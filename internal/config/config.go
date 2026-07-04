@@ -1,23 +1,32 @@
 package config
 
-// Config holds core-server gRPC and persistence settings.
+import (
+	"fmt"
+	"os"
+
+	"gopkg.in/yaml.v3"
+)
+
+const configPath = "config/config.yaml"
+
 type Config struct {
 	Server ServerConfig `yaml:"server"`
-	DB     DBConfig     `yaml:"db"`
+	Mysql  MySQLConfig  `yaml:"Mysql"`
 }
 
 type ServerConfig struct {
 	Addr string `yaml:"addr"`
 }
 
-type DBConfig struct {
-	DSN string `yaml:"dsn"`
-}
-
-// Load reads configuration from config/config.yaml.
 func Load() (*Config, error) {
-	return &Config{
-		Server: ServerConfig{Addr: ":9090"},
-		DB:     DBConfig{DSN: ""},
-	}, nil
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("read config %s: %w", configPath, err)
+	}
+
+	cfg := &Config{}
+	if err := yaml.Unmarshal(data, cfg); err != nil {
+		return nil, fmt.Errorf("parse config %s: %w", configPath, err)
+	}
+	return cfg, nil
 }

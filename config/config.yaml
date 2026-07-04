@@ -1,5 +1,12 @@
 server:
-  addr: ":9090"
+  addr: "127.0.0.1:8081"
 
-db:
-  dsn: ""
+Mysql:
+  Host: "127.0.0.1"
+  Port: "3306"
+  username: "root"
+  password: "123456"
+  dbname: "renai"
+  config: "charset=utf8mb4&parseTime=True&loc=Local"
+  Max_Idle_Conn: 10
+  Max_Open_Conn: 100
