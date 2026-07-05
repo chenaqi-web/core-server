@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+// provide user like service
+// 1. add like
+
+
+package like;
+import "validate/validate.proto";
+//import "idl/validate/validate.proto";
+option go_package = "github.com/CulturalRoad/cultural-road-interaction-service/internal/rpc/server/likepb";
+
+// 1.点赞操作 和 取消点赞
+message ThumbUpRequest {
+  string userID = 1 [(validate.rules).string.min_len = 1];
+  string objectType = 2 [(validate.rules).string.min_len = 1];
+  string objectID = 3 [(validate.rules).string.min_len = 1];
+  string objectOwnerID = 4[(validate.rules).string.min_len = 1];
+}
+
+message ThumbUpResponse {
+  bool success = 1;
+}
+
+message CancelThumbUpRequest{
+  string userID = 1 [(validate.rules).string.min_len = 1];
+  string objectType = 2 [(validate.rules).string.min_len = 1];
+  string objectID = 3 [(validate.rules).string.min_len = 1];
+  string objectOwnerID = 4 [(validate.rules).string.min_len = 1];
+}
+
+message CancelThumbUpResponse{
+  bool success = 1;
+}
+
+// 2.点踩(目前只有评论能点踩) 和 取消点踩
+message ThumbDownRequest{
+  string userID = 1 [(validate.rules).string.min_len = 1];
+  string objectType = 2 [(validate.rules).string.min_len = 1];
+  string objectID = 3 [(validate.rules).string.min_len = 1];
+}
+
+message ThumbDownResponse{
+  bool success = 1;
+}
+
+message CancelThumbDownRequest{
+  string userID = 1 [(validate.rules).string.min_len = 1];
+  string objectType = 2 [(validate.rules).string.min_len = 1];
+  string objectID = 3 [(validate.rules).string.min_len = 1];
+}
+
+message CancelThumbDownResponse{
+  bool success = 1;
+}
+
+message PageQueryLikeObjectListRequest {
+  string userID = 1[(validate.rules).string.min_len = 1];
+  string objectType = 2[(validate.rules).string.min_len = 1];
+  int32 page = 3 [(validate.rules).int32 = {ignore_empty: true, gt: 0}];
+  int32 pageSize = 4 [(validate.rules).int32 = {ignore_empty: true, gt: 0}];
+}
+
+message PageQueryLikeObjectListResponse {
+  repeated string objectIDs = 1;
+  int32 page = 2;
+  int32 pageSize = 3;
+  int64 total = 4;
+}
+
+message QueryInteractionStatusInBatchRequest {
+  string userID = 1 [(validate.rules).string.min_len = 1];
+  string objectType = 2 [(validate.rules).string.min_len = 1];
+  repeated string objectIDs = 3 [(validate.rules).repeated.min_items = 1];
+}
+
+message QueryInteractionStatusInBatchResponse {
+  repeated string statusList = 1;
+}
+
+// message ObjectLikeMsg {
+//     string objectID = 1;
+//     string objectType = 2;
+//     int64 count = 3;
+// }
+
+message QueryObjectLikedCountInBatchRequest {
+  string objectType = 1[(validate.rules).string.min_len = 1];
+  repeated string objectIDs = 2 [(validate.rules).repeated.min_items = 1];
+}
+
+message QueryObjectLikedCountInBatchResponse {
+  repeated int64 counts = 1;
+}
+
+
+service UserLikeService {
+  rpc ThumbUp(ThumbUpRequest) returns (ThumbUpResponse){};
+  rpc CancelThumbUp(CancelThumbUpRequest) returns (CancelThumbUpResponse){};
+  rpc ThumbDown(ThumbDownRequest) returns (ThumbDownResponse){};
+  rpc CancelThumbDown(CancelThumbDownRequest) returns (CancelThumbDownResponse){};
+  rpc PageQueryLikeObjectList(PageQueryLikeObjectListRequest) returns (PageQueryLikeObjectListResponse){};
+  rpc QueryInteractionStatusInBatch(QueryInteractionStatusInBatchRequest) returns (QueryInteractionStatusInBatchResponse){};
+  rpc QueryObjectLikedCountInBatch(QueryObjectLikedCountInBatchRequest) returns (QueryObjectLikedCountInBatchResponse){};
+}

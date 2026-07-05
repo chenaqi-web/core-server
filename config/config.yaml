@@ -17,3 +17,13 @@ Redis:
   username: "root"
   password: ""
   db: 0
+
+Kafka:
+  Version: "2.8.0"
+  Host: "127.0.0.1:9092"
+  MaxRetry: 3
+  Timeout: 10
+  ConsumerMaxProcessingTime: 10
+  # 死信队列，格式: group_id;topic_name;partition_num;replication_factor_num
+  DlqTopic: "dlq_group;dlq_topic;1;1"
+  LikeTopic: "like_group;like_topic;3;1"

@@ -13,6 +13,7 @@ type Config struct {
 	Server ServerConfig `yaml:"server"`
 	Mysql  MySQLConfig  `yaml:"Mysql"`
 	Redis  RedisConfig  `yaml:"Redis"`
+	Kafka  KafkaConfig  `yaml:"Kafka"`
 }
 
 type ServerConfig struct {

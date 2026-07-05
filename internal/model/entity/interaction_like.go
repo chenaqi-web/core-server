@@ -2,7 +2,9 @@ package entity
 
 import "time"
 
-type InteractionLikeEntity struct {
+// 点赞关系表
+
+type InteractionLike struct {
 	ID         string         `json:"id"`
 	CreatedAt  time.Time      `json:"-"`
 	UpdatedAt  time.Time      `json:"-"`
@@ -19,10 +21,9 @@ type InteractionLikeEntity struct {
 type LikeStatusType string
 
 const (
-	LikeStatusTypeUnknown   LikeStatusType = "unknown"
-	LikeStatusTypeThumbUp   LikeStatusType = "thumb_up"
-	LikeStatusTypeThumbDown LikeStatusType = "thumb_down"
-	LikeStatusTypeNothing   LikeStatusType = "nothing" // 设计此状态是为了避免频繁删除数据
+	LikeStatusTypeUnknown LikeStatusType = "unknown"
+	LikeStatusTypeThumbUp LikeStatusType = "thumb_up"
+	LikeStatusTypeNothing LikeStatusType = "nothing" // 设计此状态是为了避免频繁删除数据
 )
 
 func (s LikeStatusType) String() string {
@@ -33,8 +34,6 @@ func ParseLikeStatusType(s string) LikeStatusType {
 	switch s {
 	case "thumb_up":
 		return LikeStatusTypeThumbUp
-	case "thumb_down":
-		return LikeStatusTypeThumbDown
 	case "nothing":
 		return LikeStatusTypeNothing
 	default:
@@ -51,6 +50,7 @@ const (
 	ObjectTypeUnknown ObjectType = "unknown"
 	ObjectTypeArticle ObjectType = "article"
 	ObjectTypeLife    ObjectType = "life"
+	ObjectTypeComment ObjectType = "comment"
 )
 
 func (o ObjectType) String() string {
@@ -63,6 +63,8 @@ func ParseObjectType(s string) ObjectType {
 		return ObjectTypeArticle
 	case "life":
 		return ObjectTypeLife
+	case "comment":
+		return ObjectTypeComment
 	default:
 		return ObjectTypeUnknown
 	}
