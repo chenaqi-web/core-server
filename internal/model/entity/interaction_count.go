@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type InteractionCountEntity struct {
+type InteractionCount struct {
 	ID              string               `json:"id"`
 	CreatedAt       time.Time            `json:"-"`
 	UpdatedAt       time.Time            `json:"-"`
