@@ -1,4 +1,4 @@
-package like_domain
+package domain
 
 type LikeDomain interface {
 	Like()

@@ -1,7 +1,7 @@
 package infras
 
 import (
-	"backend/core-server/internal/domain/like_domain"
+	"backend/core-server/internal/domain"
 	"backend/core-server/internal/infras/cache"
 	"backend/core-server/internal/infras/repo"
 
@@ -12,7 +12,7 @@ var ProviderSet = wire.NewSet(
 	// database
 	repo.NewDBClient,
 	repo.NewLikeRepo,
-	wire.Bind(new(like_domain.LikeDomain), new(*repo.LikeRepo)),
+	wire.Bind(new(domain.LikeDomain), new(*repo.LikeRepo)),
 
 	// cache
 	cache.NewClient,
