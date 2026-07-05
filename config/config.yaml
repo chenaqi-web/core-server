@@ -10,3 +10,10 @@ Mysql:
   config: "charset=utf8mb4&parseTime=True&loc=Local"
   Max_Idle_Conn: 10
   Max_Open_Conn: 100
+
+Redis:
+  Host: "127.0.0.1"
+  Port: "6379"
+  username: "root"
+  password: ""
+  db: 0

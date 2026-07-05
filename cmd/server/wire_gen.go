@@ -15,7 +15,7 @@ import (
 // Injectors from wire.go:
 
 func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
-	sqlClient, err := repo.NewSQLClient(cfg)
+	sqlClient, err := repo.NewDBClient(cfg)
 	if err != nil {
 		return nil, err
 	}

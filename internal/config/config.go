@@ -12,6 +12,7 @@ const configPath = "config/config.yaml"
 type Config struct {
 	Server ServerConfig `yaml:"server"`
 	Mysql  MySQLConfig  `yaml:"Mysql"`
+	Redis  RedisConfig  `yaml:"Redis"`
 }
 
 type ServerConfig struct {

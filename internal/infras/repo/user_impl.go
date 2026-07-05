@@ -1,21 +1,17 @@
 package repo
 
-import (
-	"gorm.io/gorm"
-)
-
 // IUserRepo defines the interface for user-related data access operations.
 
 type UserPepo struct {
-	DB *gorm.DB
+	client *DBClient
 }
 
-func NewUserPepo(client *SQLClient) *UserPepo {
+func NewUserPepo(client *DBClient) *UserPepo {
 	return &UserPepo{
-		DB: client.DB,
+		client: client,
 	}
 }
 
 func (u *UserPepo) Login() {
-
+	_ = u.client.GetDB()
 }

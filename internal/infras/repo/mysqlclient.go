@@ -1,6 +1,7 @@
 package repo
 
 import (
+	entity2 "backend/core-server/internal/model/entity"
 	"fmt"
 	"log"
 
@@ -8,14 +9,13 @@ import (
 	"gorm.io/gorm"
 
 	"backend/core-server/internal/config"
-	"backend/core-server/internal/domain/model/entity"
 )
 
-type SQLClient struct {
+type DBClient struct {
 	DB *gorm.DB
 }
 
-func NewSQLClient(cfg *config.Config) (*SQLClient, error) {
+func NewDBClient(cfg *config.Config) (*DBClient, error) {
 	mysqlCfg := cfg.Mysql
 	if mysqlCfg.Host == "" || mysqlCfg.Port == "" || mysqlCfg.DBName == "" {
 		return nil, fmt.Errorf("mysql config is incomplete")
@@ -47,19 +47,28 @@ func NewSQLClient(cfg *config.Config) (*SQLClient, error) {
 	}
 
 	log.Println("mysql connected")
-	return &SQLClient{DB: db}, nil
+	return &DBClient{DB: db}, nil
 }
 
 func migrate(db *gorm.DB) error {
 	return db.AutoMigrate(
-		&entity.User{},
+		&entity2.User{},
+		&entity2.InteractionLikeEntity{},
 	)
 }
 
-func (c *SQLClient) Close() error {
+func (c *DBClient) Close() error {
 	sqlDB, err := c.DB.DB()
 	if err != nil {
 		return err
 	}
 	return sqlDB.Close()
+}
+
+func (c *DBClient) GetDB() *gorm.DB {
+	return c.DB
+}
+
+func (c *DBClient) WithTransaction() {
+	// todo
 }
