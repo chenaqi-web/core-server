@@ -53,7 +53,7 @@ func NewDBClient(cfg *config.Config) (*DBClient, error) {
 func migrate(db *gorm.DB) error {
 	return db.AutoMigrate(
 		&entity2.User{},
-		&entity2.InteractionLikeEntity{},
+		&entity2.InteractionLike{},
 	)
 }
 

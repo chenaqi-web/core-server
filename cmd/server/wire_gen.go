@@ -7,7 +7,9 @@
 package main
 
 import (
+	"backend/core-server/internal/application"
 	"backend/core-server/internal/config"
+	"backend/core-server/internal/infras/cache"
 	"backend/core-server/internal/infras/repo"
 	"backend/core-server/internal/rpc"
 )
@@ -15,12 +17,16 @@ import (
 // Injectors from wire.go:
 
 func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
-	sqlClient, err := repo.NewDBClient(cfg)
+	dbClient, err := repo.NewDBClient(cfg)
 	if err != nil {
 		return nil, err
 	}
-	healthPRC := rpc.NewHealthPRC()
-	server, err := rpc.NewServer(cfg, sqlClient, healthPRC)
+	likeRepo := repo.NewLikeRepo(dbClient)
+	cacheClient := cache.NewClient(cfg)
+	iLikeCache := cache.NewILikeCache(cacheClient)
+	likeService := application.NewLikeService(likeRepo, iLikeCache)
+	likeRPC := rpc.NewLikeRPC(likeService)
+	server, err := rpc.NewServer(cfg, likeRPC)
 	if err != nil {
 		return nil, err
 	}

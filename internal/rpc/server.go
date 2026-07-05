@@ -1,7 +1,7 @@
 package rpc
 
 import (
-	"backend/core-server/internal/rpc/healthpb"
+	"backend/core-server/internal/rpc/likepb"
 	"fmt"
 	"log"
 	"net"
@@ -10,29 +10,25 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"backend/core-server/internal/config"
-	"backend/core-server/internal/infras/repo"
 )
 
 type Server struct {
 	cfg    *config.Config
 	Engine *grpc.Server
-	db     *repo.SQLClient
 }
 
 func NewServer(
 	cfg *config.Config,
-	db *repo.SQLClient,
-	health *HealthPRC,
+	like *LikeRPC,
 ) (*Server, error) {
 
 	s := &Server{
 		cfg:    cfg,
 		Engine: grpc.NewServer(),
-		db:     db,
 	}
 
 	// 在这个下面注册rpc...
-	healthpb.RegisterHealthServiceServer(s.Engine, health)
+	likepb.RegisterLikeServiceServer(s.Engine, like)
 
 	reflection.Register(s.Engine)
 	return s, nil
@@ -49,11 +45,6 @@ func (s *Server) Start() error {
 
 func (s *Server) Stop() {
 	s.Engine.GracefulStop()
-	if s.db != nil {
-		if err := s.db.Close(); err != nil {
-			log.Printf("close database: %v", err)
-		}
-	}
 }
 
 func (s *Server) Addr() string {

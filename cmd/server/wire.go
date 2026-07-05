@@ -16,7 +16,6 @@ import (
 
 func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 	wire.Build(
-		wire.Value(cfg),
 		infras.ProviderSet,
 		application.ProviderSet,
 		rpc.ProviderSet,
