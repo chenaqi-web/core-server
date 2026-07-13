@@ -10,19 +10,30 @@ import (
 	"github.com/IBM/sarama"
 )
 
+// 生产者模型搭建 SyncProducer（同步生成者模型）
+// 如果需要producer，需要在application中加入SyncProducer实现异步消费
+// 生产者需要注意生产者方面的一些知识
+//
+// 提供2个主要的功能：
+// 1. SendMessage  推送单条消息
+// 2. SendMessages 批量推送消息
+
 type SyncProducer struct {
 	logger   *slog.Logger
 	producer sarama.SyncProducer
 }
 
 func NewSyncProducer(cfg *config.Config) (*SyncProducer, error) {
+	// 拿到基础配置
 	saramaConfig := sarama.NewConfig()
 
+	// 解析Kafka的版本号
 	version, err := sarama.ParseKafkaVersion(cfg.Kafka.Version)
 	if err != nil {
 		return nil, fmt.Errorf("parse kafka version: %w", err)
 	}
 
+	// 生产者相关的配置
 	saramaConfig.Version = version
 	saramaConfig.Producer.RequiredAcks = sarama.WaitForAll
 	saramaConfig.Producer.Retry.Max = cfg.Kafka.MaxRetry
@@ -30,6 +41,7 @@ func NewSyncProducer(cfg *config.Config) (*SyncProducer, error) {
 	saramaConfig.Producer.Return.Successes = true
 	saramaConfig.Producer.Return.Errors = true
 
+	// 新建生产者
 	producer, err := sarama.NewSyncProducer(cfg.Kafka.Brokers(), saramaConfig)
 	if err != nil {
 		return nil, fmt.Errorf("start sync producer: %w", err)
@@ -43,6 +55,21 @@ func NewSyncProducer(cfg *config.Config) (*SyncProducer, error) {
 
 func (s *SyncProducer) Close() error {
 	return s.producer.Close()
+}
+
+func (s *SyncProducer) SendMessage(topic, key string, value []byte) error {
+	partition, offset, err := s.producer.SendMessage(&sarama.ProducerMessage{
+		Topic: topic,
+		Key:   sarama.StringEncoder(key),
+		// 消息key，指定分区（保证同一用户内容发到同一分区保证有序）
+		Value: sarama.ByteEncoder(value), // 消息体
+	})
+	if err != nil {
+		return err
+	}
+
+	s.logger.Debug("message sent", "topic", topic, "partition", partition, "offset", offset)
+	return nil
 }
 
 func (s *SyncProducer) SendMessages(topic string, keyBatch []string, valueBatch [][]byte) error {
@@ -64,18 +91,4 @@ func (s *SyncProducer) SendMessages(topic string, keyBatch []string, valueBatch 
 	}
 
 	return s.producer.SendMessages(messages)
-}
-
-func (s *SyncProducer) SendMessage(topic, key string, value []byte) error {
-	partition, offset, err := s.producer.SendMessage(&sarama.ProducerMessage{
-		Topic: topic,
-		Key:   sarama.StringEncoder(key),
-		Value: sarama.ByteEncoder(value),
-	})
-	if err != nil {
-		return err
-	}
-
-	s.logger.Debug("message sent", "topic", topic, "partition", partition, "offset", offset)
-	return nil
 }

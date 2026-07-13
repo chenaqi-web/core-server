@@ -32,7 +32,7 @@ func userThumbUpCountKey(userID, objectType string) string {
 }
 
 type ILikeCache struct {
-	*CacheClient
+	*CacheClient        // 继承
 	maxLikeSetSize      int64
 	likeListExpiration  time.Duration
 	likeCountExpiration time.Duration

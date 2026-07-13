@@ -10,10 +10,11 @@ import (
 const configPath = "config/config.yaml"
 
 type Config struct {
-	Server ServerConfig `yaml:"server"`
-	Mysql  MySQLConfig  `yaml:"Mysql"`
-	Redis  RedisConfig  `yaml:"Redis"`
-	Kafka  KafkaConfig  `yaml:"Kafka"`
+	Server          ServerConfig          `yaml:"server"`
+	Mysql           MySQLConfig           `yaml:"Mysql"`
+	Redis           RedisConfig           `yaml:"Redis"`
+	Kafka           KafkaConfig           `yaml:"Kafka"`
+	CountAggregator CountAggregatorConfig `yaml:"CountAggregator"`
 }
 
 type ServerConfig struct {

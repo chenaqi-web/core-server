@@ -1,7 +1,7 @@
 package repo
 
 import (
-	entity2 "backend/core-server/internal/model/entity"
+	"backend/core-server/internal/model/entity"
 	"fmt"
 	"log"
 
@@ -52,8 +52,9 @@ func NewDBClient(cfg *config.Config) (*DBClient, error) {
 
 func migrate(db *gorm.DB) error {
 	return db.AutoMigrate(
-		&entity2.User{},
-		&entity2.InteractionLike{},
+		&entity.User{},
+		&entity.InteractionLike{},
+		&entity.InteractionCount{},
 	)
 }
 
@@ -67,8 +68,4 @@ func (c *DBClient) Close() error {
 
 func (c *DBClient) GetDB() *gorm.DB {
 	return c.DB
-}
-
-func (c *DBClient) WithTransaction() {
-	// todo
 }

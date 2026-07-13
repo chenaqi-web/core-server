@@ -5,17 +5,20 @@ import (
 	"time"
 )
 
-// 点赞关系表
-
 type InteractionLike struct {
-	ID         string          `json:"id"`
-	CreatedAt  time.Time       `json:"-"`
-	UpdatedAt  time.Time       `json:"-"`
-	UserID     string          `json:"user_id"`
-	ObjectType enum.ObjectType `json:"object_type"`
-	ObjectID   string          `json:"object_id"`
-	Status     LikeStatusType  `json:"status"`
-	Version    int64           `json:"version"`
+	ID            string          `gorm:"primaryKey;size:64" json:"id"`
+	CreatedAt     time.Time       `gorm:"comment:创建时间" json:"-"`
+	UpdatedAt     time.Time       `gorm:"comment:更新时间" json:"-"`
+	UserID        string          `gorm:"size:64;not null;uniqueIndex:uk_like_user_object,priority:1" json:"user_id"`
+	ObjectType    enum.ObjectType `gorm:"size:32;not null;uniqueIndex:uk_like_user_object,priority:2" json:"object_type"`
+	ObjectID      string          `gorm:"size:64;not null;uniqueIndex:uk_like_user_object,priority:3" json:"object_id"`
+	ObjectOwnerID string          `gorm:"size:64;not null;default:'';index:idx_object_owner_id" json:"object_owner_id"`
+	Status        LikeStatusType  `gorm:"size:32;not null" json:"status"`
+	Version       int64           `gorm:"not null;default:0" json:"version"`
+}
+
+func (InteractionLike) TableName() string {
+	return "interaction_like"
 }
 
 //======================================================================================================================

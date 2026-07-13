@@ -10,25 +10,46 @@ import (
 	"backend/core-server/internal/application"
 	"backend/core-server/internal/config"
 	"backend/core-server/internal/infras/cache"
+	"backend/core-server/internal/infras/mq/kafka"
 	"backend/core-server/internal/infras/repo"
+	"backend/core-server/internal/jobs"
+	jobdbsync "backend/core-server/internal/jobs/job-dbsync"
 	"backend/core-server/internal/rpc"
 )
 
 // Injectors from wire.go:
 
-func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
+func InitializeApp(cfg *config.Config) (*App, error) {
 	dbClient, err := repo.NewDBClient(cfg)
 	if err != nil {
 		return nil, err
 	}
 	likeRepo := repo.NewLikeRepo(dbClient)
+	countRepo := repo.NewCountRepo(dbClient)
+	topicManager, err := kafka.NewTopicManager(cfg)
+	if err != nil {
+		return nil, err
+	}
+	syncProducer, err := kafka.NewSyncProducer(cfg)
+	if err != nil {
+		return nil, err
+	}
 	cacheClient := cache.NewClient(cfg)
 	iLikeCache := cache.NewILikeCache(cacheClient)
-	likeService := application.NewLikeService(likeRepo, iLikeCache)
+	logger := jobs.NewLogger()
+	messageQueueConsumer, err := jobdbsync.NewMessageQueueConsumer(cfg, logger, syncProducer, topicManager, cacheClient, likeRepo, countRepo, iLikeCache)
+	if err != nil {
+		return nil, err
+	}
+	likeService, err := application.NewLikeService(likeRepo, iLikeCache, syncProducer, cfg)
+	if err != nil {
+		return nil, err
+	}
 	likeRPC := rpc.NewLikeRPC(likeService)
 	server, err := rpc.NewServer(cfg, likeRPC)
 	if err != nil {
 		return nil, err
 	}
-	return server, nil
+	app := NewApp(server, messageQueueConsumer)
+	return app, nil
 }

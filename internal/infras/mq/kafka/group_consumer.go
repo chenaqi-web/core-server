@@ -80,6 +80,8 @@ func (consumer *BatchConsumer) commitOffset(session sarama.ConsumerGroupSession,
 	session.Commit()
 }
 
+//======================================================================================================================
+
 type GroupConsumer struct {
 	topic    string
 	groupID  string

@@ -9,16 +9,19 @@ import (
 	"backend/core-server/internal/application"
 	"backend/core-server/internal/config"
 	"backend/core-server/internal/infras"
+	"backend/core-server/internal/jobs"
 	"backend/core-server/internal/rpc"
 )
 
 //go:generate go run github.com/google/wire/cmd/wire
 
-func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
+func InitializeApp(cfg *config.Config) (*App, error) {
 	wire.Build(
-		infras.ProviderSet,
+		infras.JobProviderSet,
+		jobs.ProviderSet,
 		application.ProviderSet,
 		rpc.ProviderSet,
+		NewApp,
 	)
 	return nil, nil
 }

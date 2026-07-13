@@ -15,21 +15,27 @@ func main() {
 		log.Fatalf("load config: %v", err)
 	}
 
-	srv, err := InitializeServer(cfg)
+	app, err := InitializeApp(cfg)
 	if err != nil {
-		log.Fatalf("initialize server: %v", err)
+		log.Fatalf("initialize app: %v", err)
+	}
+
+	if err := app.Consumer.Start(); err != nil {
+		log.Fatalf("start like consumer: %v", err)
 	}
 
 	go func() {
-		if err := srv.Start(); err != nil {
+		if err := app.Server.Start(); err != nil {
 			log.Fatalf("grpc server: %v", err)
 		}
 	}()
+
+	log.Println("core-server started (grpc + like consumer)")
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
 	log.Println("shutting down core-server...")
-	srv.Stop()
+	app.Stop()
 }

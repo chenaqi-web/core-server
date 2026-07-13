@@ -90,3 +90,11 @@ func (c *KafkaConfig) DlqTopicName() string {
 	}
 	return dlq.Name
 }
+
+func (c *KafkaConfig) LikeTopicName() (string, error) {
+	topic, err := ParseTopic(c.LikeTopic)
+	if err != nil {
+		return "", err
+	}
+	return topic.Name, nil
+}

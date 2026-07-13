@@ -27,3 +27,8 @@ Kafka:
   # 死信队列，格式: group_id;topic_name;partition_num;replication_factor_num
   DlqTopic: "dlq_group;dlq_topic;1;1"
   LikeTopic: "like_group;like_topic;3;1"
+
+CountAggregator:
+  FlushInterval: "5s"
+  BufferSize: 100
+  DBTimeout: "10s"
