@@ -5,6 +5,8 @@ import (
 	"context"
 )
 
+// 数据库操作的接口
+
 type LikeDomain interface {
 	WithTransaction(ctx context.Context, fn func(ctx context.Context) error) error
 	Upsert(ctx context.Context, like *entity.InteractionLike) (int, error)

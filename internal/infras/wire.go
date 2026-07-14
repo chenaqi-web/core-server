@@ -13,6 +13,8 @@ var RepoProviderSet = wire.NewSet(
 	repo.NewDBClient,
 	repo.NewLikeRepo,
 	repo.NewCountRepo,
+	// todo 新操作
+
 	wire.Bind(new(domain.LikeDomain), new(*repo.LikeRepo)),
 	wire.Bind(new(domain.CountDomain), new(*repo.CountRepo)),
 )
