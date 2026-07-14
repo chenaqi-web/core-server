@@ -20,17 +20,19 @@ func main() {
 		log.Fatalf("initialize app: %v", err)
 	}
 
+	// 启动消费者协程
 	if err := app.Consumer.Start(); err != nil {
 		log.Fatalf("start like consumer: %v", err)
 	}
 
+	// 启动http服务
 	go func() {
 		if err := app.Server.Start(); err != nil {
 			log.Fatalf("grpc server: %v", err)
 		}
 	}()
 
-	log.Println("core-server started (grpc + like consumer)")
+	log.Println("core-server started (grpc + consumer)")
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)

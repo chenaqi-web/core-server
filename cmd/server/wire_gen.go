@@ -13,7 +13,7 @@ import (
 	"backend/core-server/internal/infras/mq/kafka"
 	"backend/core-server/internal/infras/repo"
 	"backend/core-server/internal/jobs"
-	jobdbsync "backend/core-server/internal/jobs/job-dbsync"
+	"backend/core-server/internal/jobs/job-dbsync"
 	"backend/core-server/internal/rpc"
 )
 
@@ -25,19 +25,9 @@ func InitializeApp(cfg *config.Config) (*App, error) {
 		return nil, err
 	}
 	likeRepo := repo.NewLikeRepo(dbClient)
-	countRepo := repo.NewCountRepo(dbClient)
-	topicManager, err := kafka.NewTopicManager(cfg)
-	if err != nil {
-		return nil, err
-	}
-	syncProducer, err := kafka.NewSyncProducer(cfg)
-	if err != nil {
-		return nil, err
-	}
 	cacheClient := cache.NewClient(cfg)
 	iLikeCache := cache.NewILikeCache(cacheClient)
-	logger := jobs.NewLogger()
-	messageQueueConsumer, err := jobdbsync.NewMessageQueueConsumer(cfg, logger, syncProducer, topicManager, cacheClient, likeRepo, countRepo, iLikeCache)
+	syncProducer, err := kafka.NewSyncProducer(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -47,6 +37,16 @@ func InitializeApp(cfg *config.Config) (*App, error) {
 	}
 	likeRPC := rpc.NewLikeRPC(likeService)
 	server, err := rpc.NewServer(cfg, likeRPC)
+	if err != nil {
+		return nil, err
+	}
+	logger := jobs.NewLogger()
+	topicManager, err := kafka.NewTopicManager(cfg)
+	if err != nil {
+		return nil, err
+	}
+	countRepo := repo.NewCountRepo(dbClient)
+	messageQueueConsumer, err := jobdbsync.NewMessageQueueConsumer(cfg, logger, syncProducer, topicManager, cacheClient, likeRepo, countRepo, iLikeCache)
 	if err != nil {
 		return nil, err
 	}

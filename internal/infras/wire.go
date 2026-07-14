@@ -27,6 +27,7 @@ var CacheProviderSet = wire.NewSet(
 var MQProviderSet = wire.NewSet(
 	kafka.NewSyncProducer,
 	kafka.NewTopicManager,
+	kafka.NewKafkaManager,
 )
 
 var JobProviderSet = wire.NewSet(

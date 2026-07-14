@@ -88,6 +88,7 @@ type GroupConsumer struct {
 	consumer sarama.ConsumerGroup
 }
 
+// NewGroupConsumer 新建一个消费者，加入对应的groupID，本质上是搞了一个消费者组
 func NewGroupConsumer(cfg *config.Config, groupID, topic string) (*GroupConsumer, error) {
 	saramaConfig := sarama.NewConfig()
 

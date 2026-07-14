@@ -51,14 +51,12 @@ func NewMessageQueueConsumer(
 	cfg *config.Config,
 	logger *slog.Logger,
 	producer *kafka.SyncProducer,
-	topicManager *kafka.TopicManager,
+	kafkaManager *kafka.KafkaManager,
 	redisClient *cache.CacheClient,
 	likeRepo domain.LikeDomain,
 	countRepo domain.CountDomain,
 	likeCache *cache.ILikeCache,
-) (*MessageQueueConsumer, error) {
-	kafkaManager := kafka.NewKafkaManager(cfg, topicManager)
-
+) *MessageQueueConsumer {
 	consumer := &MessageQueueConsumer{
 		logger:       logger.With("component", "job_dbsync"),
 		kafkaManager: kafkaManager,
@@ -78,17 +76,12 @@ func NewMessageQueueConsumer(
 		cfg.CountAggregator.DBDuration(),
 	)
 
-	return consumer, nil
+	return consumer
 }
 
 func (c *MessageQueueConsumer) Start() error {
 	// 1. 加载消息处理handler
 	c.kafkaManager.SetBatchHandler(c.batchHandleMessages)
-
-	// 2.初始化所以的topic 包含死信
-	if err := c.kafkaManager.InitTopics(); err != nil {
-		return err
-	}
 
 	c.likeCountAggregator.Start()
 
@@ -177,6 +170,7 @@ func (c *MessageQueueConsumer) handleMessage(ctx context.Context, msg *event.Mes
 		return nil
 	}
 
+	// 处理不同的消息类型
 	switch enum.ParseMessageEventType(msg.EventType) {
 	case enum.MessageEventTypeUserThumbUp:
 		var message event.EventUserThumbUp

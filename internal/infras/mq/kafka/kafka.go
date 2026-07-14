@@ -8,11 +8,12 @@ import (
 
 	"backend/core-server/internal/config"
 
+	"github.com/hashicorp/go-multierror"
 	"golang.org/x/sync/errgroup"
 )
 
 // KafkaManager 本质是一个消费协调器
-// 知道所有的topic，消费者组，以及消费handler
+// 创建Topic和消费者
 
 type KafkaManager struct {
 	// config
@@ -21,13 +22,13 @@ type KafkaManager struct {
 	// Topic 管理器
 	topicManager *TopicManager
 
-	// 消费者组map
-	mu                *sync.Mutex
-	groupConsumersMap map[string]*GroupConsumer
-
 	// lifecycle controller
 	ctx    context.Context
 	cancel context.CancelFunc
+
+	// 消费者组map
+	mu                *sync.Mutex
+	groupConsumersMap map[string][]*GroupConsumer
 
 	// 用于消费的处理器
 	batchHandler BatchMessagesHandler
@@ -37,11 +38,15 @@ type KafkaManager struct {
 func NewKafkaManager(cfg *config.Config, topicManager *TopicManager) *KafkaManager {
 	ctx, cancel := context.WithCancel(context.Background())
 
+	// 1.初始化Topic
+	_ = topicManager.CreateTopics()
+	_ = topicManager.CreateDlqTopic()
+
 	return &KafkaManager{
 		cfg:               cfg,
 		topicManager:      topicManager,
 		mu:                &sync.Mutex{},
-		groupConsumersMap: make(map[string]*GroupConsumer),
+		groupConsumersMap: make(map[string][]*GroupConsumer),
 		ctx:               ctx,
 		cancel:            cancel,
 	}
@@ -57,19 +62,9 @@ func (km *KafkaManager) Close() error {
 // =====================================================================================================================
 // 下面的方法均是在job中使用
 
+// SetBatchHandler 在定时任务那里设置
 func (km *KafkaManager) SetBatchHandler(handler BatchMessagesHandler) {
 	km.batchHandler = handler
-}
-
-// InitTopics 初始化所有topic和死信topic
-func (km *KafkaManager) InitTopics() error {
-	if err := km.topicManager.CreateTopics(); err != nil {
-		return err
-	}
-	if err := km.topicManager.CreateDlqTopic(); err != nil {
-		return err
-	}
-	return nil
 }
 
 func (km *KafkaManager) StartGroupConsumers() error {
@@ -83,39 +78,52 @@ func (km *KafkaManager) StartGroupConsumers() error {
 		km.mu.Unlock()
 		return errors.New("consumers already started; call StopGroupConsumers first")
 	}
-	km.groupConsumersMap = make(map[string]*GroupConsumer)
+	km.groupConsumersMap = make(map[string][]*GroupConsumer)
 	km.mu.Unlock()
 
+	// 控制并发数 10个
 	g, _ := errgroup.WithContext(km.ctx)
 	g.SetLimit(10)
 
 	for _, topic := range km.topicManager.topics {
-		topic := topic
-		g.Go(func() error {
-			consumer, err := NewGroupConsumer(km.cfg, topic.GroupID, topic.Name)
-			if err != nil {
-				return err
-			}
+		topicName := topic.Name
+		for i := 0; i < topic.PartitionNum; i++ {
+			g.Go(func() error {
+				consumer, err := NewGroupConsumer(km.cfg, topic.GroupID, topic.Name)
+				if err != nil {
+					return err
+				}
 
-			km.mu.Lock()
-			km.groupConsumersMap[topic.Name] = consumer
-			km.mu.Unlock()
-			return nil
-		})
+				km.mu.Lock()
+				defer km.mu.Unlock()
+
+				if _, ok := km.groupConsumersMap[topicName]; !ok {
+					km.groupConsumersMap[topicName] = make([]*GroupConsumer, 0)
+				}
+
+				km.groupConsumersMap[topicName] = append(km.groupConsumersMap[topicName], consumer)
+				return nil
+			})
+		}
+
 	}
 
 	if err := g.Wait(); err != nil {
 		return fmt.Errorf("create group consumers: %w", err)
 	}
 
-	var startErr error
-	for _, consumer := range km.groupConsumersMap {
-		if err := consumer.StartBatchConsume(km.ctx, km.batchHandler); err != nil {
-			startErr = errors.Join(startErr, err)
+	// start group consumers
+	var multiErr *multierror.Error
+	for _, val := range km.groupConsumersMap {
+		for _, consumer := range val {
+			err := consumer.StartBatchConsume(km.ctx, km.batchHandler)
+			if err != nil {
+				multiErr = multierror.Append(multiErr, err)
+			}
 		}
 	}
 
-	return startErr
+	return multiErr.ErrorOrNil()
 }
 
 func (km *KafkaManager) StopGroupConsumers() error {
@@ -124,21 +132,26 @@ func (km *KafkaManager) StopGroupConsumers() error {
 	g, _ := errgroup.WithContext(context.Background())
 	g.SetLimit(10)
 
-	for topicName, consumer := range km.groupConsumersMap {
+	// wait for all group consumers to stop
+	for _, val := range km.groupConsumersMap {
+		consumers := val
+
 		g.Go(func() error {
-			if err := consumer.Close(); err != nil {
-				return fmt.Errorf("stop consumer %s: %w", topicName, err)
+			var me *multierror.Error
+
+			for _, consumer := range consumers {
+				if err := consumer.Close(); err != nil {
+					me = multierror.Append(me, err)
+				}
 			}
-			return nil
+
+			return me.ErrorOrNil()
 		})
 	}
 
-	err := g.Wait()
+	if err := g.Wait(); err != nil {
+		return err
+	}
 
-	km.mu.Lock()
-	km.groupConsumersMap = make(map[string]*GroupConsumer)
-	km.mu.Unlock()
-
-	km.ctx, km.cancel = context.WithCancel(context.Background())
-	return err
+	return nil
 }
