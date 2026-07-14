@@ -2,6 +2,7 @@ package repo
 
 import (
 	"backend/core-server/internal/model/entity"
+	"context"
 	"fmt"
 	"log"
 
@@ -68,4 +69,16 @@ func (c *DBClient) Close() error {
 
 func (c *DBClient) GetDB() *gorm.DB {
 	return c.DB
+}
+
+type txContextKey struct{}
+
+func withTx(ctx context.Context, tx *gorm.DB) context.Context {
+	return context.WithValue(ctx, txContextKey{}, tx)
+}
+
+func (c *DBClient) WithTransaction(ctx context.Context, fn func(ctx context.Context) error) error {
+	return c.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return fn(withTx(ctx, tx))
+	})
 }

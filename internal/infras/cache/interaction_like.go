@@ -19,6 +19,7 @@ const (
 	defaultLikeCountExpiration       = 7 * 24 * time.Hour
 )
 
+// 记录用户的点赞关系的列表
 func thumbUpListKey(userID, objectType string) string {
 	return fmt.Sprintf("like:list:%s:%s", userID, objectType)
 }
@@ -58,6 +59,9 @@ func (c *ILikeCache) randomLikeCountExpiration() time.Duration {
 func (c *ILikeCache) randomLikeListExpiration() time.Duration {
 	return randomExpiration(c.likeListExpiration, 0.3)
 }
+
+//======================================================================================================================
+// 点赞操作
 
 func (c *ILikeCache) ThumbUp(ctx context.Context, userID, objectType, objectID string, score int64) error {
 	keyZSet := thumbUpListKey(userID, objectType)
@@ -132,6 +136,21 @@ func (c *ILikeCache) CancelThumbUp(ctx context.Context, userID, objectType, obje
 	return 1, scoreInt, nil
 }
 
+func (c *ILikeCache) ExistZSetMember(ctx context.Context, userID, objectType, objectID string) (bool, error) {
+	keyZSet := thumbUpListKey(userID, objectType)
+
+	_, err := c.Cache.ZScore(ctx, keyZSet, objectID).Result()
+	if errors.Is(err, redis.Nil) {
+		return false, ErrKeyNotFound
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+//======================================================================================================================
+
 func (c *ILikeCache) SetLikeList(ctx context.Context, userID, objectType string, interactions []*entity.InteractionLike) error {
 	if len(interactions) == 0 {
 		return nil
@@ -154,19 +173,6 @@ func (c *ILikeCache) SetLikeList(ctx context.Context, userID, objectType string,
 
 	_, err := pipe.Exec(ctx)
 	return err
-}
-
-func (c *ILikeCache) ExistZSetMember(ctx context.Context, userID, objectType, objectID string) (bool, error) {
-	keyZSet := thumbUpListKey(userID, objectType)
-
-	_, err := c.Cache.ZScore(ctx, keyZSet, objectID).Result()
-	if errors.Is(err, redis.Nil) {
-		return false, ErrKeyNotFound
-	}
-	if err != nil {
-		return false, err
-	}
-	return true, nil
 }
 
 func (c *ILikeCache) BatchExistZSetMembers(ctx context.Context, userID, objectType string, objectIDs []string) ([]string, error) {
