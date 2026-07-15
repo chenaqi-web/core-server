@@ -16,8 +16,8 @@ var RepoProviderSet = wire.NewSet(
 	repo.NewCountRepo,
 	// todo 新操作
 
-	wire.Bind(new(domain.LikeDomain), new(*repo.LikeRepo)),
-	wire.Bind(new(domain.CountDomain), new(*repo.CountRepo)),
+	wire.Bind(new(domain.LikeRepoDomain), new(*repo.LikeRepo)),
+	wire.Bind(new(domain.CountRepoDomain), new(*repo.CountRepo)),
 )
 
 var CacheProviderSet = wire.NewSet(

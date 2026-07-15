@@ -15,9 +15,9 @@ type LikeRepo interface {
 	QueryWithCondition(ctx context.Context, userID, objectType, objectID, status string) (*entity.InteractionLike, error)
 }
 
-type LikeCache interface{}
-
-type LikeDomain interface {
+type LikeRepoDomain interface {
 	ITransaction
 	LikeRepo
 }
+
+type LikeCacheDomain interface{}

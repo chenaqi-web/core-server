@@ -5,6 +5,6 @@ import (
 	"context"
 )
 
-type CountDomain interface {
+type CountRepoDomain interface {
 	Upsert(ctx context.Context, count *entity.InteractionCount, delta int64) error
 }

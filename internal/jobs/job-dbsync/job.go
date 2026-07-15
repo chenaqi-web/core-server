@@ -32,8 +32,8 @@ type MessageQueueConsumer struct {
 	redisClient *cache.CacheClient
 
 	// database
-	likeRepo  domain.LikeDomain
-	countRepo domain.CountDomain
+	likeRepo  domain.LikeRepoDomain
+	countRepo domain.CountRepoDomain
 
 	// cache
 	likeCache *cache.ILikeCache
@@ -54,8 +54,8 @@ func NewMessageQueueConsumer(
 	producer *kafka.SyncProducer,
 	kafkaManager *kafka.KafkaManager,
 	redisClient *cache.CacheClient,
-	likeRepo domain.LikeDomain,
-	countRepo domain.CountDomain,
+	likeRepo domain.LikeRepoDomain,
+	countRepo domain.CountRepoDomain,
 	likeCache *cache.ILikeCache,
 ) *MessageQueueConsumer {
 	consumer := &MessageQueueConsumer{

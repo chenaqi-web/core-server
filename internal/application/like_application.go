@@ -1,6 +1,7 @@
 package application
 
 import (
+	"backend/core-server/internal/infras/clog"
 	"context"
 	"encoding/json"
 	"errors"
@@ -19,13 +20,15 @@ import (
 
 type LikeService struct {
 	cfg      *config.Config
-	repo     domain.LikeDomain
+	repo     domain.LikeRepoDomain
 	cache    *cache.ILikeCache
 	producer *kafka.SyncProducer
+	log      *clog.Log
 }
 
 func NewLikeService(
-	repo domain.LikeDomain,
+	log *clog.Log,
+	repo domain.LikeRepoDomain,
 	likeCache *cache.ILikeCache,
 	producer *kafka.SyncProducer,
 	cfg *config.Config,
@@ -35,6 +38,7 @@ func NewLikeService(
 		repo:     repo,
 		cache:    likeCache,
 		producer: producer,
+		log:      log,
 	}, nil
 }
 
