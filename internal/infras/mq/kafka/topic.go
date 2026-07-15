@@ -3,13 +3,11 @@ package kafka
 import (
 	"backend/core-server/internal/config"
 	"fmt"
-	"log/slog"
 
 	"github.com/IBM/sarama"
 )
 
 type TopicManager struct {
-	logger *slog.Logger
 
 	// 用于管理Topic
 	clusterAdmin sarama.ClusterAdmin
@@ -40,7 +38,6 @@ func NewTopicManager(cfg *config.Config) (*TopicManager, error) {
 	}
 
 	return &TopicManager{
-		logger:       slog.Default().With("component", "kafka_topic_manager"),
 		clusterAdmin: clusterAdmin,
 		topics:       topics,
 		dlqTopic:     dlqTopic,
@@ -55,7 +52,6 @@ func (tm *TopicManager) CreateTopics() error {
 
 	for _, topic := range tm.topics {
 		if _, exists := existingTopics[topic.Name]; exists {
-			tm.logger.Info("topic already exists", "topic", topic.Name)
 			continue
 		}
 
@@ -68,7 +64,6 @@ func (tm *TopicManager) CreateTopics() error {
 			return fmt.Errorf("create topic %s: %w", topic.Name, err)
 		}
 
-		tm.logger.Info("topic created", "topic", topic.Name)
 	}
 
 	return nil
@@ -76,7 +71,6 @@ func (tm *TopicManager) CreateTopics() error {
 
 func (tm *TopicManager) CreateDlqTopic() error {
 	if tm.dlqTopic == nil {
-		tm.logger.Info("no dlq topic configured")
 		return nil
 	}
 
@@ -86,7 +80,6 @@ func (tm *TopicManager) CreateDlqTopic() error {
 	}
 
 	if _, ok := existingTopics[tm.dlqTopic.Name]; ok {
-		tm.logger.Info("dlq topic already exists", "topic", tm.dlqTopic.Name)
 		return nil
 	}
 
@@ -99,7 +92,6 @@ func (tm *TopicManager) CreateDlqTopic() error {
 		return fmt.Errorf("create dlq topic %s: %w", tm.dlqTopic.Name, err)
 	}
 
-	tm.logger.Info("dlq topic created", "topic", tm.dlqTopic.Name)
 	return nil
 }
 

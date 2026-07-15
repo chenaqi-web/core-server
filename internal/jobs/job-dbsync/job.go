@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"log/slog"
 	"strconv"
 	"time"
@@ -90,7 +91,7 @@ func (c *MessageQueueConsumer) Start() error {
 		return err
 	}
 
-	c.logger.Info("message queue consumer started")
+	log.Println("message queue consumer started")
 	return nil
 }
 

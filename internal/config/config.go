@@ -15,6 +15,7 @@ type Config struct {
 	Redis           RedisConfig           `yaml:"Redis"`
 	Kafka           KafkaConfig           `yaml:"Kafka"`
 	CountAggregator CountAggregatorConfig `yaml:"CountAggregator"`
+	Log             LogConfig             `yaml:"Log"`
 }
 
 type ServerConfig struct {

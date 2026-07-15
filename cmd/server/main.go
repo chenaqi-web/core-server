@@ -32,8 +32,6 @@ func main() {
 		}
 	}()
 
-	log.Println("core-server started (grpc + consumer)")
-
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit

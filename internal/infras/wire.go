@@ -3,6 +3,7 @@ package infras
 import (
 	"backend/core-server/internal/domain"
 	"backend/core-server/internal/infras/cache"
+	"backend/core-server/internal/infras/clog"
 	"backend/core-server/internal/infras/mq/kafka"
 	"backend/core-server/internal/infras/repo"
 
@@ -30,8 +31,13 @@ var MQProviderSet = wire.NewSet(
 	kafka.NewKafkaManager,
 )
 
+var LogProviderSet = wire.NewSet(
+	clog.NewLog,
+)
+
 var JobProviderSet = wire.NewSet(
 	RepoProviderSet,
 	CacheProviderSet,
 	MQProviderSet,
+	LogProviderSet,
 )
