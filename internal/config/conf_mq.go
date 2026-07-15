@@ -24,6 +24,7 @@ type KafkaConfig struct {
 	LikeTopic                 string `yaml:"LikeTopic"`
 }
 
+// Brokers 可能是kafka集群
 func (c *KafkaConfig) Brokers() []string {
 	return strings.Split(c.Host, ",")
 }

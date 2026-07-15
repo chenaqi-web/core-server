@@ -32,22 +32,14 @@ func NewDBClient(cfg *config.Config) (*DBClient, error) {
 		return nil, fmt.Errorf("get sql db: %w", err)
 	}
 
-	maxIdleConn := mysqlCfg.MaxIdleConn
-	if maxIdleConn == 0 {
-		maxIdleConn = 10
-	}
-	maxOpenConn := mysqlCfg.MaxOpenConn
-	if maxOpenConn == 0 {
-		maxOpenConn = 100
-	}
-	sqlDB.SetMaxIdleConns(maxIdleConn)
-	sqlDB.SetMaxOpenConns(maxOpenConn)
+	sqlDB.SetMaxIdleConns(mysqlCfg.MaxIdleConn)
+	sqlDB.SetMaxOpenConns(mysqlCfg.MaxOpenConn)
 
 	if err := migrate(db); err != nil {
 		return nil, fmt.Errorf("auto migrate: %w", err)
 	}
 
-	log.Println("mysql connected")
+	log.Println("mysql connected successfully")
 	return &DBClient{DB: db}, nil
 }
 

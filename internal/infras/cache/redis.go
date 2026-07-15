@@ -2,6 +2,7 @@ package cache
 
 import (
 	"backend/core-server/internal/config"
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -39,7 +40,15 @@ func NewClient(cfg *config.Config) *CacheClient {
 
 	rdb := redis.NewClient(&options)
 
-	log.Println("redis connected")
+	// 测试连接
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := rdb.Ping(ctx).Err(); err != nil {
+		log.Fatal("failed:", err)
+	}
+
+	log.Println("redis connected successfully")
 
 	return &CacheClient{
 		Cache: rdb,

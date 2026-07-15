@@ -7,7 +7,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const configPath = "config/config.yaml"
+const configPath = "conf/config.yaml"
 
 type Config struct {
 	Server          ServerConfig          `yaml:"server"`

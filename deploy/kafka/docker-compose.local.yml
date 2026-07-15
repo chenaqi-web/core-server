@@ -1,0 +1,53 @@
+version: '3'
+
+services:
+  kafka1:
+    image: apache/kafka:4.2.0
+    container_name: kafka1
+    hostname: kafka1
+    ports:
+      - "9092:9092"       # 外部客户端连接端口（应用程序使用）
+      - "9093:9093"       # Controller 通信端口（KRaft 集群内部选举用）
+      - "9999:9999"       # JMX 监控端口（用于性能监控工具连接）
+
+    environment:
+      # ---------- KRaft 模式必需配置 ----------
+      KAFKA_NODE_ID: 1                                          # kafka结点ID
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@localhost:9093"        # 投票列表（当Leader挂了的时候重新选举）格式：node_id@hostname:port
+      KAFKA_PROCESS_ROLES: "broker,controller"                  # 进程角色：broker（存储数据）+ controller（管理集群）在 KRaft 模式中，一个节点可以同时扮演两个角色
+
+      # ---------- 监听器配置（网络通信） ----------
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"             # Controller 使用的监听器名称
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"             # Broker 之间通信使用的监听器
+
+      # 定义监听器：EXTERNAL(9092) 走 SASL 认证，PLAINTEXT(29092) 给容器内用（这里也改为 SASL 确保安全）
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093"
+
+      # 对外公布的地址（客户端连接时使用的地址）这里用 localhost 表示只能本机访问，生产环境要改成实际 IP 或域名
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka1:29092,EXTERNAL://localhost:9092"
+
+      # 监听器的安全协议映射：PLAINTEXT 表示不加密（开发测试用），生产环境应使用 SSL/SASL
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT"
+
+      # ---------- KRaft 存储配置 ----------
+      KAFKA_LOG_DIRS: "/var/lib/kafka/data"       # Kafka 数据存储目录（容器内路径，不挂载则数据随容器删除）
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1   # 主题副本数
+
+
+
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+
+    ports:
+      - "9091:8080"
+
+    environment:
+      KAFKA_CLUSTERS_0_NAME: "local-kafka"
+      # Kafka 连接地址（容器内使用服务名 kafka1 访问）
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka1:29092"
+      KAFKA_CLUSTERS_0_JMXPORT: 9999          # JMX 监控端口
+      DYNAMIC_CONFIG_ENABLED: "TRUE"          # 允许动态配置
+
+    depends_on:
+      - kafka1

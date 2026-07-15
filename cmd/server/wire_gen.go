@@ -45,11 +45,9 @@ func InitializeApp(cfg *config.Config) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
+	kafkaManager := kafka.NewKafkaManager(cfg, topicManager)
 	countRepo := repo.NewCountRepo(dbClient)
-	messageQueueConsumer, err := jobdbsync.NewMessageQueueConsumer(cfg, logger, syncProducer, topicManager, cacheClient, likeRepo, countRepo, iLikeCache)
-	if err != nil {
-		return nil, err
-	}
+	messageQueueConsumer := jobdbsync.NewMessageQueueConsumer(cfg, logger, syncProducer, kafkaManager, cacheClient, likeRepo, countRepo, iLikeCache)
 	app := NewApp(server, messageQueueConsumer)
 	return app, nil
 }
