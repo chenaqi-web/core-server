@@ -1,8 +1,12 @@
 package kafka
 
 import (
+	"context"
+
 	"github.com/IBM/sarama"
 )
+
+type MessageHandler func(ctx context.Context, msg *sarama.ConsumerMessage) error
 
 type SimpleConsumer struct {
 	ready   chan bool

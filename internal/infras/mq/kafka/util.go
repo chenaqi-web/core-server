@@ -14,8 +14,6 @@ import (
 	"github.com/cespare/xxhash/v2"
 )
 
-type MessageHandler func(ctx context.Context, msg *sarama.ConsumerMessage) error
-
 // BatchHandlerWrapper 将单条消息处理器包装为批量处理器。
 // redisClient 不为 nil 时，通过消息 hash 做短时去重。
 // dlqTopic 不为空且 producer 不为 nil 时，处理失败的消息会写入死信队列。

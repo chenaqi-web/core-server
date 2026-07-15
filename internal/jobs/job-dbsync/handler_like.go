@@ -6,6 +6,8 @@ import (
 	"context"
 
 	"backend/core-server/internal/model/event"
+
+	"go.uber.org/zap"
 )
 
 func (c *MessageQueueConsumer) handleUserLike(ctx context.Context, msg *event.EventUserThumbUp) error {
@@ -23,7 +25,7 @@ func (c *MessageQueueConsumer) handleUserLike(ctx context.Context, msg *event.Ev
 		if err != nil {
 			_, _, cacheErr := c.likeCache.CancelThumbUp(ctx, msg.UserID, msg.ObjectType, msg.ObjectID)
 			if cacheErr != nil {
-				c.logger.Error("cache cancel thumb up failed", "user_id", msg.UserID, "err", cacheErr)
+				c.logger.Error("cache cancel thumb up failed", zap.String("user_id", msg.UserID), zap.Error(cacheErr))
 			}
 			return err
 		}
@@ -35,7 +37,7 @@ func (c *MessageQueueConsumer) handleUserLike(ctx context.Context, msg *event.Ev
 		return nil
 	})
 	if err != nil {
-		c.logger.Error("handle user like failed", "msg", msg, "err", err)
+		c.logger.Error("handle user like failed", zap.Any("msg", msg), zap.Error(err))
 		return err
 	}
 	return nil
@@ -67,7 +69,7 @@ func (c *MessageQueueConsumer) handleUserCancelThumbUp(ctx context.Context, msg 
 		return nil
 	})
 	if err != nil {
-		c.logger.Error("handle user cancel like failed", "msg", msg, "err", err)
+		c.logger.Error("handle user cancel like failed", zap.Any("msg", msg), zap.Error(err))
 		return err
 	}
 

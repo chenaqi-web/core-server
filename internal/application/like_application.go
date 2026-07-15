@@ -16,6 +16,7 @@ import (
 	"backend/core-server/internal/model/event"
 
 	"github.com/avast/retry-go"
+	"go.uber.org/zap"
 )
 
 type LikeService struct {
@@ -49,7 +50,7 @@ func (s *LikeService) HasThumbUp(ctx context.Context, userID, objectType, object
 	// 1. 首先判断是否点赞(在zset里面)
 	exist, err := s.cache.ExistZSetMember(ctx, userID, objectType, objectID)
 	if err != nil && !errors.Is(err, cache.ErrKeyNotFound) {
-		// todo log 降级
+		s.log.Error("Error checking if thumbnail exist", zap.Error(err))
 	}
 	if exist {
 		return true, nil

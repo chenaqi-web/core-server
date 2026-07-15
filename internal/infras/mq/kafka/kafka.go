@@ -68,6 +68,7 @@ func (km *KafkaManager) SetBatchHandler(handler BatchMessagesHandler) {
 }
 
 func (km *KafkaManager) StartGroupConsumers() error {
+	// 首先需要设置处理器handler，如果没有则无法消费
 	if km.batchHandler == nil {
 		return errors.New("batch handler is not set")
 	}

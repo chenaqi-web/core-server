@@ -18,6 +18,10 @@ type BatchConsumer struct {
 	handler BatchMessagesHandler
 }
 
+// 这里说一下执行流程：
+// 当调用consumer.Consume时（相当于新建会话），会先执行Setup（创建协程），然后在ConsumeClaim异步处理消息，最后Cleanup
+// 可以参考这一篇文章：https://www.cnblogs.com/payapa/p/15401357.html
+
 func (consumer *BatchConsumer) Setup(_ sarama.ConsumerGroupSession) error {
 	close(consumer.ready)
 	return nil
@@ -82,13 +86,14 @@ func (consumer *BatchConsumer) commitOffset(session sarama.ConsumerGroupSession,
 
 //======================================================================================================================
 
+// GroupConsumer 消费者（带有消费者组id）
 type GroupConsumer struct {
 	topic    string
 	groupID  string
 	consumer sarama.ConsumerGroup
 }
 
-// NewGroupConsumer 新建一个消费者，加入对应的groupID，本质上是搞了一个消费者组
+// NewGroupConsumer 新建一个消费者，加入对应的groupID
 func NewGroupConsumer(cfg *config.Config, groupID, topic string) (*GroupConsumer, error) {
 	saramaConfig := sarama.NewConfig()
 
@@ -97,14 +102,17 @@ func NewGroupConsumer(cfg *config.Config, groupID, topic string) (*GroupConsumer
 		return nil, fmt.Errorf("parse kafka version: %w", err)
 	}
 
-	// version must set before producer/consumer init
 	saramaConfig.Version = version
+
 	// 当消费者组内成员变化时，Kafka 会触发 Rebalance（重平衡），这会造成短暂的消费停滞, 这里使用sticky策略替代
 	saramaConfig.Consumer.Group.Rebalance.GroupStrategies = []sarama.BalanceStrategy{
 		sarama.NewBalanceStrategySticky(),
 	}
+
+	// 指定消费者组第一次启动时从哪开始消费（oldest从头，newest从最新的）
 	saramaConfig.Consumer.Offsets.Initial = sarama.OffsetOldest
-	// disable auto commit
+
+	// 偏移量提交策略（true自动提交，false手动提交）
 	saramaConfig.Consumer.Offsets.AutoCommit.Enable = false
 	saramaConfig.Consumer.MaxProcessingTime = time.Duration(cfg.Kafka.ConsumerMaxProcessingTime) * time.Second
 
@@ -120,6 +128,7 @@ func NewGroupConsumer(cfg *config.Config, groupID, topic string) (*GroupConsumer
 	}, nil
 }
 
+// StartBatchConsume 开始批量消费
 func (groupConsumer *GroupConsumer) StartBatchConsume(ctx context.Context, handler BatchMessagesHandler) error {
 	consumer := BatchConsumer{
 		ready:   make(chan bool),
@@ -129,7 +138,6 @@ func (groupConsumer *GroupConsumer) StartBatchConsume(ctx context.Context, handl
 	go func() {
 		for {
 			_ = groupConsumer.consumer.Consume(ctx, []string{groupConsumer.topic}, &consumer)
-
 			if ctx.Err() != nil {
 				return
 			}

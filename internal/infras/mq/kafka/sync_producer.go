@@ -1,13 +1,14 @@
 package kafka
 
 import (
+	"backend/core-server/internal/infras/clog"
 	"fmt"
-	"log/slog"
 	"time"
 
 	"backend/core-server/internal/config"
 
 	"github.com/IBM/sarama"
+	"go.uber.org/zap"
 )
 
 // 生产者模型搭建 SyncProducer（同步生成者模型）
@@ -19,11 +20,11 @@ import (
 // 2. SendMessages 批量推送消息
 
 type SyncProducer struct {
-	logger   *slog.Logger
+	logger   *clog.Log
 	producer sarama.SyncProducer
 }
 
-func NewSyncProducer(cfg *config.Config) (*SyncProducer, error) {
+func NewSyncProducer(cfg *config.Config, log *clog.Log) (*SyncProducer, error) {
 	// 拿到基础配置
 	saramaConfig := sarama.NewConfig()
 
@@ -35,7 +36,7 @@ func NewSyncProducer(cfg *config.Config) (*SyncProducer, error) {
 
 	// 生产者相关的配置
 	saramaConfig.Version = version
-	saramaConfig.Producer.RequiredAcks = sarama.WaitForAll
+	saramaConfig.Producer.RequiredAcks = sarama.WaitForAll // 发送应答机制
 	saramaConfig.Producer.Retry.Max = cfg.Kafka.MaxRetry
 	saramaConfig.Producer.Timeout = time.Duration(cfg.Kafka.Timeout) * time.Second
 	saramaConfig.Producer.Return.Successes = true
@@ -48,7 +49,7 @@ func NewSyncProducer(cfg *config.Config) (*SyncProducer, error) {
 	}
 
 	return &SyncProducer{
-		logger:   slog.Default().With("component", "kafka_sync_producer"),
+		logger:   log,
 		producer: producer,
 	}, nil
 }
@@ -60,15 +61,17 @@ func (s *SyncProducer) Close() error {
 func (s *SyncProducer) SendMessage(topic, key string, value []byte) error {
 	partition, offset, err := s.producer.SendMessage(&sarama.ProducerMessage{
 		Topic: topic,
-		Key:   sarama.StringEncoder(key),
-		// 消息key，指定分区（保证同一用户内容发到同一分区保证有序）
+		Key:   sarama.StringEncoder(key), // 消息key，指定分区（保证同一用户内容发到同一分区保证有序）
 		Value: sarama.ByteEncoder(value), // 消息体
 	})
 	if err != nil {
 		return err
 	}
 
-	s.logger.Debug("message sent", "topic", topic, "partition", partition, "offset", offset)
+	s.logger.Debug("message sent",
+		zap.String("topic", topic),
+		zap.Int64("offset", offset),
+		zap.Int32("partition", partition))
 	return nil
 }
 

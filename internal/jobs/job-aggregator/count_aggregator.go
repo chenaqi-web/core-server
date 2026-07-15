@@ -1,8 +1,8 @@
 package jobaggregator
 
 import (
+	"backend/core-server/internal/infras/clog"
 	"context"
-	"log/slog"
 	"sync"
 	"time"
 
@@ -14,20 +14,20 @@ import (
 )
 
 type ObjectCountAggregator struct {
-	logger        *slog.Logger
+	logger        *clog.Log
 	buffer        map[string]*ObjectCountDelta
 	mu            sync.Mutex
 	flushInterval time.Duration
 	bufferSize    int
 	dbTimeout     time.Duration
-	countRepo     domain.CountDomain
+	countRepo     domain.CountRepoDomain
 	ctx           context.Context
 	cancel        context.CancelFunc
 }
 
 func NewObjectCountAggregator(
-	logger *slog.Logger,
-	countRepo domain.CountDomain,
+	logger *clog.Log,
+	countRepo domain.CountRepoDomain,
 	flushInterval time.Duration,
 	bufferSize int,
 	dbTimeout time.Duration,
@@ -95,7 +95,6 @@ func (a *ObjectCountAggregator) Flush() {
 	a.mu.Unlock()
 
 	if err := a.batchUpdateMySQL(toFlush); err != nil {
-		a.logger.Error("batch update interaction_count failed", "err", err)
 		a.mu.Lock()
 		for k, v := range toFlush {
 			if existing, ok := a.buffer[k]; ok {
@@ -124,7 +123,6 @@ func (a *ObjectCountAggregator) batchUpdateMySQL(data map[string]*ObjectCountDel
 			ObjectID:        delta.ObjectID,
 		}
 		if err := a.countRepo.Upsert(ctx, ent, delta.Delta); err != nil {
-			a.logger.Error("upsert interaction_count failed", "object_id", ent.ObjectID, "err", err)
 			multiErr = multierror.Append(multiErr, err)
 		}
 	}

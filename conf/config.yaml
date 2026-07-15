@@ -25,7 +25,7 @@ Redis:
   db: 0
 
 Kafka:
-  Version: "4.0.0"
+  Version: "4.2.0"
   Host: "127.0.0.1:9092"
   MaxRetry: 3
   Timeout: 10

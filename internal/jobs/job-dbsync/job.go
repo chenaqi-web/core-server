@@ -1,11 +1,11 @@
 package jobdbsync
 
 import (
+	"backend/core-server/internal/infras/clog"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
-	"log/slog"
 	"strconv"
 	"time"
 
@@ -20,10 +20,11 @@ import (
 	"github.com/IBM/sarama"
 	"github.com/avast/retry-go"
 	"github.com/cespare/xxhash/v2"
+	"go.uber.org/zap"
 )
 
 type MessageQueueConsumer struct {
-	logger *slog.Logger
+	logger *clog.Log
 
 	// kafka 消费协调器
 	kafkaManager *kafka.KafkaManager
@@ -50,7 +51,7 @@ type MessageQueueConsumer struct {
 
 func NewMessageQueueConsumer(
 	cfg *config.Config,
-	logger *slog.Logger,
+	logger *clog.Log,
 	producer *kafka.SyncProducer,
 	kafkaManager *kafka.KafkaManager,
 	redisClient *cache.CacheClient,
@@ -58,8 +59,9 @@ func NewMessageQueueConsumer(
 	countRepo domain.CountRepoDomain,
 	likeCache *cache.ILikeCache,
 ) *MessageQueueConsumer {
+
 	consumer := &MessageQueueConsumer{
-		logger:       logger.With("component", "job_dbsync"),
+		logger:       logger,
 		kafkaManager: kafkaManager,
 		redisClient:  redisClient,
 		likeRepo:     likeRepo,
@@ -70,7 +72,7 @@ func NewMessageQueueConsumer(
 	}
 
 	consumer.likeCountAggregator = jobaggregator.NewObjectCountAggregator(
-		logger.With("component", "like_count_aggregator"),
+		logger,
 		countRepo,
 		cfg.CountAggregator.FlushDuration(),
 		cfg.CountAggregator.BufferCapacity(),
@@ -83,10 +85,9 @@ func NewMessageQueueConsumer(
 func (c *MessageQueueConsumer) Start() error {
 	// 1. 加载消息处理handler
 	c.kafkaManager.SetBatchHandler(c.batchHandleMessages)
-
 	c.likeCountAggregator.Start()
 
-	// 3.启动所以的消费者
+	// 2.启动所有的消费者
 	if err := c.kafkaManager.StartGroupConsumers(); err != nil {
 		return err
 	}
@@ -121,7 +122,7 @@ func (c *MessageQueueConsumer) batchHandleMessages(ctx context.Context, msgs []*
 		hashKey := fmt.Sprintf("msg_%s", strconv.FormatUint(hash, 10))
 		success, err := c.redisClient.Cache.SetNX(ctx, hashKey, "true", 10*time.Minute).Result()
 		if err != nil {
-			c.logger.Warn("redis dedup failed", "err", err, "key", hashKey)
+			c.logger.Warn("redis dedup failed", zap.String("key", hashKey), zap.Error(err))
 		} else if !success {
 			continue
 		}
@@ -186,7 +187,7 @@ func (c *MessageQueueConsumer) handleMessage(ctx context.Context, msg *event.Mes
 		}
 		return c.handleUserCancelThumbUp(ctx, &message)
 	default:
-		c.logger.Warn("unknown message event type", "event_type", msg.EventType)
+		c.logger.Warn("unknown message event type", zap.String("event_type", msg.EventType))
 	}
 	return nil
 }

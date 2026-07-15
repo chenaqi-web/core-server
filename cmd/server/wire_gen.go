@@ -10,9 +10,9 @@ import (
 	"backend/core-server/internal/application"
 	"backend/core-server/internal/config"
 	"backend/core-server/internal/infras/cache"
+	"backend/core-server/internal/infras/clog"
 	"backend/core-server/internal/infras/mq/kafka"
 	"backend/core-server/internal/infras/repo"
-	"backend/core-server/internal/jobs"
 	"backend/core-server/internal/jobs/job-dbsync"
 	"backend/core-server/internal/rpc"
 )
@@ -20,6 +20,10 @@ import (
 // Injectors from wire.go:
 
 func InitializeApp(cfg *config.Config) (*App, error) {
+	log, err := clog.NewLog(cfg)
+	if err != nil {
+		return nil, err
+	}
 	dbClient, err := repo.NewDBClient(cfg)
 	if err != nil {
 		return nil, err
@@ -27,11 +31,11 @@ func InitializeApp(cfg *config.Config) (*App, error) {
 	likeRepo := repo.NewLikeRepo(dbClient)
 	cacheClient := cache.NewClient(cfg)
 	iLikeCache := cache.NewILikeCache(cacheClient)
-	syncProducer, err := kafka.NewSyncProducer(cfg)
+	syncProducer, err := kafka.NewSyncProducer(cfg, log)
 	if err != nil {
 		return nil, err
 	}
-	likeService, err := application.NewLikeService(likeRepo, iLikeCache, syncProducer, cfg)
+	likeService, err := application.NewLikeService(log, likeRepo, iLikeCache, syncProducer, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -40,14 +44,13 @@ func InitializeApp(cfg *config.Config) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
-	logger := jobs.NewLogger()
 	topicManager, err := kafka.NewTopicManager(cfg)
 	if err != nil {
 		return nil, err
 	}
 	kafkaManager := kafka.NewKafkaManager(cfg, topicManager)
 	countRepo := repo.NewCountRepo(dbClient)
-	messageQueueConsumer := jobdbsync.NewMessageQueueConsumer(cfg, logger, syncProducer, kafkaManager, cacheClient, likeRepo, countRepo, iLikeCache)
+	messageQueueConsumer := jobdbsync.NewMessageQueueConsumer(cfg, log, syncProducer, kafkaManager, cacheClient, likeRepo, countRepo, iLikeCache)
 	app := NewApp(server, messageQueueConsumer)
 	return app, nil
 }
