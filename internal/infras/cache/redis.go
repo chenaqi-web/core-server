@@ -54,3 +54,7 @@ func NewClient(cfg *config.Config) *CacheClient {
 		Cache: rdb,
 	}
 }
+
+func (c *CacheClient) Close() error {
+	return c.Cache.Close()
+}

@@ -15,13 +15,12 @@ import (
 
 //go:generate go run github.com/google/wire/cmd/wire
 
-func InitializeApp(cfg *config.Config) (*App, error) {
+func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 	wire.Build(
 		infras.JobProviderSet,
 		jobs.ProviderSet,
 		application.ProviderSet,
 		rpc.ProviderSet,
-		NewApp,
 	)
 	return nil, nil
 }

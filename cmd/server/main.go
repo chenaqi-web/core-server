@@ -15,20 +15,14 @@ func main() {
 		log.Fatalf("load config: %v", err)
 	}
 
-	app, err := InitializeApp(cfg)
+	srv, err := InitializeServer(cfg)
 	if err != nil {
-		log.Fatalf("initialize app: %v", err)
+		log.Fatalf("initialize server: %v", err)
 	}
 
-	// 启动消费者协程
-	if err := app.Consumer.Start(); err != nil {
-		log.Fatalf("start like consumer: %v", err)
-	}
-
-	// 启动http服务
 	go func() {
-		if err := app.Server.Start(); err != nil {
-			log.Fatalf("grpc server: %v", err)
+		if err := srv.Start(); err != nil {
+			log.Fatalf("server: %v", err)
 		}
 	}()
 
@@ -37,5 +31,5 @@ func main() {
 	<-quit
 
 	log.Println("shutting down core-server...")
-	app.Stop()
+	srv.Stop()
 }
