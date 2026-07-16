@@ -63,6 +63,13 @@ func (c *DBClient) GetDB() *gorm.DB {
 	return c.DB
 }
 
+func (c *DBClient) db(ctx context.Context) *gorm.DB {
+	if tx, ok := ctx.Value(txContextKey{}).(*gorm.DB); ok && tx != nil {
+		return tx.WithContext(ctx)
+	}
+	return c.DB.WithContext(ctx)
+}
+
 type txContextKey struct{}
 
 func withTx(ctx context.Context, tx *gorm.DB) context.Context {
