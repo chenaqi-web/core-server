@@ -21,16 +21,16 @@ import (
 
 type LikeService struct {
 	cfg      *config.Config
-	repo     domain.LikeRepoDomain
-	cache    *cache.ILikeCache
-	producer *kafka.SyncProducer
 	log      *clog.Log
+	producer *kafka.SyncProducer
+	repo     domain.LikeRepoDomain
+	cache    domain.LikeCacheDomain
 }
 
 func NewLikeService(
 	log *clog.Log,
 	repo domain.LikeRepoDomain,
-	likeCache *cache.ILikeCache,
+	likeCache domain.LikeCacheDomain,
 	producer *kafka.SyncProducer,
 	cfg *config.Config,
 ) (*LikeService, error) {

@@ -37,7 +37,7 @@ type MessageQueueConsumer struct {
 	countRepo domain.CountRepoDomain
 
 	// cache
-	likeCache *cache.ILikeCache
+	likeCache domain.LikeCacheDomain
 
 	// 聚合器
 	likeCountAggregator *jobaggregator.ObjectCountAggregator
@@ -57,7 +57,7 @@ func NewMessageQueueConsumer(
 	redisClient *cache.CacheClient,
 	likeRepo domain.LikeRepoDomain,
 	countRepo domain.CountRepoDomain,
-	likeCache *cache.ILikeCache,
+	likeCache domain.LikeCacheDomain,
 ) *MessageQueueConsumer {
 
 	consumer := &MessageQueueConsumer{

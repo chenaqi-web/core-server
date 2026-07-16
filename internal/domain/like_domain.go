@@ -20,4 +20,13 @@ type LikeRepoDomain interface {
 	LikeRepo
 }
 
-type LikeCacheDomain interface{}
+// =====================================================================================================================
+
+type LikeCacheDomain interface {
+	CompensationCountDecr(ctx context.Context, objectID, objectType string) error
+	CompensationCountIncr(ctx context.Context, objectID, objectType string) error
+
+	ThumbUp(ctx context.Context, userID, objectType, objectID string, score int64) error
+	CancelThumbUp(ctx context.Context, userID, objectType, objectID string) (int, int64, error)
+	ExistZSetMember(ctx context.Context, userID, objectType, objectID string) (bool, error)
+}

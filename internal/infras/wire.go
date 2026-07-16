@@ -23,6 +23,9 @@ var RepoProviderSet = wire.NewSet(
 var CacheProviderSet = wire.NewSet(
 	cache.NewClient,
 	cache.NewILikeCache,
+	// 新接口
+
+	wire.Bind(new(domain.LikeCacheDomain), new(*cache.ILikeCache)),
 )
 
 var MQProviderSet = wire.NewSet(
