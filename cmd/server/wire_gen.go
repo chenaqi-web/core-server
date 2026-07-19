@@ -13,29 +13,23 @@ import (
 	"backend/core-server/internal/infras/clog"
 	"backend/core-server/internal/infras/mq/kafka"
 	"backend/core-server/internal/infras/repo"
-	jobdbsync "backend/core-server/internal/jobs/job-dbsync"
+	"backend/core-server/internal/jobs/job-dbsync"
 	"backend/core-server/internal/rpc"
 )
 
 // Injectors from wire.go:
 
 func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
-	log, err := clog.NewLog(cfg)
-	if err != nil {
-		return nil, err
-	}
 	dbClient, err := repo.NewDBClient(cfg)
 	if err != nil {
 		return nil, err
 	}
-	likeRepo := repo.NewLikeRepo(dbClient)
 	cacheClient := cache.NewClient(cfg)
-	iLikeCache := cache.NewILikeCache(cacheClient)
-	syncProducer, err := kafka.NewSyncProducer(cfg, log)
+	log, err := clog.NewLog(cfg)
 	if err != nil {
 		return nil, err
 	}
-	likeService, err := application.NewLikeService(log, likeRepo, iLikeCache, syncProducer, cfg)
+	syncProducer, err := kafka.NewSyncProducer(cfg, log)
 	if err != nil {
 		return nil, err
 	}
@@ -44,8 +38,14 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 		return nil, err
 	}
 	kafkaManager := kafka.NewKafkaManager(cfg, topicManager)
+	likeRepo := repo.NewLikeRepo(dbClient)
 	countRepo := repo.NewCountRepo(dbClient)
+	iLikeCache := cache.NewILikeCache(cacheClient)
 	messageQueueConsumer := jobdbsync.NewMessageQueueConsumer(cfg, log, syncProducer, kafkaManager, cacheClient, likeRepo, countRepo, iLikeCache)
+	likeService, err := application.NewLikeService(log, likeRepo, iLikeCache, syncProducer, cfg)
+	if err != nil {
+		return nil, err
+	}
 	likeRPC := rpc.NewLikeRPC(likeService)
 	server, err := rpc.NewServer(cfg, dbClient, cacheClient, syncProducer, kafkaManager, messageQueueConsumer, likeRPC)
 	if err != nil {
