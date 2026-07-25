@@ -31,7 +31,6 @@ message CreateArticleRequest {
   uint64 categoryID = 6;
   bool isTop = 7;
 }
-
 message CreateArticleResponse {
   bool success = 1;
 }
@@ -39,7 +38,6 @@ message CreateArticleResponse {
 message GetArticleRequest {
   uint64 id = 1;
 }
-
 message GetArticleResponse {
   Article article = 1;
 }
@@ -48,7 +46,6 @@ message ListArticlesRequest {
   uint32 page = 1; // 从 1 开始
   uint32 pageSize = 2;
 }
-
 message ListArticlesResponse {
   repeated Article articles = 1;
   uint64 total = 2;
@@ -58,17 +55,54 @@ message DeleteArticleRequest {
   uint64 id = 1;
   uint64 authorID = 2; // 请求者用户ID，用于校验是否有权限删除
 }
-
 message DeleteArticleResponse {
   bool success = 1;
 }
+
+message ListMyArticlesRequest {
+  uint64 authorID = 1;
+  uint32 page = 2;
+  uint32 pageSize = 3;
+}
+message ListMyArticlesResponse {
+  repeated Article articles = 1;
+  uint64 total = 2;
+}
+
+message ListByCategoryRequest {
+  uint64 categoryID = 1;
+  uint32 page = 2;
+  uint32 pageSize = 3;
+}
+message ListByCategoryResponse {
+  repeated Article articles = 1;
+  uint64 total = 2;
+}
+
+message SearchArticlesRequest {
+  string q = 1; // keyword
+  uint32 page = 2;
+  uint32 pageSize = 3;
+}
+message SearchArticlesResponse {
+  repeated Article articles = 1;
+  uint64 total = 2;
+}
+
 
 service ArticleService {
   rpc CreateArticle(CreateArticleRequest) returns (CreateArticleResponse) {};
   rpc GetArticle(GetArticleRequest) returns (GetArticleResponse) {};
   rpc ListArticles(ListArticlesRequest) returns (ListArticlesResponse) {};
+  rpc ListMyArticles(ListMyArticlesRequest) returns (ListMyArticlesResponse) {};
+  // 查询某个分类下的文章列表
+  rpc ListByCategory(ListByCategoryRequest) returns (ListByCategoryResponse) {};
+  // 搜索文章（标题/摘要/正文）
+  rpc SearchArticles(SearchArticlesRequest) returns (SearchArticlesResponse) {};
   rpc DeleteArticle(DeleteArticleRequest) returns (DeleteArticleResponse) {};
 }
+
+
 
 
 

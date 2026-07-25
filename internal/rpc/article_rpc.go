@@ -56,12 +56,58 @@ func (a *ArticleRPC) DeleteArticle(ctx context.Context, req *articlepb.DeleteArt
 	return &articlepb.DeleteArticleResponse{Success: true}, nil
 }
 
+func (a *ArticleRPC) ListMyArticles(ctx context.Context, req *articlepb.ListMyArticlesRequest) (*articlepb.ListMyArticlesResponse, error) {
+	articles, err := a.ArticleService.ListMyArticles(ctx, req.GetAuthorID(), int(req.GetPage()), int(req.GetPageSize()))
+	if err != nil {
+		return nil, err
+	}
+	items := make([]*articlepb.Article, 0, len(articles))
+	for _, art := range articles {
+		items = append(items, toArticlePB(art))
+	}
+	total := uint64(len(items))
+	return &articlepb.ListMyArticlesResponse{Articles: items, Total: total}, nil
+}
+
+func (a *ArticleRPC) ListByCategory(ctx context.Context, req *articlepb.ListByCategoryRequest) (*articlepb.ListByCategoryResponse, error) {
+	articles, err := a.ArticleService.ListArticlesByCategory(ctx, req.GetCategoryID(), int(req.GetPage()), int(req.GetPageSize()))
+	if err != nil {
+		return nil, err
+	}
+	items := make([]*articlepb.Article, 0, len(articles))
+	for _, art := range articles {
+		items = append(items, toArticlePB(art))
+	}
+	total := uint64(len(items))
+	return &articlepb.ListByCategoryResponse{Articles: items, Total: total}, nil
+}
+
+func (a *ArticleRPC) SearchArticles(ctx context.Context, req *articlepb.SearchArticlesRequest) (*articlepb.SearchArticlesResponse, error) {
+	articles, err := a.ArticleService.SearchArticles(ctx, req.GetQ(), int(req.GetPage()), int(req.GetPageSize()))
+	if err != nil {
+		return nil, err
+	}
+	items := make([]*articlepb.Article, 0, len(articles))
+	for _, art := range articles {
+		items = append(items, toArticlePB(art))
+	}
+	total := uint64(len(items))
+	return &articlepb.SearchArticlesResponse{Articles: items, Total: total}, nil
+}
+
 func toArticlePB(a *entity.Article) *articlepb.Article {
 	return &articlepb.Article{
-		Id:        a.ID,
-		AuthorID:  a.AuthorID,
-		Title:     a.Title,
-		Content:   a.Content,
-		CreatedAt: uint64(a.CreatedAt.Unix()),
+		Id:           a.ID,
+		AuthorID:     a.AuthorID,
+		Title:        a.Title,
+		Content:      a.Content,
+		Summary:      a.Summary,
+		CategoryID:   a.CategoryID,
+		IsTop:        a.IsTop,
+		CoverImage:   a.CoverImage,
+		ViewCount:    a.ViewCount,
+		LikeCount:    a.LikeCount,
+		CommentCount: a.CommentCount,
+		CreatedAt:    uint64(a.CreatedAt.Unix()),
 	}
 }

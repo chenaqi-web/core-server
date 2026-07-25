@@ -38,6 +38,28 @@ func (r *ArticleRepo) Create(ctx context.Context, article *entity.Article) error
 	return nil
 }
 
+func (r *ArticleRepo) DeleteByID(ctx context.Context, id, authorID uint64) error {
+	now := time.Now()
+	query := `
+UPDATE blog_article 
+SET deleted_at = ?, updated_at = ? 
+WHERE id = ? 
+  AND deleted_at IS NULL
+  AND author_id = ?`
+	result, err := r.db(ctx).ExecContext(ctx, query, now, now, id, authorID)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 func (r *ArticleRepo) GetByID(ctx context.Context, id uint64) (*entity.Article, error) {
 	var a entity.Article
 	const query = `
@@ -71,24 +93,50 @@ LIMIT ?, ?`
 	return items, nil
 }
 
-func (r *ArticleRepo) DeleteByID(ctx context.Context, id, authorID uint64) error {
-	now := time.Now()
-	query := `
-UPDATE blog_article 
-SET deleted_at = ?, updated_at = ? 
-WHERE id = ? 
-  AND deleted_at IS NULL
-  AND author_id = ?`
-	result, err := r.db(ctx).ExecContext(ctx, query, now, now, id, authorID)
-	if err != nil {
-		return err
+func (r *ArticleRepo) ListByAuthor(ctx context.Context, authorID uint64, offset, limit int) ([]*entity.Article, error) {
+	var items []*entity.Article
+	const query = `
+SELECT id, created_at, updated_at, deleted_at, title, summary, content, cover_image, author_id, category_id, is_top, view_count, like_count, comment_count
+FROM blog_article
+WHERE author_id = ? AND deleted_at IS NULL
+ORDER BY id DESC
+LIMIT ?, ?`
+
+	if err := r.db(ctx).SelectContext(ctx, &items, query, authorID, offset, limit); err != nil {
+		return nil, err
 	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return err
+	return items, nil
+}
+
+func (r *ArticleRepo) ListByCategory(ctx context.Context, categoryID uint64, offset, limit int) ([]*entity.Article, error) {
+	var items []*entity.Article
+	const query = `
+SELECT id, created_at, updated_at, deleted_at, title, summary, content, cover_image, author_id, category_id, is_top, view_count, like_count, comment_count
+FROM blog_article
+WHERE category_id = ? AND deleted_at IS NULL
+ORDER BY id DESC
+LIMIT ?, ?`
+
+	if err := r.db(ctx).SelectContext(ctx, &items, query, categoryID, offset, limit); err != nil {
+		return nil, err
 	}
-	if rowsAffected == 0 {
-		return ErrNotFound
+	return items, nil
+}
+
+// todo 后续修改一下这个search
+
+func (r *ArticleRepo) Search(ctx context.Context, q string, offset, limit int) ([]*entity.Article, error) {
+	var items []*entity.Article
+	const query = `
+SELECT id, created_at, updated_at, deleted_at, title, summary, content, cover_image, author_id, category_id, is_top, view_count, like_count, comment_count
+FROM blog_article
+WHERE (title LIKE ? OR summary LIKE ? OR content LIKE ?) AND deleted_at IS NULL
+ORDER BY id DESC
+LIMIT ?, ?`
+
+	like := "%" + q + "%"
+	if err := r.db(ctx).SelectContext(ctx, &items, query, like, like, like, offset, limit); err != nil {
+		return nil, err
 	}
-	return nil
+	return items, nil
 }
