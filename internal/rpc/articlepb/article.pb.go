@@ -443,7 +443,6 @@ func (x *ListArticlesRequest) GetPageSize() uint32 {
 type ListArticlesResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Articles      []*Article             `protobuf:"bytes,1,rep,name=articles,proto3" json:"articles,omitempty"`
-	Total         uint64                 `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -483,13 +482,6 @@ func (x *ListArticlesResponse) GetArticles() []*Article {
 		return x.Articles
 	}
 	return nil
-}
-
-func (x *ListArticlesResponse) GetTotal() uint64 {
-	if x != nil {
-		return x.Total
-	}
-	return 0
 }
 
 type DeleteArticleRequest struct {
@@ -651,7 +643,6 @@ func (x *ListMyArticlesRequest) GetPageSize() uint32 {
 type ListMyArticlesResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Articles      []*Article             `protobuf:"bytes,1,rep,name=articles,proto3" json:"articles,omitempty"`
-	Total         uint64                 `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -691,13 +682,6 @@ func (x *ListMyArticlesResponse) GetArticles() []*Article {
 		return x.Articles
 	}
 	return nil
-}
-
-func (x *ListMyArticlesResponse) GetTotal() uint64 {
-	if x != nil {
-		return x.Total
-	}
-	return 0
 }
 
 type ListByCategoryRequest struct {
@@ -763,7 +747,6 @@ func (x *ListByCategoryRequest) GetPageSize() uint32 {
 type ListByCategoryResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Articles      []*Article             `protobuf:"bytes,1,rep,name=articles,proto3" json:"articles,omitempty"`
-	Total         uint64                 `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -803,13 +786,6 @@ func (x *ListByCategoryResponse) GetArticles() []*Article {
 		return x.Articles
 	}
 	return nil
-}
-
-func (x *ListByCategoryResponse) GetTotal() uint64 {
-	if x != nil {
-		return x.Total
-	}
-	return 0
 }
 
 type SearchArticlesRequest struct {
@@ -875,7 +851,6 @@ func (x *SearchArticlesRequest) GetPageSize() uint32 {
 type SearchArticlesResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Articles      []*Article             `protobuf:"bytes,1,rep,name=articles,proto3" json:"articles,omitempty"`
-	Total         uint64                 `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -915,13 +890,6 @@ func (x *SearchArticlesResponse) GetArticles() []*Article {
 		return x.Articles
 	}
 	return nil
-}
-
-func (x *SearchArticlesResponse) GetTotal() uint64 {
-	if x != nil {
-		return x.Total
-	}
-	return 0
 }
 
 var File_article_proto protoreflect.FileDescriptor
@@ -968,10 +936,9 @@ const file_article_proto_rawDesc = "" +
 	"\aarticle\x18\x01 \x01(\v2\x10.article.ArticleR\aarticle\"E\n" +
 	"\x13ListArticlesRequest\x12\x12\n" +
 	"\x04page\x18\x01 \x01(\rR\x04page\x12\x1a\n" +
-	"\bpageSize\x18\x02 \x01(\rR\bpageSize\"Z\n" +
+	"\bpageSize\x18\x02 \x01(\rR\bpageSize\"D\n" +
 	"\x14ListArticlesResponse\x12,\n" +
-	"\barticles\x18\x01 \x03(\v2\x10.article.ArticleR\barticles\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x04R\x05total\"B\n" +
+	"\barticles\x18\x01 \x03(\v2\x10.article.ArticleR\barticles\"B\n" +
 	"\x14DeleteArticleRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x1a\n" +
 	"\bauthorID\x18\x02 \x01(\x04R\bauthorID\"1\n" +
@@ -980,26 +947,23 @@ const file_article_proto_rawDesc = "" +
 	"\x15ListMyArticlesRequest\x12\x1a\n" +
 	"\bauthorID\x18\x01 \x01(\x04R\bauthorID\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\rR\x04page\x12\x1a\n" +
-	"\bpageSize\x18\x03 \x01(\rR\bpageSize\"\\\n" +
+	"\bpageSize\x18\x03 \x01(\rR\bpageSize\"F\n" +
 	"\x16ListMyArticlesResponse\x12,\n" +
-	"\barticles\x18\x01 \x03(\v2\x10.article.ArticleR\barticles\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x04R\x05total\"g\n" +
+	"\barticles\x18\x01 \x03(\v2\x10.article.ArticleR\barticles\"g\n" +
 	"\x15ListByCategoryRequest\x12\x1e\n" +
 	"\n" +
 	"categoryID\x18\x01 \x01(\x04R\n" +
 	"categoryID\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\rR\x04page\x12\x1a\n" +
-	"\bpageSize\x18\x03 \x01(\rR\bpageSize\"\\\n" +
+	"\bpageSize\x18\x03 \x01(\rR\bpageSize\"F\n" +
 	"\x16ListByCategoryResponse\x12,\n" +
-	"\barticles\x18\x01 \x03(\v2\x10.article.ArticleR\barticles\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x04R\x05total\"U\n" +
+	"\barticles\x18\x01 \x03(\v2\x10.article.ArticleR\barticles\"U\n" +
 	"\x15SearchArticlesRequest\x12\f\n" +
 	"\x01q\x18\x01 \x01(\tR\x01q\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\rR\x04page\x12\x1a\n" +
-	"\bpageSize\x18\x03 \x01(\rR\bpageSize\"\\\n" +
+	"\bpageSize\x18\x03 \x01(\rR\bpageSize\"F\n" +
 	"\x16SearchArticlesResponse\x12,\n" +
-	"\barticles\x18\x01 \x03(\v2\x10.article.ArticleR\barticles\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x04R\x05total2\xcb\x04\n" +
+	"\barticles\x18\x01 \x03(\v2\x10.article.ArticleR\barticles2\xcb\x04\n" +
 	"\x0eArticleService\x12P\n" +
 	"\rCreateArticle\x12\x1d.article.CreateArticleRequest\x1a\x1e.article.CreateArticleResponse\"\x00\x12G\n" +
 	"\n" +

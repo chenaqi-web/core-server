@@ -48,7 +48,6 @@ message ListArticlesRequest {
 }
 message ListArticlesResponse {
   repeated Article articles = 1;
-  uint64 total = 2;
 }
 
 message DeleteArticleRequest {
@@ -66,7 +65,6 @@ message ListMyArticlesRequest {
 }
 message ListMyArticlesResponse {
   repeated Article articles = 1;
-  uint64 total = 2;
 }
 
 message ListByCategoryRequest {
@@ -76,7 +74,6 @@ message ListByCategoryRequest {
 }
 message ListByCategoryResponse {
   repeated Article articles = 1;
-  uint64 total = 2;
 }
 
 message SearchArticlesRequest {
@@ -86,7 +83,6 @@ message SearchArticlesRequest {
 }
 message SearchArticlesResponse {
   repeated Article articles = 1;
-  uint64 total = 2;
 }
 
 

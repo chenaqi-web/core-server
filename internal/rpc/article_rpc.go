@@ -45,8 +45,7 @@ func (a *ArticleRPC) ListArticles(ctx context.Context, req *articlepb.ListArticl
 	for _, art := range articles {
 		items = append(items, toArticlePB(art))
 	}
-	total := uint64(len(items))
-	return &articlepb.ListArticlesResponse{Articles: items, Total: total}, nil
+	return &articlepb.ListArticlesResponse{Articles: items}, nil
 }
 
 func (a *ArticleRPC) DeleteArticle(ctx context.Context, req *articlepb.DeleteArticleRequest) (*articlepb.DeleteArticleResponse, error) {
@@ -65,8 +64,7 @@ func (a *ArticleRPC) ListMyArticles(ctx context.Context, req *articlepb.ListMyAr
 	for _, art := range articles {
 		items = append(items, toArticlePB(art))
 	}
-	total := uint64(len(items))
-	return &articlepb.ListMyArticlesResponse{Articles: items, Total: total}, nil
+	return &articlepb.ListMyArticlesResponse{Articles: items}, nil
 }
 
 func (a *ArticleRPC) ListByCategory(ctx context.Context, req *articlepb.ListByCategoryRequest) (*articlepb.ListByCategoryResponse, error) {
@@ -78,8 +76,7 @@ func (a *ArticleRPC) ListByCategory(ctx context.Context, req *articlepb.ListByCa
 	for _, art := range articles {
 		items = append(items, toArticlePB(art))
 	}
-	total := uint64(len(items))
-	return &articlepb.ListByCategoryResponse{Articles: items, Total: total}, nil
+	return &articlepb.ListByCategoryResponse{Articles: items}, nil
 }
 
 func (a *ArticleRPC) SearchArticles(ctx context.Context, req *articlepb.SearchArticlesRequest) (*articlepb.SearchArticlesResponse, error) {
@@ -91,8 +88,7 @@ func (a *ArticleRPC) SearchArticles(ctx context.Context, req *articlepb.SearchAr
 	for _, art := range articles {
 		items = append(items, toArticlePB(art))
 	}
-	total := uint64(len(items))
-	return &articlepb.SearchArticlesResponse{Articles: items, Total: total}, nil
+	return &articlepb.SearchArticlesResponse{Articles: items}, nil
 }
 
 func toArticlePB(a *entity.Article) *articlepb.Article {

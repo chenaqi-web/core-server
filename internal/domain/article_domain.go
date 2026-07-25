@@ -14,7 +14,7 @@ type ArticleRepo interface {
 	ListByAuthor(ctx context.Context, authorID uint64, offset, limit int) ([]*entity.Article, error)
 	ListByCategory(ctx context.Context, categoryID uint64, offset, limit int) ([]*entity.Article, error)
 
-	Search(ctx context.Context, q string, offset, limit int) ([]*entity.Article, error)
+	Search(ctx context.Context, name string, offset, limit int) ([]*entity.Article, error)
 }
 
 type ArticleRepoDomain interface {

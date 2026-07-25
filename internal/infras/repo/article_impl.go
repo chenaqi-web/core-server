@@ -125,7 +125,7 @@ LIMIT ?, ?`
 
 // todo 后续修改一下这个search
 
-func (r *ArticleRepo) Search(ctx context.Context, q string, offset, limit int) ([]*entity.Article, error) {
+func (r *ArticleRepo) Search(ctx context.Context, name string, offset, limit int) ([]*entity.Article, error) {
 	var items []*entity.Article
 	const query = `
 SELECT id, created_at, updated_at, deleted_at, title, summary, content, cover_image, author_id, category_id, is_top, view_count, like_count, comment_count
@@ -134,7 +134,7 @@ WHERE (title LIKE ? OR summary LIKE ? OR content LIKE ?) AND deleted_at IS NULL
 ORDER BY id DESC
 LIMIT ?, ?`
 
-	like := "%" + q + "%"
+	like := "%" + name + "%"
 	if err := r.db(ctx).SelectContext(ctx, &items, query, like, like, like, offset, limit); err != nil {
 		return nil, err
 	}

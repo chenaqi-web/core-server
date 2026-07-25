@@ -38,7 +38,6 @@ type ArticleServiceClient interface {
 	CreateArticle(ctx context.Context, in *CreateArticleRequest, opts ...grpc.CallOption) (*CreateArticleResponse, error)
 	GetArticle(ctx context.Context, in *GetArticleRequest, opts ...grpc.CallOption) (*GetArticleResponse, error)
 	ListArticles(ctx context.Context, in *ListArticlesRequest, opts ...grpc.CallOption) (*ListArticlesResponse, error)
-	// 查询当前用户自己的文章列表
 	ListMyArticles(ctx context.Context, in *ListMyArticlesRequest, opts ...grpc.CallOption) (*ListMyArticlesResponse, error)
 	// 查询某个分类下的文章列表
 	ListByCategory(ctx context.Context, in *ListByCategoryRequest, opts ...grpc.CallOption) (*ListByCategoryResponse, error)
@@ -132,7 +131,6 @@ type ArticleServiceServer interface {
 	CreateArticle(context.Context, *CreateArticleRequest) (*CreateArticleResponse, error)
 	GetArticle(context.Context, *GetArticleRequest) (*GetArticleResponse, error)
 	ListArticles(context.Context, *ListArticlesRequest) (*ListArticlesResponse, error)
-	// 查询当前用户自己的文章列表
 	ListMyArticles(context.Context, *ListMyArticlesRequest) (*ListMyArticlesResponse, error)
 	// 查询某个分类下的文章列表
 	ListByCategory(context.Context, *ListByCategoryRequest) (*ListByCategoryResponse, error)
