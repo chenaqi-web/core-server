@@ -8,8 +8,8 @@ import (
 type ArticleRepo interface {
 	Create(ctx context.Context, article *entity.Article) error
 	GetByID(ctx context.Context, id uint64) (*entity.Article, error)
-
 	List(ctx context.Context, offset, limit int) ([]*entity.Article, error)
+	DeleteByID(ctx context.Context, id, authorID uint64) error
 }
 
 type ArticleRepoDomain interface {

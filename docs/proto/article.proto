@@ -54,9 +54,21 @@ message ListArticlesResponse {
   uint64 total = 2;
 }
 
+message DeleteArticleRequest {
+  uint64 id = 1;
+  uint64 authorID = 2; // 请求者用户ID，用于校验是否有权限删除
+}
+
+message DeleteArticleResponse {
+  bool success = 1;
+}
+
 service ArticleService {
   rpc CreateArticle(CreateArticleRequest) returns (CreateArticleResponse) {};
   rpc GetArticle(GetArticleRequest) returns (GetArticleResponse) {};
   rpc ListArticles(ListArticlesRequest) returns (ListArticlesResponse) {};
+  rpc DeleteArticle(DeleteArticleRequest) returns (DeleteArticleResponse) {};
 }
+
+
 

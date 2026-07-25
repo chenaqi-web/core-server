@@ -49,6 +49,13 @@ func (a *ArticleRPC) ListArticles(ctx context.Context, req *articlepb.ListArticl
 	return &articlepb.ListArticlesResponse{Articles: items, Total: total}, nil
 }
 
+func (a *ArticleRPC) DeleteArticle(ctx context.Context, req *articlepb.DeleteArticleRequest) (*articlepb.DeleteArticleResponse, error) {
+	if err := a.ArticleService.DeleteArticle(ctx, req.GetId(), req.GetAuthorID()); err != nil {
+		return nil, err
+	}
+	return &articlepb.DeleteArticleResponse{Success: true}, nil
+}
+
 func toArticlePB(a *entity.Article) *articlepb.Article {
 	return &articlepb.Article{
 		Id:        a.ID,

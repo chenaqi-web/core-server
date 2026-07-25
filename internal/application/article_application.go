@@ -1,8 +1,10 @@
 package application
 
 import (
+	"backend/core-server/internal/infras/repo"
 	"backend/core-server/internal/rpc/articlepb"
 	"context"
+	"errors"
 
 	"backend/core-server/internal/config"
 	"backend/core-server/internal/domain"
@@ -54,4 +56,14 @@ func (s *ArticleService) ListArticles(ctx context.Context, page, pageSize int) (
 	}
 	offset := (page - 1) * pageSize
 	return s.repo.List(ctx, offset, pageSize)
+}
+
+func (s *ArticleService) DeleteArticle(ctx context.Context, id uint64, authorID uint64) error {
+	if err := s.repo.DeleteByID(ctx, id, authorID); err != nil {
+		if errors.Is(err, repo.ErrNotFound) {
+			return ErrArticleNotFound
+		}
+		return err
+	}
+	return nil
 }

@@ -70,3 +70,25 @@ LIMIT ?, ?`
 	}
 	return items, nil
 }
+
+func (r *ArticleRepo) DeleteByID(ctx context.Context, id, authorID uint64) error {
+	now := time.Now()
+	query := `
+UPDATE blog_article 
+SET deleted_at = ?, updated_at = ? 
+WHERE id = ? 
+  AND deleted_at IS NULL
+  AND author_id = ?`
+	result, err := r.db(ctx).ExecContext(ctx, query, now, now, id, authorID)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return ErrNotFound
+	}
+	return nil
+}

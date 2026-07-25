@@ -492,6 +492,102 @@ func (x *ListArticlesResponse) GetTotal() uint64 {
 	return 0
 }
 
+type DeleteArticleRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	AuthorID      uint64                 `protobuf:"varint,2,opt,name=authorID,proto3" json:"authorID,omitempty"` // 请求者用户ID，用于校验是否有权限删除
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteArticleRequest) Reset() {
+	*x = DeleteArticleRequest{}
+	mi := &file_article_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteArticleRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteArticleRequest) ProtoMessage() {}
+
+func (x *DeleteArticleRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_article_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteArticleRequest.ProtoReflect.Descriptor instead.
+func (*DeleteArticleRequest) Descriptor() ([]byte, []int) {
+	return file_article_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *DeleteArticleRequest) GetId() uint64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *DeleteArticleRequest) GetAuthorID() uint64 {
+	if x != nil {
+		return x.AuthorID
+	}
+	return 0
+}
+
+type DeleteArticleResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteArticleResponse) Reset() {
+	*x = DeleteArticleResponse{}
+	mi := &file_article_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteArticleResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteArticleResponse) ProtoMessage() {}
+
+func (x *DeleteArticleResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_article_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteArticleResponse.ProtoReflect.Descriptor instead.
+func (*DeleteArticleResponse) Descriptor() ([]byte, []int) {
+	return file_article_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *DeleteArticleResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
 var File_article_proto protoreflect.FileDescriptor
 
 const file_article_proto_rawDesc = "" +
@@ -539,12 +635,18 @@ const file_article_proto_rawDesc = "" +
 	"\bpageSize\x18\x02 \x01(\rR\bpageSize\"Z\n" +
 	"\x14ListArticlesResponse\x12,\n" +
 	"\barticles\x18\x01 \x03(\v2\x10.article.ArticleR\barticles\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x04R\x05total2\xfa\x01\n" +
+	"\x05total\x18\x02 \x01(\x04R\x05total\"B\n" +
+	"\x14DeleteArticleRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x1a\n" +
+	"\bauthorID\x18\x02 \x01(\x04R\bauthorID\"1\n" +
+	"\x15DeleteArticleResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess2\xcc\x02\n" +
 	"\x0eArticleService\x12P\n" +
 	"\rCreateArticle\x12\x1d.article.CreateArticleRequest\x1a\x1e.article.CreateArticleResponse\"\x00\x12G\n" +
 	"\n" +
 	"GetArticle\x12\x1a.article.GetArticleRequest\x1a\x1b.article.GetArticleResponse\"\x00\x12M\n" +
-	"\fListArticles\x12\x1c.article.ListArticlesRequest\x1a\x1d.article.ListArticlesResponse\"\x00B6Z4backend/core-server/internal/rpc/articlepb;articlepbb\x06proto3"
+	"\fListArticles\x12\x1c.article.ListArticlesRequest\x1a\x1d.article.ListArticlesResponse\"\x00\x12P\n" +
+	"\rDeleteArticle\x12\x1d.article.DeleteArticleRequest\x1a\x1e.article.DeleteArticleResponse\"\x00B6Z4backend/core-server/internal/rpc/articlepb;articlepbb\x06proto3"
 
 var (
 	file_article_proto_rawDescOnce sync.Once
@@ -558,7 +660,7 @@ func file_article_proto_rawDescGZIP() []byte {
 	return file_article_proto_rawDescData
 }
 
-var file_article_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_article_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_article_proto_goTypes = []any{
 	(*Article)(nil),               // 0: article.Article
 	(*CreateArticleRequest)(nil),  // 1: article.CreateArticleRequest
@@ -567,6 +669,8 @@ var file_article_proto_goTypes = []any{
 	(*GetArticleResponse)(nil),    // 4: article.GetArticleResponse
 	(*ListArticlesRequest)(nil),   // 5: article.ListArticlesRequest
 	(*ListArticlesResponse)(nil),  // 6: article.ListArticlesResponse
+	(*DeleteArticleRequest)(nil),  // 7: article.DeleteArticleRequest
+	(*DeleteArticleResponse)(nil), // 8: article.DeleteArticleResponse
 }
 var file_article_proto_depIdxs = []int32{
 	0, // 0: article.GetArticleResponse.article:type_name -> article.Article
@@ -574,11 +678,13 @@ var file_article_proto_depIdxs = []int32{
 	1, // 2: article.ArticleService.CreateArticle:input_type -> article.CreateArticleRequest
 	3, // 3: article.ArticleService.GetArticle:input_type -> article.GetArticleRequest
 	5, // 4: article.ArticleService.ListArticles:input_type -> article.ListArticlesRequest
-	2, // 5: article.ArticleService.CreateArticle:output_type -> article.CreateArticleResponse
-	4, // 6: article.ArticleService.GetArticle:output_type -> article.GetArticleResponse
-	6, // 7: article.ArticleService.ListArticles:output_type -> article.ListArticlesResponse
-	5, // [5:8] is the sub-list for method output_type
-	2, // [2:5] is the sub-list for method input_type
+	7, // 5: article.ArticleService.DeleteArticle:input_type -> article.DeleteArticleRequest
+	2, // 6: article.ArticleService.CreateArticle:output_type -> article.CreateArticleResponse
+	4, // 7: article.ArticleService.GetArticle:output_type -> article.GetArticleResponse
+	6, // 8: article.ArticleService.ListArticles:output_type -> article.ListArticlesResponse
+	8, // 9: article.ArticleService.DeleteArticle:output_type -> article.DeleteArticleResponse
+	6, // [6:10] is the sub-list for method output_type
+	2, // [2:6] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
 	2, // [2:2] is the sub-list for extension extendee
 	0, // [0:2] is the sub-list for field type_name
@@ -595,7 +701,7 @@ func file_article_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_article_proto_rawDesc), len(file_article_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
