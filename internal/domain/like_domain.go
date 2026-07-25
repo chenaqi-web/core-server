@@ -5,10 +5,6 @@ import (
 	"context"
 )
 
-type ITransaction interface {
-	WithTransaction(ctx context.Context, fn func(ctx context.Context) error) error
-}
-
 type LikeRepo interface {
 	Upsert(ctx context.Context, like *entity.InteractionLike) (int, error)
 	UpdateWithCondition(ctx context.Context, condition string, like *entity.InteractionLike) (int, error)

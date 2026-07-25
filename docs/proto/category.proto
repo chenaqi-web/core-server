@@ -1,8 +1,8 @@
 syntax = "proto3";
 
 // provide category service
-// 一级类型 Type（如：动作、喜剧） + 二级分类 Category（如：全部、爱情喜剧）
-// 流程：ListTypes -> 点选 typeID -> ListCategories(typeID)
+// 固定二级分类：parent_id = 0 为一级，parent_id = 一级.id 为二级，不支持三级
+// 流程：ListTypes -> 点选 parentID -> ListCategories(parentID)
 
 package category;
 //import "idl/validate/validate.proto";
@@ -15,8 +15,8 @@ message CategoryType {
 
 message Category {
   uint64 id = 1;
-  uint64 typeID = 2;
-  string name = 3; // 二级分类名，如：爱情喜剧、全部
+  uint64 parentID = 2;
+  string name = 3; // 子分类名，如：爱情喜剧、全部
 }
 
 // ---------- Type ----------
@@ -47,7 +47,7 @@ message ListTypesResponse {
 // ---------- Category ----------
 
 message CreateCategoryRequest {
-  uint64 typeID = 1;
+  uint64 parentID = 1;
   string name = 2;
 }
 
@@ -64,7 +64,7 @@ message DeleteCategoryResponse {
 }
 
 message ListCategoriesRequest {
-  uint64 typeID = 1; // 必填：查询该类型下的二级分类
+  uint64 parentID = 1; // 必填：查询该一级类型下的子分类
 }
 
 message ListCategoriesResponse {

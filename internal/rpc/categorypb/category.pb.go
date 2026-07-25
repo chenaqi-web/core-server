@@ -5,8 +5,8 @@
 // source: category.proto
 
 // provide category service
-// 一级类型 Type（如：动作、喜剧） + 二级分类 Category（如：全部、爱情喜剧）
-// 流程：ListTypes -> 点选 typeID -> ListCategories(typeID)
+// 固定二级分类：parent_id = 0 为一级，parent_id = 一级.id 为二级，不支持三级
+// 流程：ListTypes -> 点选 parentID -> ListCategories(parentID)
 
 package categorypb
 
@@ -80,8 +80,8 @@ func (x *CategoryType) GetName() string {
 type Category struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	TypeID        uint64                 `protobuf:"varint,2,opt,name=typeID,proto3" json:"typeID,omitempty"`
-	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"` // 二级分类名，如：爱情喜剧、全部
+	ParentID      uint64                 `protobuf:"varint,2,opt,name=parentID,proto3" json:"parentID,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"` // 子分类名，如：爱情喜剧、全部
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -123,9 +123,9 @@ func (x *Category) GetId() uint64 {
 	return 0
 }
 
-func (x *Category) GetTypeID() uint64 {
+func (x *Category) GetParentID() uint64 {
 	if x != nil {
-		return x.TypeID
+		return x.ParentID
 	}
 	return 0
 }
@@ -395,7 +395,7 @@ func (x *ListTypesResponse) GetTypes() []*CategoryType {
 
 type CreateCategoryRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	TypeID        uint64                 `protobuf:"varint,1,opt,name=typeID,proto3" json:"typeID,omitempty"`
+	ParentID      uint64                 `protobuf:"varint,1,opt,name=parentID,proto3" json:"parentID,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -431,9 +431,9 @@ func (*CreateCategoryRequest) Descriptor() ([]byte, []int) {
 	return file_category_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *CreateCategoryRequest) GetTypeID() uint64 {
+func (x *CreateCategoryRequest) GetParentID() uint64 {
 	if x != nil {
-		return x.TypeID
+		return x.ParentID
 	}
 	return 0
 }
@@ -579,7 +579,7 @@ func (x *DeleteCategoryResponse) GetSuccess() bool {
 
 type ListCategoriesRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	TypeID        uint64                 `protobuf:"varint,1,opt,name=typeID,proto3" json:"typeID,omitempty"` // 必填：查询该类型下的二级分类
+	ParentID      uint64                 `protobuf:"varint,1,opt,name=parentID,proto3" json:"parentID,omitempty"` // 必填：查询该一级类型下的子分类
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -614,9 +614,9 @@ func (*ListCategoriesRequest) Descriptor() ([]byte, []int) {
 	return file_category_proto_rawDescGZIP(), []int{12}
 }
 
-func (x *ListCategoriesRequest) GetTypeID() uint64 {
+func (x *ListCategoriesRequest) GetParentID() uint64 {
 	if x != nil {
-		return x.TypeID
+		return x.ParentID
 	}
 	return 0
 }
@@ -672,10 +672,10 @@ const file_category_proto_rawDesc = "" +
 	"\x0ecategory.proto\x12\bcategory\"2\n" +
 	"\fCategoryType\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\"F\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\"J\n" +
 	"\bCategory\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x16\n" +
-	"\x06typeID\x18\x02 \x01(\x04R\x06typeID\x12\x12\n" +
+	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x1a\n" +
+	"\bparentID\x18\x02 \x01(\x04R\bparentID\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\"'\n" +
 	"\x11CreateTypeRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\".\n" +
@@ -687,18 +687,18 @@ const file_category_proto_rawDesc = "" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x12\n" +
 	"\x10ListTypesRequest\"A\n" +
 	"\x11ListTypesResponse\x12,\n" +
-	"\x05types\x18\x01 \x03(\v2\x16.category.CategoryTypeR\x05types\"C\n" +
-	"\x15CreateCategoryRequest\x12\x16\n" +
-	"\x06typeID\x18\x01 \x01(\x04R\x06typeID\x12\x12\n" +
+	"\x05types\x18\x01 \x03(\v2\x16.category.CategoryTypeR\x05types\"G\n" +
+	"\x15CreateCategoryRequest\x12\x1a\n" +
+	"\bparentID\x18\x01 \x01(\x04R\bparentID\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\"2\n" +
 	"\x16CreateCategoryResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\"'\n" +
 	"\x15DeleteCategoryRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\"2\n" +
 	"\x16DeleteCategoryResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"/\n" +
-	"\x15ListCategoriesRequest\x12\x16\n" +
-	"\x06typeID\x18\x01 \x01(\x04R\x06typeID\"L\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"3\n" +
+	"\x15ListCategoriesRequest\x12\x1a\n" +
+	"\bparentID\x18\x01 \x01(\x04R\bparentID\"L\n" +
 	"\x16ListCategoriesResponse\x122\n" +
 	"\n" +
 	"categories\x18\x01 \x03(\v2\x12.category.CategoryR\n" +

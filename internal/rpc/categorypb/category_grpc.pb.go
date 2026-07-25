@@ -5,8 +5,8 @@
 // source: category.proto
 
 // provide category service
-// 一级类型 Type（如：动作、喜剧） + 二级分类 Category（如：全部、爱情喜剧）
-// 流程：ListTypes -> 点选 typeID -> ListCategories(typeID)
+// 固定二级分类：parent_id = 0 为一级，parent_id = 一级.id 为二级，不支持三级
+// 流程：ListTypes -> 点选 parentID -> ListCategories(parentID)
 
 package categorypb
 

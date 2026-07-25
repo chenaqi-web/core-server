@@ -30,18 +30,21 @@ func NewCategoryService(
 }
 
 // =====================================================================================================================
-// 一级类型
+// 一级类型（parent_id = 0）
 
 func (s *CategoryService) CreateType(ctx context.Context, name string) error {
-	return s.repo.CreateType(ctx, &entity.CategoryType{Name: name})
+	return s.repo.Create(ctx, &entity.Category{
+		ParentID: entity.RootCategoryParentID,
+		Name:     name,
+	})
 }
 
 func (s *CategoryService) DeleteType(ctx context.Context, id uint64) error {
 	return s.repo.WithTransaction(ctx, func(ctx context.Context) error {
-		if err := s.repo.DeleteByTypeID(ctx, id); err != nil {
+		if err := s.repo.DeleteByParentID(ctx, id); err != nil {
 			return err
 		}
-		if err := s.repo.DeleteTypeByID(ctx, id); err != nil {
+		if err := s.repo.DeleteByID(ctx, id); err != nil {
 			if errors.Is(err, repo.ErrNotFound) {
 				return ErrCategoryTypeNotFound
 			}
@@ -51,25 +54,17 @@ func (s *CategoryService) DeleteType(ctx context.Context, id uint64) error {
 	})
 }
 
-func (s *CategoryService) ListTypes(ctx context.Context) ([]*entity.CategoryType, error) {
-	return s.repo.ListTypes(ctx)
+func (s *CategoryService) ListTypes(ctx context.Context) ([]*entity.Category, error) {
+	return s.repo.ListByParentID(ctx, entity.RootCategoryParentID)
 }
 
 // =====================================================================================================================
-// 二级分类
+// 子分类
 
-func (s *CategoryService) CreateCategory(ctx context.Context, typeID uint64, name string) error {
-	categoryType, err := s.repo.QueryTypeByID(ctx, typeID)
-	if err != nil {
-		return err
-	}
-	if categoryType == nil {
-		return ErrCategoryTypeNotFound
-	}
-
+func (s *CategoryService) CreateCategory(ctx context.Context, parentID uint64, name string) error {
 	return s.repo.Create(ctx, &entity.Category{
-		TypeID: typeID,
-		Name:   name,
+		ParentID: parentID,
+		Name:     name,
 	})
 }
 
@@ -83,6 +78,6 @@ func (s *CategoryService) DeleteCategory(ctx context.Context, id uint64) error {
 	return nil
 }
 
-func (s *CategoryService) ListCategories(ctx context.Context, typeID uint64) ([]*entity.Category, error) {
-	return s.repo.ListByTypeID(ctx, typeID)
+func (s *CategoryService) ListCategories(ctx context.Context, parentID uint64) ([]*entity.Category, error) {
+	return s.repo.ListByParentID(ctx, parentID)
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRedisClient(t *testing.T) {
+func TestDBClient(t *testing.T) {
 	require.NoError(t, os.Chdir("../../.."))
 
 	cfg, err := config.Load()

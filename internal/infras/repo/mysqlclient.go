@@ -51,7 +51,9 @@ func (c *DBClient) db(ctx context.Context) dbExecutor {
 	return c.DB
 }
 
-// 将事物对象存入上下文
+// =====================================================================================================================
+
+// 将事务对象存入上下文
 type txContextKey struct{}
 
 func withTx(ctx context.Context, tx *sqlx.Tx) context.Context {

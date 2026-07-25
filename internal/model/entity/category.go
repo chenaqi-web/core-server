@@ -6,16 +6,23 @@ import (
 	"gorm.io/gorm"
 )
 
-// Category 二级分类，挂在某个 CategoryType 下，如：全部、爱情喜剧。
+const RootCategoryParentID uint64 = 0
+
+// Category 二级分类节点（固定两级）。
+// parent_id = 0 为一级分类（如：动作、喜剧），parent_id > 0 为二级分类（如：全部、爱情喜剧）。
 type Category struct {
-	ID        uint64         `gorm:"primaryKey;autoIncrement;comment:主键ID" json:"id"`
-	CreatedAt time.Time      `gorm:"comment:创建时间" json:"-"`
-	UpdatedAt time.Time      `gorm:"comment:更新时间" json:"-"`
-	DeletedAt gorm.DeletedAt `gorm:"index;comment:软删除时间" json:"-"`
-	TypeID    uint64         `gorm:"not null;uniqueIndex:uk_category_type_id_name,priority:1;index:idx_category_type_id;comment:一级类型ID" json:"type_id"`
-	Name      string         `gorm:"size:64;not null;uniqueIndex:uk_category_type_id_name,priority:2;comment:二级分类名称" json:"name"`
+	ID        uint64         `db:"id" json:"id"`
+	CreatedAt time.Time      `db:"created_at" json:"-"`
+	UpdatedAt time.Time      `db:"updated_at" json:"-"`
+	DeletedAt gorm.DeletedAt `db:"deleted_at" json:"-"`
+	ParentID  uint64         `db:"parent_id" json:"parent_id"`
+	Name      string         `db:"name" json:"name"`
 }
 
 func (Category) TableName() string {
 	return "category"
+}
+
+func (c *Category) IsRoot() bool {
+	return c.ParentID == RootCategoryParentID
 }

@@ -38,18 +38,18 @@ func (c *CategoryRPC) ListTypes(ctx context.Context, _ *categorypb.ListTypesRequ
 	}
 
 	items := make([]*categorypb.CategoryType, 0, len(types))
-	for _, categoryType := range types {
-		items = append(items, toCategoryTypePB(categoryType))
+	for _, category := range types {
+		items = append(items, toCategoryTypePB(category))
 	}
 	return &categorypb.ListTypesResponse{Types: items}, nil
 }
 
-// 上面type
+// 上面 type
 // =====================================================================================================================
-// 下面category
+// 下面 category
 
 func (c *CategoryRPC) CreateCategory(ctx context.Context, request *categorypb.CreateCategoryRequest) (*categorypb.CreateCategoryResponse, error) {
-	if err := c.CategoryService.CreateCategory(ctx, request.GetTypeID(), request.GetName()); err != nil {
+	if err := c.CategoryService.CreateCategory(ctx, request.GetParentID(), request.GetName()); err != nil {
 		return nil, err
 	}
 	return &categorypb.CreateCategoryResponse{Success: true}, nil
@@ -63,7 +63,7 @@ func (c *CategoryRPC) DeleteCategory(ctx context.Context, request *categorypb.De
 }
 
 func (c *CategoryRPC) ListCategories(ctx context.Context, request *categorypb.ListCategoriesRequest) (*categorypb.ListCategoriesResponse, error) {
-	categories, err := c.CategoryService.ListCategories(ctx, request.GetTypeID())
+	categories, err := c.CategoryService.ListCategories(ctx, request.GetParentID())
 	if err != nil {
 		return nil, err
 	}
@@ -75,17 +75,19 @@ func (c *CategoryRPC) ListCategories(ctx context.Context, request *categorypb.Li
 	return &categorypb.ListCategoriesResponse{Categories: items}, nil
 }
 
-func toCategoryTypePB(categoryType *entity.CategoryType) *categorypb.CategoryType {
+// =====================================================================================================================
+// dto
+func toCategoryTypePB(category *entity.Category) *categorypb.CategoryType {
 	return &categorypb.CategoryType{
-		Id:   categoryType.ID,
-		Name: categoryType.Name,
+		Id:   category.ID,
+		Name: category.Name,
 	}
 }
 
 func toCategoryPB(category *entity.Category) *categorypb.Category {
 	return &categorypb.Category{
-		Id:     category.ID,
-		TypeID: category.TypeID,
-		Name:   category.Name,
+		Id:       category.ID,
+		ParentID: category.ParentID,
+		Name:     category.Name,
 	}
 }
