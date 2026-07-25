@@ -1,0 +1,79 @@
+package repo
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"time"
+
+	"backend/core-server/internal/model/entity"
+)
+
+type ArticleRepo struct {
+	*DBClient
+}
+
+func NewArticleRepo(client *DBClient) *ArticleRepo {
+	return &ArticleRepo{DBClient: client}
+}
+
+func (r *ArticleRepo) Create(ctx context.Context, article *entity.Article) error {
+	now := time.Now()
+	const query = `
+                INSERT INTO blog_article 
+                    (title, summary, content, cover_image, author_id,
+                    category_id, is_top, view_count, like_count, comment_count,
+                    created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+
+	_, err := r.db(ctx).ExecContext(ctx, query,
+		article.Title, article.Summary, article.Content, article.CoverImage,
+		article.AuthorID, article.CategoryID, article.IsTop,
+		article.ViewCount, article.LikeCount, article.CommentCount,
+		now, now,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *ArticleRepo) GetByID(ctx context.Context, id uint64) (*entity.Article, error) {
+	var a entity.Article
+	const query = `
+SELECT id, created_at, updated_at, deleted_at, title, summary, content, cover_image, author_id, category_id, is_top, view_count, like_count, comment_count
+FROM blog_article
+WHERE id = ? AND deleted_at IS NULL
+LIMIT 1`
+
+	err := r.db(ctx).GetContext(ctx, &a, query, id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &a, nil
+}
+
+func (r *ArticleRepo) List(ctx context.Context, offset, limit int) ([]*entity.Article, uint64, error) {
+	var items []*entity.Article
+	const query = `
+SELECT id, created_at, updated_at, deleted_at, title, summary, content, cover_image, author_id, category_id, is_top, view_count, like_count, comment_count
+FROM blog_posts
+WHERE deleted_at IS NULL
+ORDER BY id DESC
+LIMIT ?, ?`
+
+	if err := r.db(ctx).SelectContext(ctx, &items, query, offset, limit); err != nil {
+		return nil, 0, err
+	}
+
+	// count total
+	var total uint64
+	const countQuery = `SELECT COUNT(1) FROM blog_posts WHERE deleted_at IS NULL`
+	if err := r.db(ctx).GetContext(ctx, &total, countQuery); err != nil {
+		return nil, 0, err
+	}
+	return items, total, nil
+}

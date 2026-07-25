@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+// article service
+// 简单的文章相关 RPC 接口示例：创建、获取、列表
+
+package article;
+option go_package = "backend/core-server/internal/rpc/articlepb;articlepb";
+
+message Article {
+  uint64 id = 1;
+  uint64 authorID = 2;
+  string title = 3;
+  string content = 4;
+  uint64 createdAt = 5; // unix timestamp (seconds)
+}
+
+message CreateArticleRequest {
+  uint64 authorID = 1;
+  string title = 2;
+  string content = 3;
+}
+
+message CreateArticleResponse {
+  uint64 id = 1;
+}
+
+message GetArticleRequest {
+  uint64 id = 1;
+}
+
+message GetArticleResponse {
+  Article article = 1;
+}
+
+message ListArticlesRequest {
+  uint32 page = 1; // 从 1 开始
+  uint32 pageSize = 2;
+}
+
+message ListArticlesResponse {
+  repeated Article articles = 1;
+  uint64 total = 2;
+}
+
+service ArticleService {
+  rpc CreateArticle(CreateArticleRequest) returns (CreateArticleResponse) {};
+  rpc GetArticle(GetArticleRequest) returns (GetArticleResponse) {};
+  rpc ListArticles(ListArticlesRequest) returns (ListArticlesResponse) {};
+}
+

@@ -6,15 +6,15 @@ import (
 )
 
 type InteractionLike struct {
-	ID            string          `gorm:"primaryKey;size:64" json:"id"`
-	CreatedAt     time.Time       `gorm:"comment:创建时间" json:"-"`
-	UpdatedAt     time.Time       `gorm:"comment:更新时间" json:"-"`
-	UserID        string          `gorm:"size:64;not null;uniqueIndex:uk_like_user_object,priority:1" json:"user_id"`
-	ObjectType    enum.ObjectType `gorm:"size:32;not null;uniqueIndex:uk_like_user_object,priority:2" json:"object_type"`
-	ObjectID      string          `gorm:"size:64;not null;uniqueIndex:uk_like_user_object,priority:3" json:"object_id"`
-	ObjectOwnerID string          `gorm:"size:64;not null;default:'';index:idx_object_owner_id" json:"object_owner_id"`
-	Status        LikeStatusType  `gorm:"size:32;not null" json:"status"`
-	Version       int64           `gorm:"not null;default:0" json:"version"`
+	ID            string          `db:"id" json:"id"`
+	CreatedAt     time.Time       `db:"created_at" json:"-"`
+	UpdatedAt     time.Time       `db:"updated_at" json:"-"`
+	UserID        string          `db:"user_id" json:"user_id"`
+	ObjectType    enum.ObjectType `db:"object_type" json:"object_type"`
+	ObjectID      string          `db:"object_id" json:"object_id"`
+	ObjectOwnerID string          `db:"object_owner_id" json:"object_owner_id"`
+	Status        LikeStatusType  `db:"status" json:"status"`
+	Version       int64           `db:"version" json:"version"`
 }
 
 func (InteractionLike) TableName() string {

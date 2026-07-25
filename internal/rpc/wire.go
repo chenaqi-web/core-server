@@ -6,5 +6,6 @@ var ProviderSet = wire.NewSet(
 	NewUserRPC,
 	NewLikeRPC,
 	NewCategoryRPC,
+	NewArticleRPC,
 	NewServer,
 )

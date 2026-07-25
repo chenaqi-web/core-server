@@ -62,7 +62,7 @@ func withTx(ctx context.Context, tx *sqlx.Tx) context.Context {
 
 // WithTransaction 事务管理器
 func (c *DBClient) WithTransaction(ctx context.Context, fn func(ctx context.Context) error) error {
-	// 1. 开启事物
+	// 1. 开启事务
 	tx, err := c.DB.BeginTxx(ctx, nil)
 	if err != nil {
 		return err

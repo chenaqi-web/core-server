@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"backend/core-server/internal/rpc/articlepb"
 	"fmt"
 	"log"
 	"net"
@@ -36,10 +37,12 @@ func NewServer(
 	consumer *jobdbsync.MessageQueueConsumer,
 	like *LikeRPC,
 	category *CategoryRPC,
+	article *ArticleRPC,
 ) (*Server, error) {
 	engine := grpc.NewServer()
 	likepb.RegisterLikeServiceServer(engine, like)
 	categorypb.RegisterCategoryServiceServer(engine, category)
+	articlepb.RegisterArticleServiceServer(engine, article)
 	reflection.Register(engine)
 
 	return &Server{
