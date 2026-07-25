@@ -24,3 +24,11 @@ type User struct {
 func (User) TableName() string {
 	return "user"
 }
+
+//======================================================================================================================
+// 用户角色
+
+const (
+	UserRoleAdmin = "admin"
+	UserRoleUser  = "user"
+)

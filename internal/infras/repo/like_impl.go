@@ -2,12 +2,11 @@ package repo
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 
 	"backend/core-server/internal/model/entity"
-
-	"gorm.io/gorm"
 )
 
 type LikeRepo struct {
@@ -26,7 +25,7 @@ func (r *LikeRepo) Upsert(ctx context.Context, like *entity.InteractionLike) (in
 		like.ID = fmt.Sprintf("%s:%s:%s", like.UserID, like.ObjectType, like.ObjectID)
 	}
 
-	const sql = `
+	const sqlQuery = `
 INSERT INTO interaction_like
   (id, user_id, object_type, object_id, object_owner_id, status, version, created_at, updated_at)
 VALUES
@@ -39,8 +38,9 @@ ON DUPLICATE KEY UPDATE
   updated_at = IF(@skip, updated_at, NOW(3))
 `
 
-	result := r.db(ctx).Exec(
-		sql,
+	result, err := r.db(ctx).ExecContext(
+		ctx,
+		sqlQuery,
 		like.ID,
 		like.UserID,
 		like.ObjectType,
@@ -50,40 +50,59 @@ ON DUPLICATE KEY UPDATE
 		like.Version,
 		entity.LikeStatusTypeThumbUp,
 	)
-	if result.Error != nil {
-		return 0, result.Error
+	if err != nil {
+		return 0, err
 	}
 
 	// MySQL: insert=1, update(有变更)=2, 无变更=0
-	if result.RowsAffected == 0 {
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+	if rowsAffected == 0 {
 		return 0, nil
 	}
 	return 1, nil
 }
 
 func (r *LikeRepo) UpdateWithCondition(ctx context.Context, condition string, like *entity.InteractionLike) (int, error) {
-	result := r.db(ctx).Model(&entity.InteractionLike{}).
-		Where(
-			"user_id = ? AND object_type = ? AND object_id = ? AND status = ? AND version <= ?",
-			like.UserID, like.ObjectType, like.ObjectID, condition, like.Version,
-		).
-		Updates(map[string]interface{}{
-			"status":  like.Status,
-			"version": like.Version,
-		})
-	if result.Error != nil {
-		return 0, result.Error
+	const sqlQuery = `
+UPDATE interaction_like
+SET status = ?, version = ?, updated_at = NOW(3)
+WHERE user_id = ? AND object_type = ? AND object_id = ? AND status = ? AND version <= ?`
+
+	result, err := r.db(ctx).ExecContext(
+		ctx,
+		sqlQuery,
+		like.Status,
+		like.Version,
+		like.UserID,
+		like.ObjectType,
+		like.ObjectID,
+		condition,
+		like.Version,
+	)
+	if err != nil {
+		return 0, err
 	}
-	return int(result.RowsAffected), nil
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+	return int(rowsAffected), nil
 }
 
 func (r *LikeRepo) QueryWithCondition(ctx context.Context, userID, objectType, objectID, status string) (*entity.InteractionLike, error) {
 	var like entity.InteractionLike
-	err := r.db(ctx).Where(
-		"user_id = ? AND object_type = ? AND object_id = ? AND status = ?",
-		userID, objectType, objectID, status,
-	).Take(&like).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	const sqlQuery = `
+SELECT id, created_at, updated_at, user_id, object_type, object_id, object_owner_id, status, version
+FROM interaction_like
+WHERE user_id = ? AND object_type = ? AND object_id = ? AND status = ?
+LIMIT 1`
+
+	err := r.db(ctx).GetContext(ctx, &like, sqlQuery, userID, objectType, objectID, status)
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {

@@ -14,10 +14,14 @@ var RepoProviderSet = wire.NewSet(
 	repo.NewDBClient,
 	repo.NewLikeRepo,
 	repo.NewCountRepo,
+	repo.NewUserRepo,
+	repo.NewCategoryRepo,
 	// todo 新操作
 
 	wire.Bind(new(domain.LikeRepoDomain), new(*repo.LikeRepo)),
 	wire.Bind(new(domain.CountRepoDomain), new(*repo.CountRepo)),
+	wire.Bind(new(domain.UserRepoDomain), new(*repo.UserRepo)),
+	wire.Bind(new(domain.CategoryRepoDomain), new(*repo.CategoryRepo)),
 )
 
 var CacheProviderSet = wire.NewSet(

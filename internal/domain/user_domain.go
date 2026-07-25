@@ -5,7 +5,7 @@ type UserRepo interface {
 
 type UserRepoDomain interface {
 	ITransaction
-	LikeRepo
+	UserRepo
 }
 
 // =====================================================================================================================

@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+// provide category service
+// 一级类型 Type（如：动作、喜剧） + 二级分类 Category（如：全部、爱情喜剧）
+// 流程：ListTypes -> 点选 typeID -> ListCategories(typeID)
+
+package category;
+//import "idl/validate/validate.proto";
+option go_package = "backend/core-server/internal/rpc/categorypb;categorypb";
+
+message CategoryType {
+  uint64 id = 1;
+  string name = 2; // 一级类型名，如：喜剧
+}
+
+message Category {
+  uint64 id = 1;
+  uint64 typeID = 2;
+  string name = 3; // 二级分类名，如：爱情喜剧、全部
+}
+
+// ---------- Type ----------
+
+message CreateTypeRequest {
+  string name = 1;
+}
+
+message CreateTypeResponse {
+  bool success = 1;
+}
+
+message DeleteTypeRequest {
+  uint64 id = 1;
+}
+
+message DeleteTypeResponse {
+  bool success = 1;
+}
+
+message ListTypesRequest {
+}
+
+message ListTypesResponse {
+  repeated CategoryType types = 1;
+}
+
+// ---------- Category ----------
+
+message CreateCategoryRequest {
+  uint64 typeID = 1;
+  string name = 2;
+}
+
+message CreateCategoryResponse {
+  bool success = 1;
+}
+
+message DeleteCategoryRequest {
+  uint64 id = 1;
+}
+
+message DeleteCategoryResponse {
+  bool success = 1;
+}
+
+message ListCategoriesRequest {
+  uint64 typeID = 1; // 必填：查询该类型下的二级分类
+}
+
+message ListCategoriesResponse {
+  repeated Category categories = 1;
+}
+
+service CategoryService {
+  rpc CreateType(CreateTypeRequest) returns (CreateTypeResponse){};
+  rpc DeleteType(DeleteTypeRequest) returns (DeleteTypeResponse){};
+  rpc ListTypes(ListTypesRequest) returns (ListTypesResponse){};
+
+  rpc CreateCategory(CreateCategoryRequest) returns (CreateCategoryResponse){};
+  rpc DeleteCategory(DeleteCategoryRequest) returns (DeleteCategoryResponse){};
+  rpc ListCategories(ListCategoriesRequest) returns (ListCategoriesResponse){};
+}

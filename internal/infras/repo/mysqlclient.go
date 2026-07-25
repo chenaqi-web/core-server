@@ -1,19 +1,25 @@
 package repo
 
 import (
-	"backend/core-server/internal/model/entity"
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
 
 	"backend/core-server/internal/config"
 )
 
 type DBClient struct {
-	DB *gorm.DB
+	DB *sqlx.DB
+}
+
+type dbExecutor interface {
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+	GetContext(ctx context.Context, dest any, query string, args ...any) error
+	SelectContext(ctx context.Context, dest any, query string, args ...any) error
 }
 
 func NewDBClient(cfg *config.Config) (*DBClient, error) {
@@ -22,62 +28,51 @@ func NewDBClient(cfg *config.Config) (*DBClient, error) {
 		return nil, fmt.Errorf("mysql config is incomplete")
 	}
 
-	db, err := gorm.Open(mysql.Open(mysqlCfg.DSN()), &gorm.Config{})
+	db, err := sqlx.Connect("mysql", mysqlCfg.DSN())
 	if err != nil {
 		return nil, fmt.Errorf("open mysql: %w", err)
 	}
 
-	sqlDB, err := db.DB()
-	if err != nil {
-		return nil, fmt.Errorf("get sql db: %w", err)
-	}
-
-	sqlDB.SetMaxIdleConns(mysqlCfg.MaxIdleConn)
-	sqlDB.SetMaxOpenConns(mysqlCfg.MaxOpenConn)
-
-	if err := migrate(db); err != nil {
-		return nil, fmt.Errorf("auto migrate: %w", err)
-	}
+	db.SetMaxIdleConns(mysqlCfg.MaxIdleConn)
+	db.SetMaxOpenConns(mysqlCfg.MaxOpenConn)
 
 	log.Println("mysql connected successfully")
 	return &DBClient{DB: db}, nil
 }
 
-func migrate(db *gorm.DB) error {
-	return db.AutoMigrate(
-		&entity.User{},
-		&entity.InteractionLike{},
-		&entity.InteractionCount{},
-	)
-}
-
 func (c *DBClient) Close() error {
-	sqlDB, err := c.DB.DB()
-	if err != nil {
-		return err
-	}
-	return sqlDB.Close()
+	return c.DB.Close()
 }
 
-func (c *DBClient) GetDB() *gorm.DB {
+func (c *DBClient) db(ctx context.Context) dbExecutor {
+	if tx, ok := ctx.Value(txContextKey{}).(*sqlx.Tx); ok && tx != nil {
+		return tx
+	}
 	return c.DB
 }
 
-func (c *DBClient) db(ctx context.Context) *gorm.DB {
-	if tx, ok := ctx.Value(txContextKey{}).(*gorm.DB); ok && tx != nil {
-		return tx.WithContext(ctx)
-	}
-	return c.DB.WithContext(ctx)
-}
-
+// 将事物对象存入上下文
 type txContextKey struct{}
 
-func withTx(ctx context.Context, tx *gorm.DB) context.Context {
+func withTx(ctx context.Context, tx *sqlx.Tx) context.Context {
 	return context.WithValue(ctx, txContextKey{}, tx)
 }
 
+// WithTransaction 事务管理器
 func (c *DBClient) WithTransaction(ctx context.Context, fn func(ctx context.Context) error) error {
-	return c.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		return fn(withTx(ctx, tx))
-	})
+	// 1. 开启事物
+	tx, err := c.DB.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	//  业务函数可以从中提取事务对象
+	txCtx := withTx(ctx, tx)
+	if err := fn(txCtx); err != nil {
+		// 错误回滚
+		_ = tx.Rollback()
+		return err
+	}
+	// 成功提交
+	return tx.Commit()
 }

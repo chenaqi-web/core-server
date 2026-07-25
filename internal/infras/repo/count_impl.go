@@ -1,11 +1,13 @@
 package repo
 
 import (
-	"backend/core-server/internal/model/entity"
 	"context"
+	"database/sql"
 	"errors"
+	"fmt"
+	"time"
 
-	"gorm.io/gorm"
+	"backend/core-server/internal/model/entity"
 )
 
 type CountRepo struct {
@@ -17,19 +19,49 @@ func NewCountRepo(client *DBClient) *CountRepo {
 }
 
 func (r *CountRepo) Upsert(ctx context.Context, count *entity.InteractionCount, delta int64) error {
+	const selectQuery = `
+SELECT id, created_at, updated_at, object_type, object_id, interaction_type, count
+FROM interaction_count
+WHERE object_type = ? AND object_id = ? AND interaction_type = ?
+LIMIT 1`
 
 	var existing entity.InteractionCount
-	err := r.GetDB().Where(
-		"object_type = ? AND object_id = ? AND interaction_type = ?",
-		count.ObjectType, count.ObjectID, count.InteractionType,
-	).Take(&existing).Error
-
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	err := r.db(ctx).GetContext(
+		ctx,
+		&existing,
+		selectQuery,
+		count.ObjectType,
+		count.ObjectID,
+		count.InteractionType,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		now := time.Now()
+		if count.ID == "" {
+			count.ID = fmt.Sprintf("%s:%s:%s", count.ObjectType, count.ObjectID, count.InteractionType)
+		}
 		count.Count = delta
 		if count.Count < 0 {
 			count.Count = 0
 		}
-		return r.GetDB().Create(count).Error
+
+		const insertQuery = `
+INSERT INTO interaction_count
+  (id, object_type, object_id, interaction_type, count, created_at, updated_at)
+VALUES
+  (?, ?, ?, ?, ?, ?, ?)`
+
+		_, err := r.db(ctx).ExecContext(
+			ctx,
+			insertQuery,
+			count.ID,
+			count.ObjectType,
+			count.ObjectID,
+			count.InteractionType,
+			count.Count,
+			now,
+			now,
+		)
+		return err
 	}
 	if err != nil {
 		return err
@@ -39,5 +71,12 @@ func (r *CountRepo) Upsert(ctx context.Context, count *entity.InteractionCount, 
 	if newCount < 0 {
 		newCount = 0
 	}
-	return r.GetDB().Model(&existing).Update("count", newCount).Error
+
+	const updateQuery = `
+UPDATE interaction_count
+SET count = ?, updated_at = NOW(3)
+WHERE id = ?`
+
+	_, err = r.db(ctx).ExecContext(ctx, updateQuery, newCount, existing.ID)
+	return err
 }

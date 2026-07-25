@@ -10,6 +10,7 @@ import (
 	"backend/core-server/internal/infras/mq/kafka"
 	"backend/core-server/internal/infras/repo"
 	jobdbsync "backend/core-server/internal/jobs/job-dbsync"
+	"backend/core-server/internal/rpc/categorypb"
 	"backend/core-server/internal/rpc/likepb"
 
 	"google.golang.org/grpc"
@@ -34,9 +35,11 @@ func NewServer(
 	kafkaManager *kafka.KafkaManager,
 	consumer *jobdbsync.MessageQueueConsumer,
 	like *LikeRPC,
+	category *CategoryRPC,
 ) (*Server, error) {
 	engine := grpc.NewServer()
 	likepb.RegisterLikeServiceServer(engine, like)
+	categorypb.RegisterCategoryServiceServer(engine, category)
 	reflection.Register(engine)
 
 	return &Server{

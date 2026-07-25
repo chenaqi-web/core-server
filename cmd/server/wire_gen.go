@@ -47,7 +47,13 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 		return nil, err
 	}
 	likeRPC := rpc.NewLikeRPC(likeService)
-	server, err := rpc.NewServer(cfg, dbClient, cacheClient, syncProducer, kafkaManager, messageQueueConsumer, likeRPC)
+	categoryRepo := repo.NewCategoryRepo(dbClient)
+	categoryService, err := application.NewCategoryService(log, categoryRepo, cfg)
+	if err != nil {
+		return nil, err
+	}
+	categoryRPC := rpc.NewCategoryRPC(categoryService)
+	server, err := rpc.NewServer(cfg, dbClient, cacheClient, syncProducer, kafkaManager, messageQueueConsumer, likeRPC, categoryRPC)
 	if err != nil {
 		return nil, err
 	}
