@@ -5,7 +5,7 @@
 // source: article.proto
 
 // article service
-// 简单的文章相关 RPC 接口示例：创建、获取、列表
+// 与数据库表 `blog_posts` 字段对应的文章 proto 定义
 
 package articlepb
 
@@ -27,17 +27,18 @@ const (
 type Article struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	AuthorID      uint64                 `protobuf:"varint,2,opt,name=authorID,proto3" json:"authorID,omitempty"`
-	Title         string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
-	Summary       string                 `protobuf:"bytes,4,opt,name=summary,proto3" json:"summary,omitempty"`
-	Content       string                 `protobuf:"bytes,5,opt,name=content,proto3" json:"content,omitempty"`
-	CoverImage    string                 `protobuf:"bytes,6,opt,name=coverImage,proto3" json:"coverImage,omitempty"`
+	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	Summary       string                 `protobuf:"bytes,3,opt,name=summary,proto3" json:"summary,omitempty"`
+	Content       string                 `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty"`
+	CoverImage    string                 `protobuf:"bytes,5,opt,name=coverImage,proto3" json:"coverImage,omitempty"`
+	AuthorID      uint64                 `protobuf:"varint,6,opt,name=authorID,proto3" json:"authorID,omitempty"`
 	CategoryID    uint64                 `protobuf:"varint,7,opt,name=categoryID,proto3" json:"categoryID,omitempty"`
-	IsTop         uint32                 `protobuf:"varint,8,opt,name=isTop,proto3" json:"isTop,omitempty"`
+	IsTop         bool                   `protobuf:"varint,8,opt,name=isTop,proto3" json:"isTop,omitempty"`
 	ViewCount     uint64                 `protobuf:"varint,9,opt,name=viewCount,proto3" json:"viewCount,omitempty"`
 	LikeCount     uint64                 `protobuf:"varint,10,opt,name=likeCount,proto3" json:"likeCount,omitempty"`
 	CommentCount  uint64                 `protobuf:"varint,11,opt,name=commentCount,proto3" json:"commentCount,omitempty"`
 	CreatedAt     uint64                 `protobuf:"varint,12,opt,name=createdAt,proto3" json:"createdAt,omitempty"` // unix timestamp (seconds)
+	UpdatedAt     uint64                 `protobuf:"varint,13,opt,name=updatedAt,proto3" json:"updatedAt,omitempty"` // unix timestamp (seconds)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -79,13 +80,6 @@ func (x *Article) GetId() uint64 {
 	return 0
 }
 
-func (x *Article) GetAuthorID() uint64 {
-	if x != nil {
-		return x.AuthorID
-	}
-	return 0
-}
-
 func (x *Article) GetTitle() string {
 	if x != nil {
 		return x.Title
@@ -114,6 +108,13 @@ func (x *Article) GetCoverImage() string {
 	return ""
 }
 
+func (x *Article) GetAuthorID() uint64 {
+	if x != nil {
+		return x.AuthorID
+	}
+	return 0
+}
+
 func (x *Article) GetCategoryID() uint64 {
 	if x != nil {
 		return x.CategoryID
@@ -121,11 +122,11 @@ func (x *Article) GetCategoryID() uint64 {
 	return 0
 }
 
-func (x *Article) GetIsTop() uint32 {
+func (x *Article) GetIsTop() bool {
 	if x != nil {
 		return x.IsTop
 	}
-	return 0
+	return false
 }
 
 func (x *Article) GetViewCount() uint64 {
@@ -156,6 +157,13 @@ func (x *Article) GetCreatedAt() uint64 {
 	return 0
 }
 
+func (x *Article) GetUpdatedAt() uint64 {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return 0
+}
+
 type CreateArticleRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AuthorID      uint64                 `protobuf:"varint,1,opt,name=authorID,proto3" json:"authorID,omitempty"`
@@ -164,7 +172,7 @@ type CreateArticleRequest struct {
 	Content       string                 `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty"`
 	CoverImage    string                 `protobuf:"bytes,5,opt,name=coverImage,proto3" json:"coverImage,omitempty"`
 	CategoryID    uint64                 `protobuf:"varint,6,opt,name=categoryID,proto3" json:"categoryID,omitempty"`
-	IsTop         uint32                 `protobuf:"varint,7,opt,name=isTop,proto3" json:"isTop,omitempty"`
+	IsTop         bool                   `protobuf:"varint,7,opt,name=isTop,proto3" json:"isTop,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -241,16 +249,16 @@ func (x *CreateArticleRequest) GetCategoryID() uint64 {
 	return 0
 }
 
-func (x *CreateArticleRequest) GetIsTop() uint32 {
+func (x *CreateArticleRequest) GetIsTop() bool {
 	if x != nil {
 		return x.IsTop
 	}
-	return 0
+	return false
 }
 
 type CreateArticleResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -285,11 +293,11 @@ func (*CreateArticleResponse) Descriptor() ([]byte, []int) {
 	return file_article_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *CreateArticleResponse) GetId() uint64 {
+func (x *CreateArticleResponse) GetSuccess() bool {
 	if x != nil {
-		return x.Id
+		return x.Success
 	}
-	return 0
+	return false
 }
 
 type GetArticleRequest struct {
@@ -488,25 +496,26 @@ var File_article_proto protoreflect.FileDescriptor
 
 const file_article_proto_rawDesc = "" +
 	"\n" +
-	"\rarticle.proto\x12\aarticle\"\xd3\x02\n" +
+	"\rarticle.proto\x12\aarticle\"\xf1\x02\n" +
 	"\aArticle\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x1a\n" +
-	"\bauthorID\x18\x02 \x01(\x04R\bauthorID\x12\x14\n" +
-	"\x05title\x18\x03 \x01(\tR\x05title\x12\x18\n" +
-	"\asummary\x18\x04 \x01(\tR\asummary\x12\x18\n" +
-	"\acontent\x18\x05 \x01(\tR\acontent\x12\x1e\n" +
+	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x14\n" +
+	"\x05title\x18\x02 \x01(\tR\x05title\x12\x18\n" +
+	"\asummary\x18\x03 \x01(\tR\asummary\x12\x18\n" +
+	"\acontent\x18\x04 \x01(\tR\acontent\x12\x1e\n" +
 	"\n" +
-	"coverImage\x18\x06 \x01(\tR\n" +
-	"coverImage\x12\x1e\n" +
+	"coverImage\x18\x05 \x01(\tR\n" +
+	"coverImage\x12\x1a\n" +
+	"\bauthorID\x18\x06 \x01(\x04R\bauthorID\x12\x1e\n" +
 	"\n" +
 	"categoryID\x18\a \x01(\x04R\n" +
 	"categoryID\x12\x14\n" +
-	"\x05isTop\x18\b \x01(\rR\x05isTop\x12\x1c\n" +
+	"\x05isTop\x18\b \x01(\bR\x05isTop\x12\x1c\n" +
 	"\tviewCount\x18\t \x01(\x04R\tviewCount\x12\x1c\n" +
 	"\tlikeCount\x18\n" +
 	" \x01(\x04R\tlikeCount\x12\"\n" +
 	"\fcommentCount\x18\v \x01(\x04R\fcommentCount\x12\x1c\n" +
-	"\tcreatedAt\x18\f \x01(\x04R\tcreatedAt\"\xd2\x01\n" +
+	"\tcreatedAt\x18\f \x01(\x04R\tcreatedAt\x12\x1c\n" +
+	"\tupdatedAt\x18\r \x01(\x04R\tupdatedAt\"\xd2\x01\n" +
 	"\x14CreateArticleRequest\x12\x1a\n" +
 	"\bauthorID\x18\x01 \x01(\x04R\bauthorID\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x18\n" +
@@ -518,9 +527,9 @@ const file_article_proto_rawDesc = "" +
 	"\n" +
 	"categoryID\x18\x06 \x01(\x04R\n" +
 	"categoryID\x12\x14\n" +
-	"\x05isTop\x18\a \x01(\rR\x05isTop\"'\n" +
-	"\x15CreateArticleResponse\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x04R\x02id\"#\n" +
+	"\x05isTop\x18\a \x01(\bR\x05isTop\"1\n" +
+	"\x15CreateArticleResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"#\n" +
 	"\x11GetArticleRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\"@\n" +
 	"\x12GetArticleResponse\x12*\n" +

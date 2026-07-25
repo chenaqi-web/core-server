@@ -56,24 +56,17 @@ LIMIT 1`
 	return &a, nil
 }
 
-func (r *ArticleRepo) List(ctx context.Context, offset, limit int) ([]*entity.Article, uint64, error) {
+func (r *ArticleRepo) List(ctx context.Context, offset, limit int) ([]*entity.Article, error) {
 	var items []*entity.Article
 	const query = `
 SELECT id, created_at, updated_at, deleted_at, title, summary, content, cover_image, author_id, category_id, is_top, view_count, like_count, comment_count
-FROM blog_posts
+FROM blog_article
 WHERE deleted_at IS NULL
 ORDER BY id DESC
 LIMIT ?, ?`
 
 	if err := r.db(ctx).SelectContext(ctx, &items, query, offset, limit); err != nil {
-		return nil, 0, err
+		return nil, err
 	}
-
-	// count total
-	var total uint64
-	const countQuery = `SELECT COUNT(1) FROM blog_posts WHERE deleted_at IS NULL`
-	if err := r.db(ctx).GetContext(ctx, &total, countQuery); err != nil {
-		return nil, 0, err
-	}
-	return items, total, nil
+	return items, nil
 }

@@ -1,27 +1,39 @@
 syntax = "proto3";
 
 // article service
-// 简单的文章相关 RPC 接口示例：创建、获取、列表
+// 与数据库表 `blog_posts` 字段对应的文章 proto 定义
 
 package article;
 option go_package = "backend/core-server/internal/rpc/articlepb;articlepb";
 
 message Article {
   uint64 id = 1;
-  uint64 authorID = 2;
-  string title = 3;
+  string title = 2;
+  string summary = 3;
   string content = 4;
-  uint64 createdAt = 5; // unix timestamp (seconds)
+  string coverImage = 5;
+  uint64 authorID = 6;
+  uint64 categoryID = 7;
+  bool isTop = 8;
+  uint64 viewCount = 9;
+  uint64 likeCount = 10;
+  uint64 commentCount = 11;
+  uint64 createdAt = 12; // unix timestamp (seconds)
+  uint64 updatedAt = 13; // unix timestamp (seconds)
 }
 
 message CreateArticleRequest {
   uint64 authorID = 1;
   string title = 2;
-  string content = 3;
+  string summary = 3;
+  string content = 4;
+  string coverImage = 5;
+  uint64 categoryID = 6;
+  bool isTop = 7;
 }
 
 message CreateArticleResponse {
-  uint64 id = 1;
+  bool success = 1;
 }
 
 message GetArticleRequest {

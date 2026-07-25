@@ -19,7 +19,7 @@ type Article struct {
 
 	AuthorID     uint64 `db:"author_id"`
 	CategoryID   uint64 `db:"category_id"`
-	IsTop        uint8  `db:"is_top"`
+	IsTop        bool   `db:"is_top"`
 	ViewCount    uint64 `db:"view_count"`
 	LikeCount    uint64 `db:"like_count"`
 	CommentCount uint64 `db:"comment_count"`

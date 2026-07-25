@@ -18,11 +18,11 @@ func NewArticleRPC(articleService *application.ArticleService) *ArticleRPC {
 }
 
 func (a *ArticleRPC) CreateArticle(ctx context.Context, req *articlepb.CreateArticleRequest) (*articlepb.CreateArticleResponse, error) {
-	id, err := a.ArticleService.CreateArticle(ctx, req)
+	err := a.ArticleService.CreateArticle(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	return &articlepb.CreateArticleResponse{Id: id}, nil
+	return &articlepb.CreateArticleResponse{Success: true}, nil
 }
 
 func (a *ArticleRPC) GetArticle(ctx context.Context, req *articlepb.GetArticleRequest) (*articlepb.GetArticleResponse, error) {
@@ -37,7 +37,7 @@ func (a *ArticleRPC) GetArticle(ctx context.Context, req *articlepb.GetArticleRe
 }
 
 func (a *ArticleRPC) ListArticles(ctx context.Context, req *articlepb.ListArticlesRequest) (*articlepb.ListArticlesResponse, error) {
-	articles, total, err := a.ArticleService.ListArticles(ctx, int(req.GetPage()), int(req.GetPageSize()))
+	articles, err := a.ArticleService.ListArticles(ctx, int(req.GetPage()), int(req.GetPageSize()))
 	if err != nil {
 		return nil, err
 	}
@@ -45,6 +45,7 @@ func (a *ArticleRPC) ListArticles(ctx context.Context, req *articlepb.ListArticl
 	for _, art := range articles {
 		items = append(items, toArticlePB(art))
 	}
+	total := uint64(len(items))
 	return &articlepb.ListArticlesResponse{Articles: items, Total: total}, nil
 }
 

@@ -5,7 +5,7 @@
 // source: article.proto
 
 // article service
-// 简单的文章相关 RPC 接口示例：创建、获取、列表
+// 与数据库表 `blog_posts` 字段对应的文章 proto 定义
 
 package articlepb
 

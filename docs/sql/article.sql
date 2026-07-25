@@ -1,36 +1,33 @@
-CREATE TABLE blog_article (
-    -- ========== 主键 ==========
-                            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT '文章ID',
+-- auto-generated definition
+create table blog_article
+(
+    id            bigint unsigned auto_increment comment '文章ID'
+        primary key,
+    title         varchar(200)                              not null comment '文章标题',
+    summary       varchar(500)    default ''                not null comment '文章摘要',
+    content       longtext                                  not null comment '文章正文（Markdown格式）',
+    cover_image   varchar(500)    default ''                not null comment '封面图URL',
+    author_id     bigint unsigned                           not null comment '作者用户ID',
+    category_id   bigint unsigned default '0'               not null comment '分类ID（0表示未分类）',
+    is_top        tinyint(1)      default 0                 not null comment '是否置顶：0-否，1-是',
+    view_count    bigint unsigned default '0'               not null comment '浏览量',
+    like_count    bigint unsigned default '0'               not null comment '点赞量',
+    comment_count bigint unsigned default '0'               not null comment '评论量',
+    created_at    datetime        default CURRENT_TIMESTAMP not null comment '创建时间',
+    updated_at    datetime        default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    deleted_at    datetime                                  null comment '软删除时间（NULL表示未删除）'
+)
+    comment '博客文章表' collate = utf8mb4_unicode_ci;
 
-    -- ========== 基础信息 ==========
-                            title VARCHAR(200) NOT NULL COMMENT '文章标题',
-                            summary VARCHAR(500) NOT NULL DEFAULT '' COMMENT '文章摘要',
-                            content LONGTEXT NOT NULL COMMENT '文章正文（Markdown格式）',
-                            cover_image VARCHAR(500) NOT NULL DEFAULT '' COMMENT '封面图URL',
+create index idx_category_id
+    on blog_article (category_id);
 
-    -- ========== 用户关联 ==========
-                            author_id BIGINT UNSIGNED NOT NULL COMMENT '作者用户ID',
+create index idx_created_at
+    on blog_article (created_at);
 
-    -- ========== 分类关联 ==========
-                            category_id BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '分类ID（0表示未分类）',
+create index idx_deleted_at
+    on blog_article (deleted_at);
 
-    -- ========== 状态 ==========
-                            is_top TINYINT NOT NULL DEFAULT 0 COMMENT '是否置顶：0-否，1-是',
+create index idx_user_id
+    on blog_article (author_id);
 
-    -- ========== 统计字段 ==========
-                            view_count BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '浏览量',
-                            like_count BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '点赞量',
-                            comment_count BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '评论量',
-
-    -- ========== 时间戳 ==========
-                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                            deleted_at DATETIME DEFAULT NULL COMMENT '软删除时间（NULL表示未删除）',
-
-    -- ========== 索引 ==========
-                            INDEX idx_user_id (author_id),
-                            INDEX idx_category_id (category_id),
-                            INDEX idx_created_at (created_at),
-                            INDEX idx_deleted_at (deleted_at)
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='博客文章表';

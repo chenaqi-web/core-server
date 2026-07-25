@@ -24,28 +24,28 @@ func NewArticleService(
 	return &ArticleService{cfg: cfg, log: log, repo: repo}, nil
 }
 
-func (s *ArticleService) CreateArticle(ctx context.Context, req *articlepb.CreateArticleRequest) (uint64, error) {
+func (s *ArticleService) CreateArticle(ctx context.Context, req *articlepb.CreateArticleRequest) error {
 	a := &entity.Article{
 		AuthorID:   req.GetAuthorID(),
 		Title:      req.GetTitle(),
 		Content:    req.GetContent(),
 		Summary:    req.GetSummary(),
 		CategoryID: req.GetCategoryID(),
-		IsTop:      uint8(req.GetIsTop()),
+		IsTop:      req.GetIsTop(),
 		CoverImage: req.GetCoverImage(),
 	}
 	if err := s.repo.Create(ctx, a); err != nil {
 		s.log.Error(err.Error())
-		return 0, err
+		return err
 	}
-	return a.ID, nil
+	return nil
 }
 
 func (s *ArticleService) GetArticle(ctx context.Context, id uint64) (*entity.Article, error) {
 	return s.repo.GetByID(ctx, id)
 }
 
-func (s *ArticleService) ListArticles(ctx context.Context, page, pageSize int) ([]*entity.Article, uint64, error) {
+func (s *ArticleService) ListArticles(ctx context.Context, page, pageSize int) ([]*entity.Article, error) {
 	if page <= 0 {
 		page = 1
 	}
