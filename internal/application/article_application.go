@@ -49,6 +49,7 @@ func (s *ArticleService) CreateArticle(ctx context.Context, req *articlepb.Creat
 func (s *ArticleService) DeleteArticle(ctx context.Context, id uint64, authorID uint64) error {
 	if err := s.ArtRepo.DeleteByID(ctx, id, authorID); err != nil {
 		if errors.Is(err, repo.ErrNotFound) {
+			s.log.Error(err.Error())
 			return ErrArticleNotFound
 		}
 		return err
@@ -85,20 +86,7 @@ func (s *ArticleService) ListArticles(ctx context.Context, page, pageSize int) (
 		s.log.Error(err.Error())
 		return nil, err
 	}
-	if len(articles) == 0 {
-		return nil, nil
-	}
-
-	items := make([]*aggregate.ArticleAggregate, 0, len(articles))
-	for _, article := range articles {
-		author, err := s.userRepo.GetByID(ctx, article.AuthorID)
-		if err != nil {
-			s.log.Error(err.Error())
-			return nil, err
-		}
-		items = append(items, aggregate.NewArticleAggregate(article, author))
-	}
-	return items, nil
+	return s.buildArticleAggregates(ctx, articles)
 }
 
 func (s *ArticleService) ListMyArticles(ctx context.Context, authorID uint64, page, pageSize int) ([]*aggregate.ArticleAggregate, error) {
@@ -138,20 +126,7 @@ func (s *ArticleService) ListArticlesByCategory(ctx context.Context, categoryID 
 		s.log.Error(err.Error())
 		return nil, err
 	}
-	if len(articles) == 0 {
-		return nil, nil
-	}
-
-	items := make([]*aggregate.ArticleAggregate, 0, len(articles))
-	for _, article := range articles {
-		author, err := s.userRepo.GetByID(ctx, article.AuthorID)
-		if err != nil {
-			s.log.Error(err.Error())
-			return nil, err
-		}
-		items = append(items, aggregate.NewArticleAggregate(article, author))
-	}
-	return items, nil
+	return s.buildArticleAggregates(ctx, articles)
 }
 
 func (s *ArticleService) SearchArticles(ctx context.Context, q string, page, pageSize int) ([]*aggregate.ArticleAggregate, error) {
@@ -164,18 +139,41 @@ func (s *ArticleService) SearchArticles(ctx context.Context, q string, page, pag
 		s.log.Error(err.Error())
 		return nil, err
 	}
+	return s.buildArticleAggregates(ctx, articles)
+}
+
+// =====================================================================================================================
+// 下面是辅助函数
+
+func (s *ArticleService) buildArticleAggregates(ctx context.Context, articles []*entity.Article) ([]*aggregate.ArticleAggregate, error) {
 	if len(articles) == 0 {
 		return nil, nil
 	}
 
+	authorIDs := make([]uint64, 0)
+	seen := make(map[uint64]struct{})
+	for _, article := range articles {
+		if _, ok := seen[article.AuthorID]; ok {
+			continue
+		}
+		seen[article.AuthorID] = struct{}{}
+		authorIDs = append(authorIDs, article.AuthorID)
+	}
+
+	users, err := s.userRepo.ListByIDs(ctx, authorIDs)
+	if err != nil {
+		s.log.Error(err.Error())
+		return nil, err
+	}
+
+	authorMap := make(map[uint64]*entity.User, len(users))
+	for _, user := range users {
+		authorMap[user.ID] = user
+	}
+
 	items := make([]*aggregate.ArticleAggregate, 0, len(articles))
 	for _, article := range articles {
-		author, err := s.userRepo.GetByID(ctx, article.AuthorID)
-		if err != nil {
-			s.log.Error(err.Error())
-			return nil, err
-		}
-		items = append(items, aggregate.NewArticleAggregate(article, author))
+		items = append(items, aggregate.NewArticleAggregate(article, authorMap[article.AuthorID]))
 	}
 	return items, nil
 }

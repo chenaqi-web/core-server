@@ -3,7 +3,6 @@
 package aggregate
 
 import (
-	"backend/core-server/internal/model/dto"
 	"backend/core-server/internal/model/entity"
 )
 
@@ -20,22 +19,4 @@ func NewArticleAggregate(article *entity.Article, author *entity.User) *ArticleA
 		Article: article,
 		Author:  author,
 	}
-}
-
-func (a *ArticleAggregate) ToDTO() *dto.ArticleDTO {
-	if a == nil {
-		return nil
-	}
-	return dto.ArticleFromEntity(a.Article, a.Author)
-}
-
-func ArticlesToDTO(aggregates []*ArticleAggregate) []*dto.ArticleDTO {
-	if len(aggregates) == 0 {
-		return nil
-	}
-	items := make([]*dto.ArticleDTO, 0, len(aggregates))
-	for _, agg := range aggregates {
-		items = append(items, agg.ToDTO())
-	}
-	return items
 }

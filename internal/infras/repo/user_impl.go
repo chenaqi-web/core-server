@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/jmoiron/sqlx"
+
 	"backend/core-server/internal/model/entity"
 )
 
@@ -32,4 +34,27 @@ LIMIT 1`
 		return nil, err
 	}
 	return &u, nil
+}
+
+func (r *UserRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+
+	const baseQuery = `
+SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, sex, age
+FROM user
+WHERE id IN (?) AND deleted_at IS NULL`
+
+	query, args, err := sqlx.In(baseQuery, ids)
+	if err != nil {
+		return nil, err
+	}
+	query = r.DB.Rebind(query)
+
+	var users []*entity.User
+	if err := r.db(ctx).SelectContext(ctx, &users, query, args...); err != nil {
+		return nil, err
+	}
+	return users, nil
 }
