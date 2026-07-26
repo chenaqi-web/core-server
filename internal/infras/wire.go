@@ -2,6 +2,7 @@ package infras
 
 import (
 	"backend/core-server/internal/domain"
+	"backend/core-server/internal/infras/auth"
 	"backend/core-server/internal/infras/cache"
 	"backend/core-server/internal/infras/clog"
 	"backend/core-server/internal/infras/mail"
@@ -44,6 +45,10 @@ var MailProviderSet = wire.NewSet(
 	wire.Bind(new(domain.MailSender), new(*mail.QQMailSender)),
 )
 
+var AuthProviderSet = wire.NewSet(
+	auth.NewJWTManager,
+)
+
 var MQProviderSet = wire.NewSet(
 	kafka.NewSyncProducer,
 	kafka.NewTopicManager,
@@ -58,6 +63,7 @@ var JobProviderSet = wire.NewSet(
 	RepoProviderSet,
 	CacheProviderSet,
 	MailProviderSet,
+	AuthProviderSet,
 	MQProviderSet,
 	LogProviderSet,
 )

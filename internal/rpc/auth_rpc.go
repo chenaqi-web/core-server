@@ -15,7 +15,12 @@ import (
 type authApplication interface {
 	SendEmailCode(ctx context.Context, email string, purpose domain.EmailCodePurpose) error
 	Register(ctx context.Context, input application.RegisterInput) (*application.AuthUser, error)
+	Login(ctx context.Context, username, password string) (*application.LoginResult, error)
+	EmailLogin(ctx context.Context, email, password string) (*application.LoginResult, error)
+	RefreshToken(ctx context.Context, refreshToken string) (*application.AuthTokens, error)
+	Logout(ctx context.Context, refreshToken string) error
 	ResetPasswordByEmail(ctx context.Context, input application.ResetPasswordByEmailInput) error
+	ValidateAccess(ctx context.Context, accessToken string) (*application.AccessIdentity, error)
 }
 
 type AuthRPC struct {
@@ -75,6 +80,61 @@ func (r *AuthRPC) Register(
 	}, nil
 }
 
+func (r *AuthRPC) Login(
+	ctx context.Context,
+	request *authpb.LoginRequest,
+) (*authpb.LoginResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	result, err := r.service.Login(ctx, request.GetUsername(), request.GetPassword())
+	if err != nil {
+		return nil, authRPCError(err)
+	}
+	return loginResultToProto(result), nil
+}
+
+func (r *AuthRPC) EmailLogin(
+	ctx context.Context,
+	request *authpb.EmailLoginRequest,
+) (*authpb.LoginResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	result, err := r.service.EmailLogin(ctx, request.GetEmail(), request.GetPassword())
+	if err != nil {
+		return nil, authRPCError(err)
+	}
+	return loginResultToProto(result), nil
+}
+
+func (r *AuthRPC) RefreshToken(
+	ctx context.Context,
+	request *authpb.RefreshTokenRequest,
+) (*authpb.RefreshTokenResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	tokens, err := r.service.RefreshToken(ctx, request.GetRefreshToken())
+	if err != nil {
+		return nil, authRPCError(err)
+	}
+	return &authpb.RefreshTokenResponse{Tokens: authTokensToProto(tokens)}, nil
+}
+
+func (r *AuthRPC) Logout(
+	ctx context.Context,
+	request *authpb.LogoutRequest,
+) (*authpb.LogoutResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	if err := r.service.Logout(ctx, request.GetRefreshToken()); err != nil {
+		return nil, authRPCError(err)
+	}
+	return &authpb.LogoutResponse{Success: true}, nil
+}
+
 func (r *AuthRPC) ResetPasswordByEmail(
 	ctx context.Context,
 	request *authpb.ResetPasswordByEmailRequest,
@@ -91,6 +151,26 @@ func (r *AuthRPC) ResetPasswordByEmail(
 		return nil, authRPCError(err)
 	}
 	return &authpb.ResetPasswordByEmailResponse{Success: true}, nil
+}
+
+func (r *AuthRPC) ValidateAccess(
+	ctx context.Context,
+	request *authpb.ValidateAccessRequest,
+) (*authpb.ValidateAccessResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	identity, err := r.service.ValidateAccess(ctx, request.GetAccessToken())
+	if err != nil {
+		return nil, authRPCError(err)
+	}
+	return &authpb.ValidateAccessResponse{
+		UserId:      identity.UserID,
+		SessionId:   identity.SessionID,
+		Role:        identity.Role,
+		Status:      identity.Status,
+		AuthVersion: identity.AuthVersion,
+	}, nil
 }
 
 func emailCodePurposeFromProto(value authpb.EmailCodePurpose) (domain.EmailCodePurpose, error) {
@@ -122,6 +202,28 @@ func authUserToProto(user *application.AuthUser) *authpb.UserInfo {
 	}
 }
 
+func loginResultToProto(result *application.LoginResult) *authpb.LoginResponse {
+	if result == nil {
+		return nil
+	}
+	return &authpb.LoginResponse{
+		User:   authUserToProto(result.User),
+		Tokens: authTokensToProto(result.Tokens),
+	}
+}
+
+func authTokensToProto(tokens *application.AuthTokens) *authpb.TokenPair {
+	if tokens == nil {
+		return nil
+	}
+	return &authpb.TokenPair{
+		AccessToken:      tokens.AccessToken,
+		RefreshToken:     tokens.RefreshToken,
+		AccessExpiresIn:  tokens.AccessExpiresIn,
+		RefreshExpiresIn: tokens.RefreshExpiresIn,
+	}
+}
+
 func authRPCError(err error) error {
 	switch {
 	case errors.Is(err, application.ErrInvalidAuthInput),
@@ -140,6 +242,16 @@ func authRPCError(err error) error {
 		return status.Error(codes.ResourceExhausted, "email sending rate limit exceeded")
 	case errors.Is(err, application.ErrMailUnavailable):
 		return status.Error(codes.Unavailable, "mail service unavailable")
+	case errors.Is(err, application.ErrInvalidCredentials):
+		return status.Error(codes.Unauthenticated, "username, email or password is incorrect")
+	case errors.Is(err, application.ErrActiveSession):
+		return status.Error(codes.AlreadyExists, "user already has an active session")
+	case errors.Is(err, application.ErrUserDisabled):
+		return status.Error(codes.PermissionDenied, "user is disabled")
+	case errors.Is(err, application.ErrAccessInvalid):
+		return status.Error(codes.Unauthenticated, "access token is invalid or expired")
+	case errors.Is(err, application.ErrRefreshInvalid):
+		return status.Error(codes.Unauthenticated, "refresh token is invalid or expired")
 	default:
 		return status.Error(codes.Internal, "internal error")
 	}

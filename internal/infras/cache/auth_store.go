@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"backend/core-server/internal/config"
+	"backend/core-server/internal/domain"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -19,11 +20,7 @@ const (
 
 var ErrInvalidAuthSession = errors.New("invalid auth session")
 
-type AuthSession struct {
-	SessionID   string
-	RefreshJTI  string
-	AuthVersion uint64
-}
+type AuthSession = domain.AuthSession
 
 type AuthStore struct {
 	client *redis.Client
@@ -72,6 +69,21 @@ redis.call('DEL', KEYS[1])
 if refresh_jti then
     redis.call('DEL', ARGV[1] .. refresh_jti)
 end
+return 1
+`)
+
+var deleteSessionIfMatchScript = redis.NewScript(`
+if redis.call('EXISTS', KEYS[1]) == 0 then
+    return 0
+end
+if redis.call('HGET', KEYS[1], 'session_id') ~= ARGV[1] then
+    return 0
+end
+if redis.call('HGET', KEYS[1], 'refresh_jti') ~= ARGV[2] then
+    return 0
+end
+redis.call('DEL', KEYS[1])
+redis.call('DEL', KEYS[2])
 return 1
 `)
 
@@ -159,6 +171,27 @@ func (s *AuthStore) DeleteSession(ctx context.Context, userID uint64) error {
 
 func (s *AuthStore) ClearUserSession(ctx context.Context, userID uint64) error {
 	return s.DeleteSession(ctx, userID)
+}
+
+func (s *AuthStore) DeleteSessionIfMatch(
+	ctx context.Context,
+	userID uint64,
+	sessionID, refreshJTI string,
+) (bool, error) {
+	if userID == 0 || sessionID == "" || refreshJTI == "" {
+		return false, ErrInvalidAuthSession
+	}
+	result, err := deleteSessionIfMatchScript.Run(
+		ctx,
+		s.client,
+		[]string{sessionKey(userID), refreshKey(refreshJTI)},
+		sessionID,
+		refreshJTI,
+	).Int64()
+	if err != nil {
+		return false, fmt.Errorf("delete matching auth session: %w", err)
+	}
+	return result == 1, nil
 }
 
 func (s *AuthStore) SaveRefreshJTI(ctx context.Context, userID uint64, sessionID, refreshJTI string) (bool, error) {

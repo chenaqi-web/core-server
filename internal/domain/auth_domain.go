@@ -29,6 +29,17 @@ type EmailCodeStore interface {
 	VerifyCode(ctx context.Context, email string, purpose EmailCodePurpose, code string) (bool, error)
 }
 
+type AuthSession struct {
+	SessionID   string
+	RefreshJTI  string
+	AuthVersion uint64
+}
+
 type AuthSessionStore interface {
+	CreateSession(ctx context.Context, userID uint64, session AuthSession) (bool, error)
+	GetSession(ctx context.Context, userID uint64) (*AuthSession, error)
+	ValidateRefreshJTI(ctx context.Context, userID uint64, sessionID, refreshJTI string) (bool, error)
+	RotateRefreshJTI(ctx context.Context, userID uint64, sessionID, oldRefreshJTI, newRefreshJTI string) (bool, error)
+	DeleteSessionIfMatch(ctx context.Context, userID uint64, sessionID, refreshJTI string) (bool, error)
 	ClearUserSession(ctx context.Context, userID uint64) error
 }

@@ -152,3 +152,69 @@ func TestAuthStoreSaveRefreshJTIDoesNotOverwrite(t *testing.T) {
 		t.Fatalf("second SaveRefreshJTI() = %v, %v", created, err)
 	}
 }
+
+func TestAuthStoreDeleteSessionIfMatchDeletesSessionAndRefreshJTI(t *testing.T) {
+	store, _ := newTestAuthStore(t)
+	ctx := context.Background()
+	session := AuthSession{SessionID: "session", RefreshJTI: "refresh", AuthVersion: 1}
+	created, err := store.CreateSession(ctx, 12, session)
+	if err != nil || !created {
+		t.Fatalf("CreateSession() = %v, %v", created, err)
+	}
+
+	deleted, err := store.DeleteSessionIfMatch(ctx, 12, session.SessionID, session.RefreshJTI)
+	if err != nil || !deleted {
+		t.Fatalf("DeleteSessionIfMatch() = %v, %v", deleted, err)
+	}
+	loaded, err := store.GetSession(ctx, 12)
+	if err != nil || loaded != nil {
+		t.Fatalf("GetSession() after conditional delete = %+v, %v", loaded, err)
+	}
+	valid, err := store.ValidateRefreshJTI(ctx, 12, session.SessionID, session.RefreshJTI)
+	if err != nil || valid {
+		t.Fatalf("ValidateRefreshJTI() after conditional delete = %v, %v", valid, err)
+	}
+}
+
+func TestAuthStoreDeleteSessionIfMatchRejectsMismatchedSession(t *testing.T) {
+	tests := []struct {
+		name       string
+		sessionID  string
+		refreshJTI string
+	}{
+		{name: "session ID", sessionID: "other-session", refreshJTI: "refresh"},
+		{name: "refresh JTI", sessionID: "session", refreshJTI: "other-refresh"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			store, _ := newTestAuthStore(t)
+			ctx := context.Background()
+			session := AuthSession{SessionID: "session", RefreshJTI: "refresh", AuthVersion: 1}
+			created, err := store.CreateSession(ctx, 13, session)
+			if err != nil || !created {
+				t.Fatalf("CreateSession() = %v, %v", created, err)
+			}
+
+			deleted, err := store.DeleteSessionIfMatch(ctx, 13, test.sessionID, test.refreshJTI)
+			if err != nil || deleted {
+				t.Fatalf("DeleteSessionIfMatch() = %v, %v", deleted, err)
+			}
+			loaded, err := store.GetSession(ctx, 13)
+			if err != nil || loaded == nil || *loaded != session {
+				t.Fatalf("GetSession() after rejected delete = %+v, %v", loaded, err)
+			}
+			valid, err := store.ValidateRefreshJTI(ctx, 13, session.SessionID, session.RefreshJTI)
+			if err != nil || !valid {
+				t.Fatalf("ValidateRefreshJTI() after rejected delete = %v, %v", valid, err)
+			}
+		})
+	}
+}
+
+func TestAuthStoreDeleteSessionIfMatchMissingSessionIsIdempotent(t *testing.T) {
+	store, _ := newTestAuthStore(t)
+	deleted, err := store.DeleteSessionIfMatch(context.Background(), 14, "session", "refresh")
+	if err != nil || deleted {
+		t.Fatalf("DeleteSessionIfMatch() = %v, %v", deleted, err)
+	}
+}

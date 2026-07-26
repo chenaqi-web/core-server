@@ -9,6 +9,7 @@ package main
 import (
 	"backend/core-server/internal/application"
 	"backend/core-server/internal/config"
+	"backend/core-server/internal/infras/auth"
 	"backend/core-server/internal/infras/cache"
 	"backend/core-server/internal/infras/clog"
 	"backend/core-server/internal/infras/mail"
@@ -56,7 +57,11 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	authService, err := application.NewAuthService(log, userRepo, emailCodeStore, authStore, qqMailSender)
+	jwtManager, err := auth.NewJWTManager(cfg)
+	if err != nil {
+		return nil, err
+	}
+	authService, err := application.NewAuthService(log, userRepo, emailCodeStore, authStore, qqMailSender, jwtManager)
 	if err != nil {
 		return nil, err
 	}

@@ -34,6 +34,7 @@ type AuthService struct {
 	emailCodes domain.EmailCodeStore
 	sessions   domain.AuthSessionStore
 	mailSender domain.MailSender
+	tokens     *authinfra.JWTManager
 }
 
 type RegisterInput struct {
@@ -74,8 +75,9 @@ func NewAuthService(
 	emailCodes domain.EmailCodeStore,
 	sessions domain.AuthSessionStore,
 	mailSender domain.MailSender,
+	tokens *authinfra.JWTManager,
 ) (*AuthService, error) {
-	if users == nil || emailCodes == nil || sessions == nil || mailSender == nil {
+	if users == nil || emailCodes == nil || sessions == nil || mailSender == nil || tokens == nil {
 		return nil, fmt.Errorf("auth service dependency is nil")
 	}
 	return &AuthService{
@@ -84,6 +86,7 @@ func NewAuthService(
 		emailCodes: emailCodes,
 		sessions:   sessions,
 		mailSender: mailSender,
+		tokens:     tokens,
 	}, nil
 }
 

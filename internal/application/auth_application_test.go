@@ -21,9 +21,25 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+func newTestJWTManager(t *testing.T) *authinfra.JWTManager {
+	t.Helper()
+	manager, err := authinfra.NewJWTManagerWithConfig(
+		"test-access-secret-32-bytes-long-value",
+		"test-refresh-secret-32-bytes-long-value",
+		20*time.Minute,
+		7*24*time.Hour,
+	)
+	if err != nil {
+		t.Fatalf("NewJWTManagerWithConfig() error = %v", err)
+	}
+	return manager
+}
+
 type stubUserRepo struct {
 	nameExists      bool
 	emailExists     bool
+	findByIDUser    *entity.User
+	findByNameUser  *entity.User
 	findByEmailUser *entity.User
 	createErr       error
 	createUser      *entity.User
@@ -38,9 +54,11 @@ func (r *stubUserRepo) GetByID(context.Context, uint64) (*entity.User, error) { 
 func (r *stubUserRepo) ListByIDs(context.Context, []uint64) ([]*entity.User, error) {
 	return nil, nil
 }
-func (r *stubUserRepo) FindByID(context.Context, uint64) (*entity.User, error) { return nil, nil }
+func (r *stubUserRepo) FindByID(context.Context, uint64) (*entity.User, error) {
+	return r.findByIDUser, nil
+}
 func (r *stubUserRepo) FindByName(context.Context, string) (*entity.User, error) {
-	return nil, nil
+	return r.findByNameUser, nil
 }
 func (r *stubUserRepo) FindByEmail(context.Context, string) (*entity.User, error) {
 	return r.findByEmailUser, nil
@@ -61,7 +79,22 @@ func (r *stubUserRepo) Create(_ context.Context, user *entity.User) error {
 func (r *stubUserRepo) UpdatePasswordAndIncrementAuthVersion(_ context.Context, id uint64, hash string) error {
 	r.updatedUserID = id
 	r.updatedHash = hash
-	return r.updateErr
+	if r.updateErr != nil {
+		return r.updateErr
+	}
+	seen := make(map[*entity.User]struct{})
+	for _, user := range []*entity.User{r.findByIDUser, r.findByNameUser, r.findByEmailUser} {
+		if user == nil || user.ID != id {
+			continue
+		}
+		if _, exists := seen[user]; exists {
+			continue
+		}
+		seen[user] = struct{}{}
+		user.Password = hash
+		user.AuthVersion++
+	}
+	return nil
 }
 func (r *stubUserRepo) WithTransaction(ctx context.Context, fn func(context.Context) error) error {
 	r.transactionRuns++
@@ -112,7 +145,7 @@ func TestAuthServiceSendEmailCodeRejectsInvalidInputBeforeReserve(t *testing.T) 
 		t.Run(test.name, func(t *testing.T) {
 			codes := &stubEmailCodeStore{}
 			mailSender := &stubMailSender{}
-			service, err := NewAuthService(nil, &stubUserRepo{}, codes, &stubSessionStore{}, mailSender)
+			service, err := NewAuthService(nil, &stubUserRepo{}, codes, &stubSessionStore{}, mailSender, newTestJWTManager(t))
 			if err != nil {
 				t.Fatalf("NewAuthService() error = %v", err)
 			}
@@ -153,6 +186,26 @@ type stubSessionStore struct {
 	err           error
 }
 
+func (s *stubSessionStore) CreateSession(context.Context, uint64, domain.AuthSession) (bool, error) {
+	return true, nil
+}
+
+func (s *stubSessionStore) GetSession(context.Context, uint64) (*domain.AuthSession, error) {
+	return nil, nil
+}
+
+func (s *stubSessionStore) ValidateRefreshJTI(context.Context, uint64, string, string) (bool, error) {
+	return false, nil
+}
+
+func (s *stubSessionStore) RotateRefreshJTI(context.Context, uint64, string, string, string) (bool, error) {
+	return false, nil
+}
+
+func (s *stubSessionStore) DeleteSessionIfMatch(context.Context, uint64, string, string) (bool, error) {
+	return false, nil
+}
+
 func (s *stubSessionStore) ClearUserSession(_ context.Context, userID uint64) error {
 	s.clearedUserID = userID
 	return s.err
@@ -187,7 +240,7 @@ func TestAuthServiceSendEmailCodeCompensatesFailedDelivery(t *testing.T) {
 		t.Fatalf("NewEmailCodeStore() error = %v", err)
 	}
 	mailSender := &stubMailSender{err: errors.New("smtp secret detail")}
-	service, err := NewAuthService(nil, &stubUserRepo{}, emailCodes, &stubSessionStore{}, mailSender)
+	service, err := NewAuthService(nil, &stubUserRepo{}, emailCodes, &stubSessionStore{}, mailSender, newTestJWTManager(t))
 	if err != nil {
 		t.Fatalf("NewAuthService() error = %v", err)
 	}
@@ -226,6 +279,7 @@ func TestAuthServiceSendEmailCodeMapsRateLimits(t *testing.T) {
 				&stubEmailCodeStore{reserveErr: test.storeErr},
 				&stubSessionStore{},
 				&stubMailSender{},
+				newTestJWTManager(t),
 			)
 			if err != nil {
 				t.Fatalf("NewAuthService() error = %v", err)
@@ -240,7 +294,7 @@ func TestAuthServiceSendEmailCodeMapsRateLimits(t *testing.T) {
 func TestAuthServiceRegisterForcesServerOwnedFields(t *testing.T) {
 	users := &stubUserRepo{}
 	codes := &stubEmailCodeStore{verifyValid: true}
-	service, err := NewAuthService(nil, users, codes, &stubSessionStore{}, &stubMailSender{})
+	service, err := NewAuthService(nil, users, codes, &stubSessionStore{}, &stubMailSender{}, newTestJWTManager(t))
 	if err != nil {
 		t.Fatalf("NewAuthService() error = %v", err)
 	}
@@ -285,7 +339,7 @@ func TestAuthServiceRegisterHandlesPrecheckAndDatabaseConflicts(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			service, err := NewAuthService(nil, test.users, &stubEmailCodeStore{verifyValid: true}, &stubSessionStore{}, &stubMailSender{})
+			service, err := NewAuthService(nil, test.users, &stubEmailCodeStore{verifyValid: true}, &stubSessionStore{}, &stubMailSender{}, newTestJWTManager(t))
 			if err != nil {
 				t.Fatalf("NewAuthService() error = %v", err)
 			}
@@ -303,7 +357,7 @@ func TestAuthServiceRegisterHandlesPrecheckAndDatabaseConflicts(t *testing.T) {
 func TestAuthServiceRegisterDatabaseFailureKeepsCodeConsumed(t *testing.T) {
 	users := &stubUserRepo{createErr: errors.New("database unavailable")}
 	codes := &stubEmailCodeStore{verifyValid: true}
-	service, err := NewAuthService(nil, users, codes, &stubSessionStore{}, &stubMailSender{})
+	service, err := NewAuthService(nil, users, codes, &stubSessionStore{}, &stubMailSender{}, newTestJWTManager(t))
 	if err != nil {
 		t.Fatalf("NewAuthService() error = %v", err)
 	}
@@ -322,7 +376,7 @@ func TestAuthServiceRegisterDatabaseFailureKeepsCodeConsumed(t *testing.T) {
 
 func TestAuthServiceRegisterRejectsInvalidCode(t *testing.T) {
 	users := &stubUserRepo{}
-	service, err := NewAuthService(nil, users, &stubEmailCodeStore{verifyValid: false}, &stubSessionStore{}, &stubMailSender{})
+	service, err := NewAuthService(nil, users, &stubEmailCodeStore{verifyValid: false}, &stubSessionStore{}, &stubMailSender{}, newTestJWTManager(t))
 	if err != nil {
 		t.Fatalf("NewAuthService() error = %v", err)
 	}
@@ -338,7 +392,7 @@ func TestAuthServiceRegisterRejectsInvalidCode(t *testing.T) {
 func TestAuthServiceRegisterValidatesPasswordConfirmation(t *testing.T) {
 	users := &stubUserRepo{}
 	codes := &stubEmailCodeStore{verifyValid: true}
-	service, err := NewAuthService(nil, users, codes, &stubSessionStore{}, &stubMailSender{})
+	service, err := NewAuthService(nil, users, codes, &stubSessionStore{}, &stubMailSender{}, newTestJWTManager(t))
 	if err != nil {
 		t.Fatalf("NewAuthService() error = %v", err)
 	}
@@ -384,7 +438,7 @@ WHERE id = ? AND deleted_at IS NULL`)).
 
 	codes := &stubEmailCodeStore{verifyValid: true}
 	sessions := &stubSessionStore{err: errors.New("redis internal secret")}
-	service, err := NewAuthService(nil, users, codes, sessions, &stubMailSender{})
+	service, err := NewAuthService(nil, users, codes, sessions, &stubMailSender{}, newTestJWTManager(t))
 	if err != nil {
 		t.Fatalf("NewAuthService() error = %v", err)
 	}
@@ -406,7 +460,7 @@ WHERE id = ? AND deleted_at IS NULL`)).
 
 func TestAuthServiceResetPasswordDoesNotStartTransactionForInvalidCode(t *testing.T) {
 	users := &stubUserRepo{findByEmailUser: &entity.User{ID: 7}}
-	service, err := NewAuthService(nil, users, &stubEmailCodeStore{verifyValid: false}, &stubSessionStore{}, &stubMailSender{})
+	service, err := NewAuthService(nil, users, &stubEmailCodeStore{verifyValid: false}, &stubSessionStore{}, &stubMailSender{}, newTestJWTManager(t))
 	if err != nil {
 		t.Fatalf("NewAuthService() error = %v", err)
 	}
@@ -442,7 +496,7 @@ WHERE id = ? AND deleted_at IS NULL`)).
 
 	sessions := &stubSessionStore{}
 	codes := &stubEmailCodeStore{verifyValid: true}
-	service, err := NewAuthService(nil, users, codes, sessions, &stubMailSender{})
+	service, err := NewAuthService(nil, users, codes, sessions, &stubMailSender{}, newTestJWTManager(t))
 	if err != nil {
 		t.Fatalf("NewAuthService() error = %v", err)
 	}

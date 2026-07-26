@@ -14,14 +14,26 @@ import (
 )
 
 type stubAuthApplication struct {
-	sendEmail     string
-	sendPurpose   domain.EmailCodePurpose
-	sendErr       error
-	registerInput application.RegisterInput
-	registerUser  *application.AuthUser
-	registerErr   error
-	resetInput    application.ResetPasswordByEmailInput
-	resetErr      error
+	sendEmail       string
+	sendPurpose     domain.EmailCodePurpose
+	sendErr         error
+	registerInput   application.RegisterInput
+	registerUser    *application.AuthUser
+	registerErr     error
+	loginIdentifier string
+	loginPassword   string
+	loginResult     *application.LoginResult
+	loginErr        error
+	refreshToken    string
+	refreshResult   *application.AuthTokens
+	refreshErr      error
+	logoutToken     string
+	logoutErr       error
+	resetInput      application.ResetPasswordByEmailInput
+	resetErr        error
+	accessToken     string
+	accessIdentity  *application.AccessIdentity
+	accessErr       error
 }
 
 func (s *stubAuthApplication) SendEmailCode(
@@ -42,12 +54,45 @@ func (s *stubAuthApplication) Register(
 	return s.registerUser, s.registerErr
 }
 
+func (s *stubAuthApplication) Login(
+	_ context.Context,
+	username, password string,
+) (*application.LoginResult, error) {
+	s.loginIdentifier = username
+	s.loginPassword = password
+	return s.loginResult, s.loginErr
+}
+
+func (s *stubAuthApplication) EmailLogin(
+	_ context.Context,
+	email, password string,
+) (*application.LoginResult, error) {
+	s.loginIdentifier = email
+	s.loginPassword = password
+	return s.loginResult, s.loginErr
+}
+
+func (s *stubAuthApplication) RefreshToken(_ context.Context, refreshToken string) (*application.AuthTokens, error) {
+	s.refreshToken = refreshToken
+	return s.refreshResult, s.refreshErr
+}
+
+func (s *stubAuthApplication) Logout(_ context.Context, refreshToken string) error {
+	s.logoutToken = refreshToken
+	return s.logoutErr
+}
+
 func (s *stubAuthApplication) ResetPasswordByEmail(
 	_ context.Context,
 	input application.ResetPasswordByEmailInput,
 ) error {
 	s.resetInput = input
 	return s.resetErr
+}
+
+func (s *stubAuthApplication) ValidateAccess(_ context.Context, accessToken string) (*application.AccessIdentity, error) {
+	s.accessToken = accessToken
+	return s.accessIdentity, s.accessErr
 }
 
 func TestAuthRPCSendEmailCodeConvertsPurpose(t *testing.T) {
@@ -96,6 +141,61 @@ func TestAuthRPCRegisterConvertsRequestAndSafeUserResponse(t *testing.T) {
 	}
 }
 
+func TestAuthRPCLoginAndEmailLoginReturnInternalTokenPair(t *testing.T) {
+	methods := []struct {
+		name string
+		call func(*AuthRPC) (*authpb.LoginResponse, error)
+		want string
+	}{
+		{name: "username", call: func(rpc *AuthRPC) (*authpb.LoginResponse, error) {
+			return rpc.Login(context.Background(), &authpb.LoginRequest{Username: "user", Password: "abc12345"})
+		}, want: "user"},
+		{name: "email", call: func(rpc *AuthRPC) (*authpb.LoginResponse, error) {
+			return rpc.EmailLogin(context.Background(), &authpb.EmailLoginRequest{Email: "user@qq.com", Password: "abc12345"})
+		}, want: "user@qq.com"},
+	}
+	for _, method := range methods {
+		t.Run(method.name, func(t *testing.T) {
+			service := &stubAuthApplication{loginResult: &application.LoginResult{
+				User: &application.AuthUser{ID: 7, Username: "user", Role: "user", Status: "active", AuthVersion: 1},
+				Tokens: &application.AuthTokens{
+					AccessToken: "access", RefreshToken: "refresh", AccessExpiresIn: 1200, RefreshExpiresIn: 604800,
+				},
+			}}
+			response, err := method.call(newAuthRPC(service))
+			if err != nil {
+				t.Fatalf("login RPC error = %v", err)
+			}
+			if service.loginIdentifier != method.want || service.loginPassword != "abc12345" ||
+				response.GetTokens().GetAccessToken() != "access" || response.GetTokens().GetRefreshToken() != "refresh" {
+				t.Fatalf("identifier = %q, response = %+v", service.loginIdentifier, response)
+			}
+		})
+	}
+}
+
+func TestAuthRPCRefreshLogoutAndValidateAccessConvertRequests(t *testing.T) {
+	service := &stubAuthApplication{
+		refreshResult: &application.AuthTokens{AccessToken: "new-access", RefreshToken: "new-refresh"},
+		accessIdentity: &application.AccessIdentity{
+			UserID: 7, SessionID: "session", Role: "admin", Status: "active", AuthVersion: 3,
+		},
+	}
+	rpc := newAuthRPC(service)
+	refreshResponse, err := rpc.RefreshToken(context.Background(), &authpb.RefreshTokenRequest{RefreshToken: "old-refresh"})
+	if err != nil || refreshResponse.GetTokens().GetRefreshToken() != "new-refresh" || service.refreshToken != "old-refresh" {
+		t.Fatalf("RefreshToken() response = %+v, error = %v", refreshResponse, err)
+	}
+	logoutResponse, err := rpc.Logout(context.Background(), &authpb.LogoutRequest{RefreshToken: "new-refresh"})
+	if err != nil || !logoutResponse.GetSuccess() || service.logoutToken != "new-refresh" {
+		t.Fatalf("Logout() response = %+v, error = %v", logoutResponse, err)
+	}
+	accessResponse, err := rpc.ValidateAccess(context.Background(), &authpb.ValidateAccessRequest{AccessToken: "access"})
+	if err != nil || accessResponse.GetUserId() != 7 || accessResponse.GetRole() != "admin" || service.accessToken != "access" {
+		t.Fatalf("ValidateAccess() response = %+v, error = %v", accessResponse, err)
+	}
+}
+
 func TestAuthRPCResetPasswordConvertsRequest(t *testing.T) {
 	service := &stubAuthApplication{}
 	response, err := newAuthRPC(service).ResetPasswordByEmail(context.Background(), &authpb.ResetPasswordByEmailRequest{
@@ -120,6 +220,11 @@ func TestAuthRPCErrorMappingDoesNotLeakInternalErrors(t *testing.T) {
 		{name: "exists", err: application.ErrEmailExists, code: codes.AlreadyExists},
 		{name: "rate", err: application.ErrEmailCodeCooldown, code: codes.ResourceExhausted},
 		{name: "mail", err: application.ErrMailUnavailable, code: codes.Unavailable},
+		{name: "credentials", err: application.ErrInvalidCredentials, code: codes.Unauthenticated},
+		{name: "session", err: application.ErrActiveSession, code: codes.AlreadyExists},
+		{name: "disabled", err: application.ErrUserDisabled, code: codes.PermissionDenied},
+		{name: "access", err: application.ErrAccessInvalid, code: codes.Unauthenticated},
+		{name: "refresh", err: application.ErrRefreshInvalid, code: codes.Unauthenticated},
 		{name: "internal", err: errors.New("mysql password secret"), code: codes.Internal},
 	}
 	for _, test := range tests {
