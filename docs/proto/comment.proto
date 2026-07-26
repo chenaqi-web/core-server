@@ -37,14 +37,16 @@ message CreateReplyReq {
   string content = 5;
 }
 message CreateReplyResp {
-  uint64 replyId = 1;
+  bool success =1;
 }
 
 message DeleteCommentReq {
   uint64 id = 1;
   uint64 userId = 2;
 }
-message DeleteCommentResp {}
+message DeleteCommentResp {
+  bool success =1;
+}
 
 message GetArticleCommentsReq {
   uint64 articleId = 1;

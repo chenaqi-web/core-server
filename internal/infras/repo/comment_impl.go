@@ -25,7 +25,7 @@ const commentSelectColumns = `
 id, article_id, user_id, parent_id, root_id, reply_to_id, reply_to_name,
 content, like_count, child_count, created_at, deleted_at`
 
-func (r *CommentRepo) Create(ctx context.Context, comment *entity.Comment) (uint64, error) {
+func (r *CommentRepo) CreateComment(ctx context.Context, comment *entity.Comment) (uint64, error) {
 	now := time.Now()
 	const query = `
 INSERT INTO comment
@@ -48,10 +48,27 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	return uint64(id), nil
 }
 
-func (r *CommentRepo) SetRootID(ctx context.Context, id, rootID uint64) error {
-	const query = `UPDATE comment SET root_id = ? WHERE id = ? AND deleted_at IS NULL`
-	_, err := r.db(ctx).ExecContext(ctx, query, rootID, id)
-	return err
+func (r *CommentRepo) CreateReply(ctx context.Context, comment *entity.Comment) (uint64, error) {
+	now := time.Now()
+	const query = `
+INSERT INTO comment
+    (article_id, user_id, parent_id, root_id, reply_to_id, reply_to_name,
+     content, like_count, child_count, created_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+
+	result, err := r.db(ctx).ExecContext(ctx, query,
+		comment.ArticleID, comment.UserID, comment.ParentID, comment.RootID,
+		comment.ReplyToID, comment.ReplyToName, comment.Content,
+		comment.LikeCount, comment.ChildCount, now,
+	)
+	if err != nil {
+		return 0, err
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+	return uint64(id), nil
 }
 
 func (r *CommentRepo) GetByID(ctx context.Context, id uint64) (*entity.Comment, error) {

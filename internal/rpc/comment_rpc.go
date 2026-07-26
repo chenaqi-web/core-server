@@ -22,9 +22,7 @@ func (c *CommentRPC) CreateComment(ctx context.Context, req *commentpb.CreateCom
 	if err != nil {
 		return nil, err
 	}
-	return &commentpb.CreateCommentResp{
-		Success: resp,
-	}, nil
+	return &commentpb.CreateCommentResp{Success: resp}, nil
 }
 
 func (c *CommentRPC) CreateReply(ctx context.Context, req *commentpb.CreateReplyReq) (*commentpb.CreateReplyResp, error) {
@@ -32,14 +30,14 @@ func (c *CommentRPC) CreateReply(ctx context.Context, req *commentpb.CreateReply
 	if err != nil {
 		return nil, err
 	}
-	return resp.ToPB(), nil
+	return &commentpb.CreateReplyResp{Success: resp}, nil
 }
 
 func (c *CommentRPC) DeleteComment(ctx context.Context, req *commentpb.DeleteCommentReq) (*commentpb.DeleteCommentResp, error) {
 	if err := c.CommentService.DeleteComment(ctx, dto.DeleteCommentRequestFromPB(req)); err != nil {
 		return nil, err
 	}
-	return &commentpb.DeleteCommentResp{}, nil
+	return &commentpb.DeleteCommentResp{Success: true}, nil
 }
 
 func (c *CommentRPC) GetArticleComments(ctx context.Context, req *commentpb.GetArticleCommentsReq) (*commentpb.GetArticleCommentsResp, error) {

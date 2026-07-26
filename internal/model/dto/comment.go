@@ -29,7 +29,6 @@ func CreateCommentRequestFromPB(req *commentpb.CreateCommentReq) *CreateCommentR
 //创建回复
 
 type CreateReplyRequest struct {
-	ArticleID   uint64
 	RootID      uint64
 	UserID      uint64
 	ReplyToID   uint64
@@ -37,9 +36,20 @@ type CreateReplyRequest struct {
 	Content     string
 }
 
-type CreateReplyResponse struct {
-	ReplyID uint64
+func CreateReplyRequestFromPB(req *commentpb.CreateReplyReq) *CreateReplyRequest {
+	if req == nil {
+		return nil
+	}
+	return &CreateReplyRequest{
+		RootID:      req.GetRootId(),
+		UserID:      req.GetUserId(),
+		ReplyToID:   req.GetReplyToId(),
+		ReplyToName: req.GetReplyToName(),
+		Content:     req.GetContent(),
+	}
 }
+
+// 删除评论
 
 type DeleteCommentRequest struct {
 	ID     uint64
@@ -101,27 +111,6 @@ type CommentInfoDTO struct {
 	UserName    string
 	UserAvatar  string
 	Replies     []*CommentInfoDTO
-}
-
-func CreateReplyRequestFromPB(req *commentpb.CreateReplyReq) *CreateReplyRequest {
-	if req == nil {
-		return nil
-	}
-	return &CreateReplyRequest{
-
-		RootID:      req.GetRootId(),
-		UserID:      req.GetUserId(),
-		ReplyToID:   req.GetReplyToId(),
-		ReplyToName: req.GetReplyToName(),
-		Content:     req.GetContent(),
-	}
-}
-
-func (r *CreateReplyResponse) ToPB() *commentpb.CreateReplyResp {
-	if r == nil {
-		return nil
-	}
-	return &commentpb.CreateReplyResp{ReplyId: r.ReplyID}
 }
 
 func DeleteCommentRequestFromPB(req *commentpb.DeleteCommentReq) *DeleteCommentRequest {

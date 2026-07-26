@@ -351,7 +351,7 @@ func (x *CreateReplyReq) GetContent() string {
 
 type CreateReplyResp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ReplyId       uint64                 `protobuf:"varint,1,opt,name=replyId,proto3" json:"replyId,omitempty"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -386,11 +386,11 @@ func (*CreateReplyResp) Descriptor() ([]byte, []int) {
 	return file_comment_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *CreateReplyResp) GetReplyId() uint64 {
+func (x *CreateReplyResp) GetSuccess() bool {
 	if x != nil {
-		return x.ReplyId
+		return x.Success
 	}
-	return 0
+	return false
 }
 
 type DeleteCommentReq struct {
@@ -447,6 +447,7 @@ func (x *DeleteCommentReq) GetUserId() uint64 {
 
 type DeleteCommentResp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -479,6 +480,13 @@ func (x *DeleteCommentResp) ProtoReflect() protoreflect.Message {
 // Deprecated: Use DeleteCommentResp.ProtoReflect.Descriptor instead.
 func (*DeleteCommentResp) Descriptor() ([]byte, []int) {
 	return file_comment_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *DeleteCommentResp) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
 }
 
 type GetArticleCommentsReq struct {
@@ -911,11 +919,12 @@ const file_comment_proto_rawDesc = "" +
 	"\vreplyToName\x18\x04 \x01(\tR\vreplyToName\x12\x18\n" +
 	"\acontent\x18\x05 \x01(\tR\acontent\"+\n" +
 	"\x0fCreateReplyResp\x12\x18\n" +
-	"\areplyId\x18\x01 \x01(\x04R\areplyId\":\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\":\n" +
 	"\x10DeleteCommentReq\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x16\n" +
-	"\x06userId\x18\x02 \x01(\x04R\x06userId\"\x13\n" +
-	"\x11DeleteCommentResp\"w\n" +
+	"\x06userId\x18\x02 \x01(\x04R\x06userId\"-\n" +
+	"\x11DeleteCommentResp\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"w\n" +
 	"\x15GetArticleCommentsReq\x12\x1c\n" +
 	"\tarticleId\x18\x01 \x01(\x04R\tarticleId\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x12\n" +

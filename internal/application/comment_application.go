@@ -1,16 +1,14 @@
 package application
 
 import (
-	"context"
-	"errors"
-	"strings"
-
 	"backend/core-server/internal/config"
 	"backend/core-server/internal/domain"
 	"backend/core-server/internal/infras/clog"
 	"backend/core-server/internal/infras/repo"
 	"backend/core-server/internal/model/dto"
 	"backend/core-server/internal/model/entity"
+	"context"
+	"errors"
 )
 
 type CommentService struct {
@@ -39,7 +37,7 @@ func NewCommentService(
 
 func (s *CommentService) CreateComment(ctx context.Context, req *dto.CreateCommentRequest) (bool, error) {
 	err := s.repo.WithTransaction(ctx, func(ctx context.Context) error {
-		_, err := s.repo.Create(ctx, &entity.Comment{
+		_, err := s.repo.CreateComment(ctx, &entity.Comment{
 			ArticleID: req.ArticleID,
 			UserID:    req.UserID,
 			Content:   req.Content,
@@ -61,41 +59,46 @@ func (s *CommentService) CreateComment(ctx context.Context, req *dto.CreateComme
 	return true, nil
 }
 
-func (s *CommentService) CreateReply(ctx context.Context, req *dto.CreateReplyRequest) (*dto.CreateReplyResponse, error) {
-	if req == nil || strings.TrimSpace(req.Content) == "" {
-		return nil, ErrCommentInvalid
+func (s *CommentService) CreateReply(ctx context.Context, req *dto.CreateReplyRequest) (bool, error) {
+	// 1. 首先拿到回复的评论的root_id
+	root, err := s.repo.GetByID(ctx, req.RootID)
+	if err != nil {
+		s.log.Error(err.Error())
+		return false, err
 	}
 
-	content := strings.TrimSpace(req.Content)
-	var replyID uint64
-	err := s.repo.WithTransaction(ctx, func(ctx context.Context) error {
-		id, err := s.repo.Create(ctx, &entity.Comment{
+	// 2.开启事务进行修改
+	err = s.repo.WithTransaction(ctx, func(ctx context.Context) error {
+		_, err = s.repo.CreateReply(ctx, &entity.Comment{
 			ArticleID:   root.ArticleID,
 			UserID:      req.UserID,
 			ParentID:    root.ID,
-			RootID:      root.ID,
+			RootID:      1, // 回复通常都不是根评论，用1来划分
 			ReplyToID:   req.ReplyToID,
 			ReplyToName: req.ReplyToName,
-			Content:     content,
+			Content:     req.Content,
 		})
 		if err != nil {
 			return err
 		}
+		// 增加根评论的下面的回复评论数
 		if err = s.repo.IncrementChildCount(ctx, root.ID); err != nil {
 			return err
 		}
+		// 修改主表的评论数
 		if err = s.artRepo.UpdateCommentCount(ctx, root.ArticleID, 1); err != nil {
 			return err
 		}
-		replyID = id
 		return nil
 	})
 	if err != nil {
 		s.log.Error(err.Error())
-		return nil, err
+		return false, err
 	}
-	return &dto.CreateReplyResponse{ReplyID: replyID}, nil
+	return true, nil
 }
+
+// todo 修改一下删除评论
 
 func (s *CommentService) DeleteComment(ctx context.Context, req *dto.DeleteCommentRequest) error {
 	if req == nil {
@@ -106,12 +109,6 @@ func (s *CommentService) DeleteComment(ctx context.Context, req *dto.DeleteComme
 	if err != nil {
 		s.log.Error(err.Error())
 		return err
-	}
-	if comment == nil {
-		return ErrCommentNotFound
-	}
-	if comment.UserID != req.UserID {
-		return ErrCommentForbidden
 	}
 
 	return s.repo.WithTransaction(ctx, func(ctx context.Context) error {

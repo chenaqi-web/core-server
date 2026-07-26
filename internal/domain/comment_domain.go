@@ -6,8 +6,8 @@ import (
 )
 
 type CommentRepo interface {
-	Create(ctx context.Context, comment *entity.Comment) (uint64, error)
-	SetRootID(ctx context.Context, id, rootID uint64) error
+	CreateComment(ctx context.Context, comment *entity.Comment) (uint64, error)
+	CreateReply(ctx context.Context, comment *entity.Comment) (uint64, error)
 	GetByID(ctx context.Context, id uint64) (*entity.Comment, error)
 	SoftDelete(ctx context.Context, id, userID uint64) error
 	IncrementChildCount(ctx context.Context, rootID uint64) error
