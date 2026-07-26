@@ -9,21 +9,24 @@ import (
 	"backend/core-server/internal/config"
 	"backend/core-server/internal/domain"
 	"backend/core-server/internal/infras/clog"
+	"backend/core-server/internal/model/aggregate"
 	"backend/core-server/internal/model/entity"
 )
 
 type ArticleService struct {
-	cfg  *config.Config
-	log  *clog.Log
-	repo domain.ArticleRepoDomain
+	cfg      *config.Config
+	log      *clog.Log
+	ArtRepo  domain.ArticleRepoDomain
+	userRepo domain.UserRepoDomain
 }
 
 func NewArticleService(
 	log *clog.Log,
-	repo domain.ArticleRepoDomain,
+	ArtRepo domain.ArticleRepoDomain,
+	userRepo domain.UserRepoDomain,
 	cfg *config.Config,
 ) (*ArticleService, error) {
-	return &ArticleService{cfg: cfg, log: log, repo: repo}, nil
+	return &ArticleService{cfg: cfg, log: log, ArtRepo: ArtRepo, userRepo: userRepo}, nil
 }
 
 func (s *ArticleService) CreateArticle(ctx context.Context, req *articlepb.CreateArticleRequest) error {
@@ -36,7 +39,7 @@ func (s *ArticleService) CreateArticle(ctx context.Context, req *articlepb.Creat
 		IsTop:      req.GetIsTop(),
 		CoverImage: req.GetCoverImage(),
 	}
-	if err := s.repo.Create(ctx, a); err != nil {
+	if err := s.ArtRepo.Create(ctx, a); err != nil {
 		s.log.Error(err.Error())
 		return err
 	}
@@ -44,7 +47,7 @@ func (s *ArticleService) CreateArticle(ctx context.Context, req *articlepb.Creat
 }
 
 func (s *ArticleService) DeleteArticle(ctx context.Context, id uint64, authorID uint64) error {
-	if err := s.repo.DeleteByID(ctx, id, authorID); err != nil {
+	if err := s.ArtRepo.DeleteByID(ctx, id, authorID); err != nil {
 		if errors.Is(err, repo.ErrNotFound) {
 			return ErrArticleNotFound
 		}
@@ -53,60 +56,140 @@ func (s *ArticleService) DeleteArticle(ctx context.Context, id uint64, authorID 
 	return nil
 }
 
-func (s *ArticleService) GetArticle(ctx context.Context, id uint64) (*entity.Article, error) {
-	res, err := s.repo.GetByID(ctx, id)
+func (s *ArticleService) GetArticle(ctx context.Context, id uint64) (*aggregate.ArticleAggregate, error) {
+	article, err := s.ArtRepo.GetByID(ctx, id)
 	if err != nil {
 		s.log.Error(err.Error())
 		return nil, err
 	}
-	return res, nil
-}
+	if article == nil {
+		return nil, nil
+	}
 
-func (s *ArticleService) ListArticles(ctx context.Context, page, pageSize int) ([]*entity.Article, error) {
-	if page <= 0 {
-		page = 1
-	}
-	if pageSize <= 0 {
-		pageSize = 20
-	}
-	offset := (page - 1) * pageSize
-	list, err := s.repo.List(ctx, offset, pageSize)
+	author, err := s.userRepo.GetByID(ctx, article.AuthorID)
 	if err != nil {
 		s.log.Error(err.Error())
 		return nil, err
 	}
-	return list, nil
+
+	return aggregate.NewArticleAggregate(article, author), nil
 }
 
-func (s *ArticleService) ListMyArticles(ctx context.Context, authorID uint64, page, pageSize int) ([]*entity.Article, error) {
+func (s *ArticleService) ListArticles(ctx context.Context, page, pageSize int) ([]*aggregate.ArticleAggregate, error) {
+	page = Page(page)
+	pageSize = Size(pageSize)
+	offset := (page - 1) * pageSize
+
+	articles, err := s.ArtRepo.List(ctx, offset, pageSize)
+	if err != nil {
+		s.log.Error(err.Error())
+		return nil, err
+	}
+	if len(articles) == 0 {
+		return nil, nil
+	}
+
+	items := make([]*aggregate.ArticleAggregate, 0, len(articles))
+	for _, article := range articles {
+		author, err := s.userRepo.GetByID(ctx, article.AuthorID)
+		if err != nil {
+			s.log.Error(err.Error())
+			return nil, err
+		}
+		items = append(items, aggregate.NewArticleAggregate(article, author))
+	}
+	return items, nil
+}
+
+func (s *ArticleService) ListMyArticles(ctx context.Context, authorID uint64, page, pageSize int) ([]*aggregate.ArticleAggregate, error) {
+	page = Page(page)
+	size := Size(pageSize)
+	offset := (page - 1) * pageSize
+
+	articles, err := s.ArtRepo.ListByAuthor(ctx, authorID, offset, size)
+	if err != nil {
+		s.log.Error(err.Error())
+		return nil, err
+	}
+	if len(articles) == 0 {
+		return nil, nil
+	}
+
+	author, err := s.userRepo.GetByID(ctx, authorID)
+	if err != nil {
+		s.log.Error(err.Error())
+		return nil, err
+	}
+
+	items := make([]*aggregate.ArticleAggregate, 0, len(articles))
+	for _, article := range articles {
+		items = append(items, aggregate.NewArticleAggregate(article, author))
+	}
+	return items, nil
+}
+
+func (s *ArticleService) ListArticlesByCategory(ctx context.Context, categoryID uint64, page, pageSize int) ([]*aggregate.ArticleAggregate, error) {
+	page = Page(page)
+	size := Size(pageSize)
+	offset := (page - 1) * size
+
+	articles, err := s.ArtRepo.ListByCategory(ctx, categoryID, offset, size)
+	if err != nil {
+		s.log.Error(err.Error())
+		return nil, err
+	}
+	if len(articles) == 0 {
+		return nil, nil
+	}
+
+	items := make([]*aggregate.ArticleAggregate, 0, len(articles))
+	for _, article := range articles {
+		author, err := s.userRepo.GetByID(ctx, article.AuthorID)
+		if err != nil {
+			s.log.Error(err.Error())
+			return nil, err
+		}
+		items = append(items, aggregate.NewArticleAggregate(article, author))
+	}
+	return items, nil
+}
+
+func (s *ArticleService) SearchArticles(ctx context.Context, q string, page, pageSize int) ([]*aggregate.ArticleAggregate, error) {
+	page = Page(page)
+	pageSize = Size(pageSize)
+	offset := (page - 1) * pageSize
+
+	articles, err := s.ArtRepo.Search(ctx, q, offset, pageSize)
+	if err != nil {
+		s.log.Error(err.Error())
+		return nil, err
+	}
+	if len(articles) == 0 {
+		return nil, nil
+	}
+
+	items := make([]*aggregate.ArticleAggregate, 0, len(articles))
+	for _, article := range articles {
+		author, err := s.userRepo.GetByID(ctx, article.AuthorID)
+		if err != nil {
+			s.log.Error(err.Error())
+			return nil, err
+		}
+		items = append(items, aggregate.NewArticleAggregate(article, author))
+	}
+	return items, nil
+}
+
+func Page(page int) int {
 	if page <= 0 {
 		page = 1
 	}
-	if pageSize <= 0 {
-		pageSize = 20
-	}
-	offset := (page - 1) * pageSize
-	return s.repo.ListByAuthor(ctx, authorID, offset, pageSize)
+	return page
 }
 
-func (s *ArticleService) ListArticlesByCategory(ctx context.Context, categoryID uint64, page, pageSize int) ([]*entity.Article, error) {
-	if page <= 0 {
-		page = 1
+func Size(size int) int {
+	if size <= 0 {
+		size = 20
 	}
-	if pageSize <= 0 {
-		pageSize = 20
-	}
-	offset := (page - 1) * pageSize
-	return s.repo.ListByCategory(ctx, categoryID, offset, pageSize)
-}
-
-func (s *ArticleService) SearchArticles(ctx context.Context, q string, page, pageSize int) ([]*entity.Article, error) {
-	if page <= 0 {
-		page = 1
-	}
-	if pageSize <= 0 {
-		pageSize = 20
-	}
-	offset := (page - 1) * pageSize
-	return s.repo.Search(ctx, q, offset, pageSize)
+	return size
 }

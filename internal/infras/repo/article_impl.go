@@ -123,8 +123,6 @@ LIMIT ?, ?`
 	return items, nil
 }
 
-// todo 后续修改一下这个search
-
 func (r *ArticleRepo) Search(ctx context.Context, name string, offset, limit int) ([]*entity.Article, error) {
 	var items []*entity.Article
 	const query = `

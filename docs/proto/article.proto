@@ -20,6 +20,8 @@ message Article {
   uint64 commentCount = 11;
   uint64 createdAt = 12; // unix timestamp (seconds)
   uint64 updatedAt = 13; // unix timestamp (seconds)
+  string authorName = 14; // 作者昵称，来自 user.name
+  string authorAvatar = 15; // 作者头像，来自 user.avatar
 }
 
 message CreateArticleRequest {

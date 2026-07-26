@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"backend/core-server/internal/application"
-	"backend/core-server/internal/model/entity"
+	"backend/core-server/internal/model/aggregate"
 	"backend/core-server/internal/rpc/articlepb"
 )
 
@@ -26,14 +26,14 @@ func (a *ArticleRPC) CreateArticle(ctx context.Context, req *articlepb.CreateArt
 }
 
 func (a *ArticleRPC) GetArticle(ctx context.Context, req *articlepb.GetArticleRequest) (*articlepb.GetArticleResponse, error) {
-	art, err := a.ArticleService.GetArticle(ctx, req.GetId())
+	agg, err := a.ArticleService.GetArticle(ctx, req.GetId())
 	if err != nil {
 		return nil, err
 	}
-	if art == nil {
+	if agg == nil {
 		return &articlepb.GetArticleResponse{}, nil
 	}
-	return &articlepb.GetArticleResponse{Article: toArticlePB(art)}, nil
+	return &articlepb.GetArticleResponse{Article: toArticlePB(agg)}, nil
 }
 
 func (a *ArticleRPC) ListArticles(ctx context.Context, req *articlepb.ListArticlesRequest) (*articlepb.ListArticlesResponse, error) {
@@ -41,11 +41,7 @@ func (a *ArticleRPC) ListArticles(ctx context.Context, req *articlepb.ListArticl
 	if err != nil {
 		return nil, err
 	}
-	items := make([]*articlepb.Article, 0, len(articles))
-	for _, art := range articles {
-		items = append(items, toArticlePB(art))
-	}
-	return &articlepb.ListArticlesResponse{Articles: items}, nil
+	return &articlepb.ListArticlesResponse{Articles: toArticlePBList(articles)}, nil
 }
 
 func (a *ArticleRPC) DeleteArticle(ctx context.Context, req *articlepb.DeleteArticleRequest) (*articlepb.DeleteArticleResponse, error) {
@@ -60,11 +56,7 @@ func (a *ArticleRPC) ListMyArticles(ctx context.Context, req *articlepb.ListMyAr
 	if err != nil {
 		return nil, err
 	}
-	items := make([]*articlepb.Article, 0, len(articles))
-	for _, art := range articles {
-		items = append(items, toArticlePB(art))
-	}
-	return &articlepb.ListMyArticlesResponse{Articles: items}, nil
+	return &articlepb.ListMyArticlesResponse{Articles: toArticlePBList(articles)}, nil
 }
 
 func (a *ArticleRPC) ListByCategory(ctx context.Context, req *articlepb.ListByCategoryRequest) (*articlepb.ListByCategoryResponse, error) {
@@ -72,11 +64,7 @@ func (a *ArticleRPC) ListByCategory(ctx context.Context, req *articlepb.ListByCa
 	if err != nil {
 		return nil, err
 	}
-	items := make([]*articlepb.Article, 0, len(articles))
-	for _, art := range articles {
-		items = append(items, toArticlePB(art))
-	}
-	return &articlepb.ListByCategoryResponse{Articles: items}, nil
+	return &articlepb.ListByCategoryResponse{Articles: toArticlePBList(articles)}, nil
 }
 
 func (a *ArticleRPC) SearchArticles(ctx context.Context, req *articlepb.SearchArticlesRequest) (*articlepb.SearchArticlesResponse, error) {
@@ -84,15 +72,26 @@ func (a *ArticleRPC) SearchArticles(ctx context.Context, req *articlepb.SearchAr
 	if err != nil {
 		return nil, err
 	}
-	items := make([]*articlepb.Article, 0, len(articles))
-	for _, art := range articles {
-		items = append(items, toArticlePB(art))
-	}
-	return &articlepb.SearchArticlesResponse{Articles: items}, nil
+	return &articlepb.SearchArticlesResponse{Articles: toArticlePBList(articles)}, nil
 }
 
-func toArticlePB(a *entity.Article) *articlepb.Article {
-	return &articlepb.Article{
+func toArticlePBList(aggregates []*aggregate.ArticleAggregate) []*articlepb.Article {
+	if len(aggregates) == 0 {
+		return nil
+	}
+	items := make([]*articlepb.Article, 0, len(aggregates))
+	for _, agg := range aggregates {
+		items = append(items, toArticlePB(agg))
+	}
+	return items
+}
+
+func toArticlePB(agg *aggregate.ArticleAggregate) *articlepb.Article {
+	if agg == nil || agg.Article == nil {
+		return nil
+	}
+	a := agg.Article
+	pb := &articlepb.Article{
 		Id:           a.ID,
 		AuthorID:     a.AuthorID,
 		Title:        a.Title,
@@ -105,5 +104,11 @@ func toArticlePB(a *entity.Article) *articlepb.Article {
 		LikeCount:    a.LikeCount,
 		CommentCount: a.CommentCount,
 		CreatedAt:    uint64(a.CreatedAt.Unix()),
+		UpdatedAt:    uint64(a.UpdatedAt.Unix()),
 	}
+	if agg.Author != nil {
+		pb.AuthorName = agg.Author.Name
+		pb.AuthorAvatar = agg.Author.Avatar
+	}
+	return pb
 }

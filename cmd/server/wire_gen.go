@@ -54,7 +54,8 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 	}
 	categoryRPC := rpc.NewCategoryRPC(categoryService)
 	articleRepo := repo.NewArticleRepo(dbClient)
-	articleService, err := application.NewArticleService(log, articleRepo, cfg)
+	userRepo := repo.NewUserRepo(dbClient)
+	articleService, err := application.NewArticleService(log, articleRepo, userRepo, cfg)
 	if err != nil {
 		return nil, err
 	}
