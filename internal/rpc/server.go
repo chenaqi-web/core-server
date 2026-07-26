@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"backend/core-server/internal/rpc/articlepb"
+	"backend/core-server/internal/rpc/authpb"
 	"fmt"
 	"log"
 	"net"
@@ -35,11 +36,13 @@ func NewServer(
 	producer *kafka.SyncProducer,
 	kafkaManager *kafka.KafkaManager,
 	consumer *jobdbsync.MessageQueueConsumer,
+	auth *AuthRPC,
 	like *LikeRPC,
 	category *CategoryRPC,
 	article *ArticleRPC,
 ) (*Server, error) {
 	engine := grpc.NewServer()
+	authpb.RegisterAuthServiceServer(engine, auth)
 	likepb.RegisterLikeServiceServer(engine, like)
 	categorypb.RegisterCategoryServiceServer(engine, category)
 	articlepb.RegisterArticleServiceServer(engine, article)

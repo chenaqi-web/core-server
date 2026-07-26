@@ -4,6 +4,7 @@ import (
 	"backend/core-server/internal/domain"
 	"backend/core-server/internal/infras/cache"
 	"backend/core-server/internal/infras/clog"
+	"backend/core-server/internal/infras/mail"
 	"backend/core-server/internal/infras/mq/kafka"
 	"backend/core-server/internal/infras/repo"
 
@@ -28,10 +29,19 @@ var RepoProviderSet = wire.NewSet(
 
 var CacheProviderSet = wire.NewSet(
 	cache.NewClient,
+	cache.NewAuthStore,
+	cache.NewEmailCodeStore,
 	cache.NewILikeCache,
 	// 新接口
 
 	wire.Bind(new(domain.LikeCacheDomain), new(*cache.ILikeCache)),
+	wire.Bind(new(domain.EmailCodeStore), new(*cache.EmailCodeStore)),
+	wire.Bind(new(domain.AuthSessionStore), new(*cache.AuthStore)),
+)
+
+var MailProviderSet = wire.NewSet(
+	mail.NewQQMailSender,
+	wire.Bind(new(domain.MailSender), new(*mail.QQMailSender)),
 )
 
 var MQProviderSet = wire.NewSet(
@@ -47,6 +57,7 @@ var LogProviderSet = wire.NewSet(
 var JobProviderSet = wire.NewSet(
 	RepoProviderSet,
 	CacheProviderSet,
+	MailProviderSet,
 	MQProviderSet,
 	LogProviderSet,
 )
