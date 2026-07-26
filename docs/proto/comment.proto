@@ -26,7 +26,7 @@ message CreateCommentReq {
   string content = 3;
 }
 message CreateCommentResp {
-  uint64 commentId = 1;
+  bool success = 1;
 }
 
 message CreateReplyReq {

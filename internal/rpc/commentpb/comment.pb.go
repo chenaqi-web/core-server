@@ -231,7 +231,7 @@ func (x *CreateCommentReq) GetContent() string {
 
 type CreateCommentResp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	CommentId     uint64                 `protobuf:"varint,1,opt,name=commentId,proto3" json:"commentId,omitempty"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -266,21 +266,20 @@ func (*CreateCommentResp) Descriptor() ([]byte, []int) {
 	return file_comment_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *CreateCommentResp) GetCommentId() uint64 {
+func (x *CreateCommentResp) GetSuccess() bool {
 	if x != nil {
-		return x.CommentId
+		return x.Success
 	}
-	return 0
+	return false
 }
 
 type CreateReplyReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	RootId        uint64                 `protobuf:"varint,1,opt,name=rootId,proto3" json:"rootId,omitempty"`
-	ParentId      uint64                 `protobuf:"varint,2,opt,name=parentId,proto3" json:"parentId,omitempty"`
-	UserId        uint64                 `protobuf:"varint,3,opt,name=userId,proto3" json:"userId,omitempty"`
-	ReplyToId     uint64                 `protobuf:"varint,4,opt,name=replyToId,proto3" json:"replyToId,omitempty"`
-	ReplyToName   string                 `protobuf:"bytes,5,opt,name=replyToName,proto3" json:"replyToName,omitempty"`
-	Content       string                 `protobuf:"bytes,6,opt,name=content,proto3" json:"content,omitempty"`
+	RootId        uint64                 `protobuf:"varint,1,opt,name=rootId,proto3" json:"rootId,omitempty"` // 一级评论ID
+	UserId        uint64                 `protobuf:"varint,2,opt,name=userId,proto3" json:"userId,omitempty"`
+	ReplyToId     uint64                 `protobuf:"varint,3,opt,name=replyToId,proto3" json:"replyToId,omitempty"` // @回复目标用户
+	ReplyToName   string                 `protobuf:"bytes,4,opt,name=replyToName,proto3" json:"replyToName,omitempty"`
+	Content       string                 `protobuf:"bytes,5,opt,name=content,proto3" json:"content,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -318,13 +317,6 @@ func (*CreateReplyReq) Descriptor() ([]byte, []int) {
 func (x *CreateReplyReq) GetRootId() uint64 {
 	if x != nil {
 		return x.RootId
-	}
-	return 0
-}
-
-func (x *CreateReplyReq) GetParentId() uint64 {
-	if x != nil {
-		return x.ParentId
 	}
 	return 0
 }
@@ -909,16 +901,15 @@ const file_comment_proto_rawDesc = "" +
 	"\x10CreateCommentReq\x12\x1c\n" +
 	"\tarticleId\x18\x01 \x01(\x04R\tarticleId\x12\x16\n" +
 	"\x06userId\x18\x02 \x01(\x04R\x06userId\x12\x18\n" +
-	"\acontent\x18\x03 \x01(\tR\acontent\"1\n" +
-	"\x11CreateCommentResp\x12\x1c\n" +
-	"\tcommentId\x18\x01 \x01(\x04R\tcommentId\"\xb6\x01\n" +
+	"\acontent\x18\x03 \x01(\tR\acontent\"-\n" +
+	"\x11CreateCommentResp\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x9a\x01\n" +
 	"\x0eCreateReplyReq\x12\x16\n" +
-	"\x06rootId\x18\x01 \x01(\x04R\x06rootId\x12\x1a\n" +
-	"\bparentId\x18\x02 \x01(\x04R\bparentId\x12\x16\n" +
-	"\x06userId\x18\x03 \x01(\x04R\x06userId\x12\x1c\n" +
-	"\treplyToId\x18\x04 \x01(\x04R\treplyToId\x12 \n" +
-	"\vreplyToName\x18\x05 \x01(\tR\vreplyToName\x12\x18\n" +
-	"\acontent\x18\x06 \x01(\tR\acontent\"+\n" +
+	"\x06rootId\x18\x01 \x01(\x04R\x06rootId\x12\x16\n" +
+	"\x06userId\x18\x02 \x01(\x04R\x06userId\x12\x1c\n" +
+	"\treplyToId\x18\x03 \x01(\x04R\treplyToId\x12 \n" +
+	"\vreplyToName\x18\x04 \x01(\tR\vreplyToName\x12\x18\n" +
+	"\acontent\x18\x05 \x01(\tR\acontent\"+\n" +
 	"\x0fCreateReplyResp\x12\x18\n" +
 	"\areplyId\x18\x01 \x01(\x04R\areplyId\":\n" +
 	"\x10DeleteCommentReq\x12\x0e\n" +

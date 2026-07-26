@@ -22,7 +22,9 @@ func (c *CommentRPC) CreateComment(ctx context.Context, req *commentpb.CreateCom
 	if err != nil {
 		return nil, err
 	}
-	return resp.ToPB(), nil
+	return &commentpb.CreateCommentResp{
+		Success: resp,
+	}, nil
 }
 
 func (c *CommentRPC) CreateReply(ctx context.Context, req *commentpb.CreateReplyReq) (*commentpb.CreateReplyResp, error) {

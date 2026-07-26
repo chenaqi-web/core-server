@@ -14,9 +14,6 @@ type CreateCommentRequest struct {
 	UserID    uint64
 	Content   string
 }
-type CreateCommentResponse struct {
-	CommentID uint64
-}
 
 func CreateCommentRequestFromPB(req *commentpb.CreateCommentReq) *CreateCommentRequest {
 	if req == nil {
@@ -104,13 +101,6 @@ type CommentInfoDTO struct {
 	UserName    string
 	UserAvatar  string
 	Replies     []*CommentInfoDTO
-}
-
-func (r *CreateCommentResponse) ToPB() *commentpb.CreateCommentResp {
-	if r == nil {
-		return nil
-	}
-	return &commentpb.CreateCommentResp{CommentId: r.CommentID}
 }
 
 func CreateReplyRequestFromPB(req *commentpb.CreateReplyReq) *CreateReplyRequest {

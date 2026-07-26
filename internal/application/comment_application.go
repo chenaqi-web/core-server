@@ -37,10 +37,9 @@ func NewCommentService(
 	}, nil
 }
 
-func (s *CommentService) CreateComment(ctx context.Context, req *dto.CreateCommentRequest) (*dto.CreateCommentResponse, error) {
-	var commentID uint64
+func (s *CommentService) CreateComment(ctx context.Context, req *dto.CreateCommentRequest) (bool, error) {
 	err := s.repo.WithTransaction(ctx, func(ctx context.Context) error {
-		id, err := s.repo.Create(ctx, &entity.Comment{
+		_, err := s.repo.Create(ctx, &entity.Comment{
 			ArticleID: req.ArticleID,
 			UserID:    req.UserID,
 			Content:   req.Content,
@@ -53,14 +52,13 @@ func (s *CommentService) CreateComment(ctx context.Context, req *dto.CreateComme
 		if err = s.artRepo.UpdateCommentCount(ctx, req.ArticleID, 1); err != nil {
 			return err
 		}
-		commentID = id
 		return nil
 	})
 	if err != nil {
 		s.log.Error(err.Error())
-		return nil, err
+		return false, err
 	}
-	return &dto.CreateCommentResponse{CommentID: commentID}, nil
+	return true, nil
 }
 
 func (s *CommentService) CreateReply(ctx context.Context, req *dto.CreateReplyRequest) (*dto.CreateReplyResponse, error) {
