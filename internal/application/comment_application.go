@@ -129,10 +129,6 @@ func (s *CommentService) DeleteComment(ctx context.Context, req *dto.DeleteComme
 }
 
 func (s *CommentService) GetArticleComments(ctx context.Context, req *dto.GetArticleCommentsRequest) (*dto.GetArticleCommentsResponse, error) {
-	if req == nil {
-		return nil, ErrCommentInvalid
-	}
-
 	page := Page(int(req.Page))
 	size := Size(int(req.Size))
 	offset := (page - 1) * size
