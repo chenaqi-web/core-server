@@ -150,25 +150,10 @@ func (s *ArticleService) buildArticleAggregates(ctx context.Context, articles []
 		return nil, nil
 	}
 
-	authorIDs := make([]uint64, 0)
-	seen := make(map[uint64]struct{})
-	for _, article := range articles {
-		if _, ok := seen[article.AuthorID]; ok {
-			continue
-		}
-		seen[article.AuthorID] = struct{}{}
-		authorIDs = append(authorIDs, article.AuthorID)
-	}
-
-	users, err := s.userRepo.ListByIDs(ctx, authorIDs)
+	authorMap, err := LoadUserMap(ctx, s.userRepo, CollectArticleAuthorIDs(articles))
 	if err != nil {
 		s.log.Error(err.Error())
 		return nil, err
-	}
-
-	authorMap := make(map[uint64]*entity.User, len(users))
-	for _, user := range users {
-		authorMap[user.ID] = user
 	}
 
 	items := make([]*aggregate.ArticleAggregate, 0, len(articles))
@@ -176,18 +161,4 @@ func (s *ArticleService) buildArticleAggregates(ctx context.Context, articles []
 		items = append(items, aggregate.NewArticleAggregate(article, authorMap[article.AuthorID]))
 	}
 	return items, nil
-}
-
-func Page(page int) int {
-	if page <= 0 {
-		page = 1
-	}
-	return page
-}
-
-func Size(size int) int {
-	if size <= 0 {
-		size = 20
-	}
-	return size
 }

@@ -17,6 +17,7 @@ var RepoProviderSet = wire.NewSet(
 	repo.NewUserRepo,
 	repo.NewCategoryRepo,
 	repo.NewArticleRepo,
+	repo.NewCommentRepo,
 	// todo 新操作
 
 	wire.Bind(new(domain.LikeRepoDomain), new(*repo.LikeRepo)),
@@ -24,6 +25,7 @@ var RepoProviderSet = wire.NewSet(
 	wire.Bind(new(domain.UserRepoDomain), new(*repo.UserRepo)),
 	wire.Bind(new(domain.CategoryRepoDomain), new(*repo.CategoryRepo)),
 	wire.Bind(new(domain.ArticleRepoDomain), new(*repo.ArticleRepo)),
+	wire.Bind(new(domain.CommentRepoDomain), new(*repo.CommentRepo)),
 )
 
 var CacheProviderSet = wire.NewSet(

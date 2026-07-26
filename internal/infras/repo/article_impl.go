@@ -138,3 +138,12 @@ LIMIT ?, ?`
 	}
 	return items, nil
 }
+
+func (r *ArticleRepo) UpdateCommentCount(ctx context.Context, articleID uint64, delta int64) error {
+	const query = `
+UPDATE blog_article
+SET comment_count = comment_count + ?, updated_at = ?
+WHERE id = ? AND deleted_at IS NULL`
+	_, err := r.db(ctx).ExecContext(ctx, query, delta, time.Now(), articleID)
+	return err
+}

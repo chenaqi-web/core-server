@@ -12,6 +12,7 @@ import (
 	"backend/core-server/internal/infras/repo"
 	jobdbsync "backend/core-server/internal/jobs/job-dbsync"
 	"backend/core-server/internal/rpc/categorypb"
+	"backend/core-server/internal/rpc/commentpb"
 	"backend/core-server/internal/rpc/likepb"
 
 	"google.golang.org/grpc"
@@ -38,11 +39,13 @@ func NewServer(
 	like *LikeRPC,
 	category *CategoryRPC,
 	article *ArticleRPC,
+	comment *CommentRPC,
 ) (*Server, error) {
 	engine := grpc.NewServer()
 	likepb.RegisterLikeServiceServer(engine, like)
 	categorypb.RegisterCategoryServiceServer(engine, category)
 	articlepb.RegisterArticleServiceServer(engine, article)
+	commentpb.RegisterCommentServiceServer(engine, comment)
 	reflection.Register(engine)
 
 	return &Server{
