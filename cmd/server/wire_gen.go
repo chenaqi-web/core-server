@@ -9,8 +9,10 @@ package main
 import (
 	"backend/core-server/internal/application"
 	"backend/core-server/internal/config"
+	"backend/core-server/internal/infras/auth"
 	"backend/core-server/internal/infras/cache"
 	"backend/core-server/internal/infras/clog"
+	"backend/core-server/internal/infras/mail"
 	"backend/core-server/internal/infras/mq/kafka"
 	"backend/core-server/internal/infras/repo"
 	"backend/core-server/internal/jobs/job-dbsync"
@@ -42,6 +44,28 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 	countRepo := repo.NewCountRepo(dbClient)
 	iLikeCache := cache.NewILikeCache(cacheClient)
 	messageQueueConsumer := jobdbsync.NewMessageQueueConsumer(cfg, log, syncProducer, kafkaManager, cacheClient, likeRepo, countRepo, iLikeCache)
+	userRepo := repo.NewUserRepo(dbClient)
+	emailCodeStore, err := cache.NewEmailCodeStore(cacheClient)
+	if err != nil {
+		return nil, err
+	}
+	authStore, err := cache.NewAuthStore(cacheClient, cfg)
+	if err != nil {
+		return nil, err
+	}
+	qqMailSender, err := mail.NewQQMailSender(cfg)
+	if err != nil {
+		return nil, err
+	}
+	jwtManager, err := auth.NewJWTManager(cfg)
+	if err != nil {
+		return nil, err
+	}
+	authService, err := application.NewAuthService(log, userRepo, emailCodeStore, authStore, qqMailSender, jwtManager)
+	if err != nil {
+		return nil, err
+	}
+	authRPC := rpc.NewAuthRPC(authService)
 	likeService, err := application.NewLikeService(log, likeRepo, iLikeCache, syncProducer, cfg)
 	if err != nil {
 		return nil, err
@@ -54,13 +78,12 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 	}
 	categoryRPC := rpc.NewCategoryRPC(categoryService)
 	articleRepo := repo.NewArticleRepo(dbClient)
-	userRepo := repo.NewUserRepo(dbClient)
 	articleService, err := application.NewArticleService(log, articleRepo, userRepo, cfg)
 	if err != nil {
 		return nil, err
 	}
 	articleRPC := rpc.NewArticleRPC(articleService)
-	server, err := rpc.NewServer(cfg, dbClient, cacheClient, syncProducer, kafkaManager, messageQueueConsumer, likeRPC, categoryRPC, articleRPC)
+	server, err := rpc.NewServer(cfg, dbClient, cacheClient, syncProducer, kafkaManager, messageQueueConsumer, authRPC, likeRPC, categoryRPC, articleRPC)
 	if err != nil {
 		return nil, err
 	}

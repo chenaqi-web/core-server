@@ -11,6 +11,7 @@ const configPath = "conf/config.yaml"
 
 type Config struct {
 	Server          ServerConfig          `yaml:"server"`
+	Auth            AuthConfig            `yaml:"auth"`
 	Mysql           MySQLConfig           `yaml:"Mysql"`
 	Redis           RedisConfig           `yaml:"Redis"`
 	Kafka           KafkaConfig           `yaml:"Kafka"`
@@ -32,5 +33,9 @@ func Load() (*Config, error) {
 	if err := yaml.Unmarshal(data, cfg); err != nil {
 		return nil, fmt.Errorf("parse config %s: %w", configPath, err)
 	}
+	cfg.Auth.JWTAccessSecret = os.Getenv("JWT_ACCESS_SECRET")
+	cfg.Auth.JWTRefreshSecret = os.Getenv("JWT_REFRESH_SECRET")
+	cfg.Auth.QQSMTPUsername = os.Getenv("QQ_SMTP_USERNAME")
+	cfg.Auth.QQSMTPAuthCode = os.Getenv("QQ_SMTP_AUTH_CODE")
 	return cfg, nil
 }

@@ -1,6 +1,10 @@
 server:
   addr: "127.0.0.1:8081"
 
+auth:
+  access_expire: "20m"
+  refresh_expire: "168h"
+
 Log:
   Level: "debug"
   # console=仅终端彩色 | file=仅文件JSON
