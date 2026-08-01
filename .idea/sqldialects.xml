@@ -4,5 +4,6 @@
     <file url="file://$PROJECT_DIR$/docs/sql/article.sql" dialect="MySQL" />
     <file url="file://$PROJECT_DIR$/docs/sql/comment.sql" dialect="MySQL" />
     <file url="file://$PROJECT_DIR$/internal/infras/repo/article_impl.go" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/internal/infras/repo/category_impl.go" dialect="GenericSQL" />
   </component>
 </project>
