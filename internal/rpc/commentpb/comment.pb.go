@@ -35,7 +35,6 @@ type CommentInfo struct {
 	CreatedAt     string                 `protobuf:"bytes,11,opt,name=createdAt,proto3" json:"createdAt,omitempty"`
 	UserName      string                 `protobuf:"bytes,12,opt,name=userName,proto3" json:"userName,omitempty"`
 	UserAvatar    string                 `protobuf:"bytes,13,opt,name=userAvatar,proto3" json:"userAvatar,omitempty"`
-	Replies       []*CommentInfo         `protobuf:"bytes,14,rep,name=replies,proto3" json:"replies,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -154,13 +153,6 @@ func (x *CommentInfo) GetUserAvatar() string {
 	return ""
 }
 
-func (x *CommentInfo) GetReplies() []*CommentInfo {
-	if x != nil {
-		return x.Replies
-	}
-	return nil
-}
-
 type CreateCommentReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ArticleId     uint64                 `protobuf:"varint,1,opt,name=articleId,proto3" json:"articleId,omitempty"`
@@ -270,7 +262,8 @@ type CreateReplyReq struct {
 	RootId        uint64                 `protobuf:"varint,1,opt,name=rootId,proto3" json:"rootId,omitempty"` // 一级评论ID
 	UserId        uint64                 `protobuf:"varint,2,opt,name=userId,proto3" json:"userId,omitempty"`
 	ReplyToId     uint64                 `protobuf:"varint,3,opt,name=replyToId,proto3" json:"replyToId,omitempty"` // @回复目标用户
-	Content       string                 `protobuf:"bytes,5,opt,name=content,proto3" json:"content,omitempty"`
+	Content       string                 `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty"`
+	ArticleId     uint64                 `protobuf:"varint,5,opt,name=articleId,proto3" json:"articleId,omitempty"` // 文章ID
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -331,6 +324,13 @@ func (x *CreateReplyReq) GetContent() string {
 		return x.Content
 	}
 	return ""
+}
+
+func (x *CreateReplyReq) GetArticleId() uint64 {
+	if x != nil {
+		return x.ArticleId
+	}
+	return 0
 }
 
 type CreateReplyResp struct {
@@ -595,7 +595,7 @@ func (x *GetArticleCommentsResp) GetSize() int32 {
 
 type GetCommentRepliesReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	RootId        uint64                 `protobuf:"varint,1,opt,name=rootId,proto3" json:"rootId,omitempty"`
+	ParentId      uint64                 `protobuf:"varint,1,opt,name=parentId,proto3" json:"parentId,omitempty"`
 	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
 	Size          int32                  `protobuf:"varint,3,opt,name=size,proto3" json:"size,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -632,9 +632,9 @@ func (*GetCommentRepliesReq) Descriptor() ([]byte, []int) {
 	return file_comment_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *GetCommentRepliesReq) GetRootId() uint64 {
+func (x *GetCommentRepliesReq) GetParentId() uint64 {
 	if x != nil {
-		return x.RootId
+		return x.ParentId
 	}
 	return 0
 }
@@ -658,7 +658,6 @@ type GetCommentRepliesResp struct {
 	Replies       []*CommentInfo         `protobuf:"bytes,1,rep,name=replies,proto3" json:"replies,omitempty"`
 	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
 	Size          int32                  `protobuf:"varint,3,opt,name=size,proto3" json:"size,omitempty"`
-	Total         int32                  `protobuf:"varint,4,opt,name=total,proto3" json:"total,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -714,146 +713,11 @@ func (x *GetCommentRepliesResp) GetSize() int32 {
 	return 0
 }
 
-func (x *GetCommentRepliesResp) GetTotal() int32 {
-	if x != nil {
-		return x.Total
-	}
-	return 0
-}
-
-type GetUserCommentsReq struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        uint64                 `protobuf:"varint,1,opt,name=userId,proto3" json:"userId,omitempty"`
-	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
-	Size          int32                  `protobuf:"varint,3,opt,name=size,proto3" json:"size,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetUserCommentsReq) Reset() {
-	*x = GetUserCommentsReq{}
-	mi := &file_comment_proto_msgTypes[11]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetUserCommentsReq) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetUserCommentsReq) ProtoMessage() {}
-
-func (x *GetUserCommentsReq) ProtoReflect() protoreflect.Message {
-	mi := &file_comment_proto_msgTypes[11]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetUserCommentsReq.ProtoReflect.Descriptor instead.
-func (*GetUserCommentsReq) Descriptor() ([]byte, []int) {
-	return file_comment_proto_rawDescGZIP(), []int{11}
-}
-
-func (x *GetUserCommentsReq) GetUserId() uint64 {
-	if x != nil {
-		return x.UserId
-	}
-	return 0
-}
-
-func (x *GetUserCommentsReq) GetPage() int32 {
-	if x != nil {
-		return x.Page
-	}
-	return 0
-}
-
-func (x *GetUserCommentsReq) GetSize() int32 {
-	if x != nil {
-		return x.Size
-	}
-	return 0
-}
-
-type GetUserCommentsResp struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Comments      []*CommentInfo         `protobuf:"bytes,1,rep,name=comments,proto3" json:"comments,omitempty"`
-	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
-	Size          int32                  `protobuf:"varint,3,opt,name=size,proto3" json:"size,omitempty"`
-	Total         int32                  `protobuf:"varint,4,opt,name=total,proto3" json:"total,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetUserCommentsResp) Reset() {
-	*x = GetUserCommentsResp{}
-	mi := &file_comment_proto_msgTypes[12]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetUserCommentsResp) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetUserCommentsResp) ProtoMessage() {}
-
-func (x *GetUserCommentsResp) ProtoReflect() protoreflect.Message {
-	mi := &file_comment_proto_msgTypes[12]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetUserCommentsResp.ProtoReflect.Descriptor instead.
-func (*GetUserCommentsResp) Descriptor() ([]byte, []int) {
-	return file_comment_proto_rawDescGZIP(), []int{12}
-}
-
-func (x *GetUserCommentsResp) GetComments() []*CommentInfo {
-	if x != nil {
-		return x.Comments
-	}
-	return nil
-}
-
-func (x *GetUserCommentsResp) GetPage() int32 {
-	if x != nil {
-		return x.Page
-	}
-	return 0
-}
-
-func (x *GetUserCommentsResp) GetSize() int32 {
-	if x != nil {
-		return x.Size
-	}
-	return 0
-}
-
-func (x *GetUserCommentsResp) GetTotal() int32 {
-	if x != nil {
-		return x.Total
-	}
-	return 0
-}
-
 var File_comment_proto protoreflect.FileDescriptor
 
 const file_comment_proto_rawDesc = "" +
 	"\n" +
-	"\rcomment.proto\x12\acomment\"\x9a\x03\n" +
+	"\rcomment.proto\x12\acomment\"\xd7\x02\n" +
 	"\vCommentInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x1c\n" +
 	"\tarticleId\x18\x02 \x01(\x04R\tarticleId\x12\x16\n" +
@@ -871,19 +735,19 @@ const file_comment_proto_rawDesc = "" +
 	"\buserName\x18\f \x01(\tR\buserName\x12\x1e\n" +
 	"\n" +
 	"userAvatar\x18\r \x01(\tR\n" +
-	"userAvatar\x12.\n" +
-	"\areplies\x18\x0e \x03(\v2\x14.comment.CommentInfoR\arepliesJ\x04\b\a\x10\bR\vreplyToName\"b\n" +
+	"userAvatar\"b\n" +
 	"\x10CreateCommentReq\x12\x1c\n" +
 	"\tarticleId\x18\x01 \x01(\x04R\tarticleId\x12\x16\n" +
 	"\x06userId\x18\x02 \x01(\x04R\x06userId\x12\x18\n" +
 	"\acontent\x18\x03 \x01(\tR\acontent\"-\n" +
 	"\x11CreateCommentResp\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x8b\x01\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x96\x01\n" +
 	"\x0eCreateReplyReq\x12\x16\n" +
 	"\x06rootId\x18\x01 \x01(\x04R\x06rootId\x12\x16\n" +
 	"\x06userId\x18\x02 \x01(\x04R\x06userId\x12\x1c\n" +
 	"\treplyToId\x18\x03 \x01(\x04R\treplyToId\x12\x18\n" +
-	"\acontent\x18\x05 \x01(\tR\acontentJ\x04\b\x04\x10\x05R\vreplyToName\"+\n" +
+	"\acontent\x18\x04 \x01(\tR\acontent\x12\x1c\n" +
+	"\tarticleId\x18\x05 \x01(\x04R\tarticleId\"+\n" +
 	"\x0fCreateReplyResp\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\":\n" +
 	"\x10DeleteCommentReq\x12\x0e\n" +
@@ -898,32 +762,21 @@ const file_comment_proto_rawDesc = "" +
 	"\x16GetArticleCommentsResp\x120\n" +
 	"\bcomments\x18\x01 \x03(\v2\x14.comment.CommentInfoR\bcomments\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x12\n" +
-	"\x04size\x18\x03 \x01(\x05R\x04size\"V\n" +
-	"\x14GetCommentRepliesReq\x12\x16\n" +
-	"\x06rootId\x18\x01 \x01(\x04R\x06rootId\x12\x12\n" +
+	"\x04size\x18\x03 \x01(\x05R\x04size\"Z\n" +
+	"\x14GetCommentRepliesReq\x12\x1a\n" +
+	"\bparentId\x18\x01 \x01(\x04R\bparentId\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x12\n" +
-	"\x04size\x18\x03 \x01(\x05R\x04size\"\x85\x01\n" +
+	"\x04size\x18\x03 \x01(\x05R\x04size\"o\n" +
 	"\x15GetCommentRepliesResp\x12.\n" +
 	"\areplies\x18\x01 \x03(\v2\x14.comment.CommentInfoR\areplies\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x12\n" +
-	"\x04size\x18\x03 \x01(\x05R\x04size\x12\x14\n" +
-	"\x05total\x18\x04 \x01(\x05R\x05total\"T\n" +
-	"\x12GetUserCommentsReq\x12\x16\n" +
-	"\x06userId\x18\x01 \x01(\x04R\x06userId\x12\x12\n" +
-	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x12\n" +
-	"\x04size\x18\x03 \x01(\x05R\x04size\"\x85\x01\n" +
-	"\x13GetUserCommentsResp\x120\n" +
-	"\bcomments\x18\x01 \x03(\v2\x14.comment.CommentInfoR\bcomments\x12\x12\n" +
-	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x12\n" +
-	"\x04size\x18\x03 \x01(\x05R\x04size\x12\x14\n" +
-	"\x05total\x18\x04 \x01(\x05R\x05total2\xe7\x03\n" +
+	"\x04size\x18\x03 \x01(\x05R\x04size2\x97\x03\n" +
 	"\x0eCommentService\x12H\n" +
 	"\rCreateComment\x12\x19.comment.CreateCommentReq\x1a\x1a.comment.CreateCommentResp\"\x00\x12B\n" +
 	"\vCreateReply\x12\x17.comment.CreateReplyReq\x1a\x18.comment.CreateReplyResp\"\x00\x12H\n" +
 	"\rDeleteComment\x12\x19.comment.DeleteCommentReq\x1a\x1a.comment.DeleteCommentResp\"\x00\x12W\n" +
 	"\x12GetArticleComments\x12\x1e.comment.GetArticleCommentsReq\x1a\x1f.comment.GetArticleCommentsResp\"\x00\x12T\n" +
-	"\x11GetCommentReplies\x12\x1d.comment.GetCommentRepliesReq\x1a\x1e.comment.GetCommentRepliesResp\"\x00\x12N\n" +
-	"\x0fGetUserComments\x12\x1b.comment.GetUserCommentsReq\x1a\x1c.comment.GetUserCommentsResp\"\x00B6Z4backend/core-server/internal/rpc/commentpb;commentpbb\x06proto3"
+	"\x11GetCommentReplies\x12\x1d.comment.GetCommentRepliesReq\x1a\x1e.comment.GetCommentRepliesResp\"\x00B6Z4backend/core-server/internal/rpc/commentpb;commentpbb\x06proto3"
 
 var (
 	file_comment_proto_rawDescOnce sync.Once
@@ -937,7 +790,7 @@ func file_comment_proto_rawDescGZIP() []byte {
 	return file_comment_proto_rawDescData
 }
 
-var file_comment_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_comment_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_comment_proto_goTypes = []any{
 	(*CommentInfo)(nil),            // 0: comment.CommentInfo
 	(*CreateCommentReq)(nil),       // 1: comment.CreateCommentReq
@@ -950,31 +803,25 @@ var file_comment_proto_goTypes = []any{
 	(*GetArticleCommentsResp)(nil), // 8: comment.GetArticleCommentsResp
 	(*GetCommentRepliesReq)(nil),   // 9: comment.GetCommentRepliesReq
 	(*GetCommentRepliesResp)(nil),  // 10: comment.GetCommentRepliesResp
-	(*GetUserCommentsReq)(nil),     // 11: comment.GetUserCommentsReq
-	(*GetUserCommentsResp)(nil),    // 12: comment.GetUserCommentsResp
 }
 var file_comment_proto_depIdxs = []int32{
-	0,  // 0: comment.CommentInfo.replies:type_name -> comment.CommentInfo
-	0,  // 1: comment.GetArticleCommentsResp.comments:type_name -> comment.CommentInfo
-	0,  // 2: comment.GetCommentRepliesResp.replies:type_name -> comment.CommentInfo
-	0,  // 3: comment.GetUserCommentsResp.comments:type_name -> comment.CommentInfo
-	1,  // 4: comment.CommentService.CreateComment:input_type -> comment.CreateCommentReq
-	3,  // 5: comment.CommentService.CreateReply:input_type -> comment.CreateReplyReq
-	5,  // 6: comment.CommentService.DeleteComment:input_type -> comment.DeleteCommentReq
-	7,  // 7: comment.CommentService.GetArticleComments:input_type -> comment.GetArticleCommentsReq
-	9,  // 8: comment.CommentService.GetCommentReplies:input_type -> comment.GetCommentRepliesReq
-	11, // 9: comment.CommentService.GetUserComments:input_type -> comment.GetUserCommentsReq
-	2,  // 10: comment.CommentService.CreateComment:output_type -> comment.CreateCommentResp
-	4,  // 11: comment.CommentService.CreateReply:output_type -> comment.CreateReplyResp
-	6,  // 12: comment.CommentService.DeleteComment:output_type -> comment.DeleteCommentResp
-	8,  // 13: comment.CommentService.GetArticleComments:output_type -> comment.GetArticleCommentsResp
-	10, // 14: comment.CommentService.GetCommentReplies:output_type -> comment.GetCommentRepliesResp
-	12, // 15: comment.CommentService.GetUserComments:output_type -> comment.GetUserCommentsResp
-	10, // [10:16] is the sub-list for method output_type
-	4,  // [4:10] is the sub-list for method input_type
-	4,  // [4:4] is the sub-list for extension type_name
-	4,  // [4:4] is the sub-list for extension extendee
-	0,  // [0:4] is the sub-list for field type_name
+	0,  // 0: comment.GetArticleCommentsResp.comments:type_name -> comment.CommentInfo
+	0,  // 1: comment.GetCommentRepliesResp.replies:type_name -> comment.CommentInfo
+	1,  // 2: comment.CommentService.CreateComment:input_type -> comment.CreateCommentReq
+	3,  // 3: comment.CommentService.CreateReply:input_type -> comment.CreateReplyReq
+	5,  // 4: comment.CommentService.DeleteComment:input_type -> comment.DeleteCommentReq
+	7,  // 5: comment.CommentService.GetArticleComments:input_type -> comment.GetArticleCommentsReq
+	9,  // 6: comment.CommentService.GetCommentReplies:input_type -> comment.GetCommentRepliesReq
+	2,  // 7: comment.CommentService.CreateComment:output_type -> comment.CreateCommentResp
+	4,  // 8: comment.CommentService.CreateReply:output_type -> comment.CreateReplyResp
+	6,  // 9: comment.CommentService.DeleteComment:output_type -> comment.DeleteCommentResp
+	8,  // 10: comment.CommentService.GetArticleComments:output_type -> comment.GetArticleCommentsResp
+	10, // 11: comment.CommentService.GetCommentReplies:output_type -> comment.GetCommentRepliesResp
+	7,  // [7:12] is the sub-list for method output_type
+	2,  // [2:7] is the sub-list for method input_type
+	2,  // [2:2] is the sub-list for extension type_name
+	2,  // [2:2] is the sub-list for extension extendee
+	0,  // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_comment_proto_init() }
@@ -988,7 +835,7 @@ func file_comment_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_comment_proto_rawDesc), len(file_comment_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   13,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

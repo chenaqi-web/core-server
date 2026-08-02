@@ -1,4 +1,4 @@
-MODULE := backend/core-server
+MODULE := core-server
 PROTO_DIR := ./docs/proto
 PROTO_FILES := $(wildcard $(PROTO_DIR)/*.proto)
 

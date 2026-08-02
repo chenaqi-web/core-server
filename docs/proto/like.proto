@@ -6,7 +6,7 @@ syntax = "proto3";
 
 package like;
 //import "idl/validate/validate.proto";
-option go_package = "backend/core-server/internal/rpc/likepb;likepb";
+option go_package = "core-server/internal/rpc/likepb;likepb";
 
 // 1.点赞操作 和 取消点赞
 message ThumbUpRequest {

@@ -1,4 +1,4 @@
-module backend/core-server
+module core-server
 
 go 1.26
 

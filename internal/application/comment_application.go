@@ -60,19 +60,12 @@ func (s *CommentService) CreateComment(ctx context.Context, req *dto.CreateComme
 }
 
 func (s *CommentService) CreateReply(ctx context.Context, req *dto.CreateReplyRequest) (bool, error) {
-	// 1. 首先拿到回复的评论的root_id
-	root, err := s.repo.GetByID(ctx, req.RootID)
-	if err != nil {
-		s.log.Error(err.Error())
-		return false, err
-	}
-
-	// 2.开启事务进行修改
-	err = s.repo.WithTransaction(ctx, func(ctx context.Context) error {
-		_, err = s.repo.CreateReply(ctx, &entity.Comment{
-			ArticleID: root.ArticleID,
+	// 开启事务进行修改
+	err := s.repo.WithTransaction(ctx, func(ctx context.Context) error {
+		_, err := s.repo.CreateReply(ctx, &entity.Comment{
+			ArticleID: req.ArticleID,
 			UserID:    req.UserID,
-			ParentID:  root.ID,
+			ParentID:  req.ParentID,
 			RootID:    1, // 回复通常都不是根评论，用1来划分
 			ReplyToID: req.ReplyToID,
 			Content:   req.Content,
@@ -81,11 +74,11 @@ func (s *CommentService) CreateReply(ctx context.Context, req *dto.CreateReplyRe
 			return err
 		}
 		// 增加根评论的下面的回复评论数
-		if err = s.repo.IncrementChildCount(ctx, root.ID); err != nil {
+		if err = s.repo.IncrementChildCount(ctx, req.ParentID); err != nil {
 			return err
 		}
 		// 修改主表的评论数
-		if err = s.artRepo.UpdateCommentCount(ctx, root.ArticleID, 1); err != nil {
+		if err = s.artRepo.UpdateCommentCount(ctx, req.ArticleID, 1); err != nil {
 			return err
 		}
 		return nil
@@ -153,20 +146,11 @@ func (s *CommentService) GetArticleComments(ctx context.Context, req *dto.GetArt
 }
 
 func (s *CommentService) GetCommentReplies(ctx context.Context, req *dto.GetCommentRepliesRequest) (*dto.GetCommentRepliesResponse, error) {
-	if req == nil {
-		return nil, ErrCommentInvalid
-	}
-
 	page := Page(int(req.Page))
 	size := Size(int(req.Size))
 	offset := (page - 1) * size
 
-	replies, err := s.repo.ListRepliesByRoot(ctx, req.RootID, offset, size)
-	if err != nil {
-		s.log.Error(err.Error())
-		return nil, err
-	}
-	total, err := s.repo.CountRepliesByRoot(ctx, req.RootID)
+	replies, err := s.repo.ListRepliesByParent(ctx, req.ParentID, offset, size)
 	if err != nil {
 		s.log.Error(err.Error())
 		return nil, err
@@ -187,45 +171,5 @@ func (s *CommentService) GetCommentReplies(ctx context.Context, req *dto.GetComm
 		Replies: items,
 		Page:    int32(page),
 		Size:    int32(size),
-		Total:   int32(total),
-	}, nil
-}
-
-func (s *CommentService) GetUserComments(ctx context.Context, req *dto.GetUserCommentsRequest) (*dto.GetUserCommentsResponse, error) {
-	if req == nil {
-		return nil, ErrCommentInvalid
-	}
-
-	page := Page(int(req.Page))
-	size := Size(int(req.Size))
-	offset := (page - 1) * size
-
-	comments, err := s.repo.ListByUser(ctx, req.UserID, offset, size)
-	if err != nil {
-		s.log.Error(err.Error())
-		return nil, err
-	}
-	total, err := s.repo.CountByUser(ctx, req.UserID)
-	if err != nil {
-		s.log.Error(err.Error())
-		return nil, err
-	}
-
-	authorMap, err := LoadUserMap(ctx, s.userRepo, CollectCommentUserIDs(comments))
-	if err != nil {
-		s.log.Error(err.Error())
-		return nil, err
-	}
-
-	items := make([]*dto.CommentInfoDTO, 0, len(comments))
-	for _, c := range comments {
-		items = append(items, dto.CommentInfoFromEntity(c, authorMap[c.UserID]))
-	}
-
-	return &dto.GetUserCommentsResponse{
-		Comments: items,
-		Page:     int32(page),
-		Size:     int32(size),
-		Total:    int32(total),
 	}, nil
 }

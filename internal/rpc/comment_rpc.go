@@ -55,11 +55,3 @@ func (c *CommentRPC) GetCommentReplies(ctx context.Context, req *commentpb.GetCo
 	}
 	return resp.ToPB(), nil
 }
-
-func (c *CommentRPC) GetUserComments(ctx context.Context, req *commentpb.GetUserCommentsReq) (*commentpb.GetUserCommentsResp, error) {
-	resp, err := c.CommentService.GetUserComments(ctx, dto.GetUserCommentsRequestFromPB(req))
-	if err != nil {
-		return nil, err
-	}
-	return resp.ToPB(), nil
-}

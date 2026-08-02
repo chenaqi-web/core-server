@@ -29,7 +29,8 @@ func CreateCommentRequestFromPB(req *commentpb.CreateCommentReq) *CreateCommentR
 //创建回复
 
 type CreateReplyRequest struct {
-	RootID    uint64
+	ArticleID uint64
+	ParentID  uint64
 	UserID    uint64
 	ReplyToID uint64
 	Content   string
@@ -40,7 +41,8 @@ func CreateReplyRequestFromPB(req *commentpb.CreateReplyReq) *CreateReplyRequest
 		return nil
 	}
 	return &CreateReplyRequest{
-		RootID:    req.GetRootId(),
+		ArticleID: req.GetArticleId(),
+		ParentID:  req.GetRootId(),
 		UserID:    req.GetUserId(),
 		ReplyToID: req.GetReplyToId(),
 		Content:   req.GetContent(),
@@ -67,29 +69,15 @@ type GetArticleCommentsResponse struct {
 }
 
 type GetCommentRepliesRequest struct {
-	RootID uint64
-	Page   int32
-	Size   int32
+	ParentID uint64
+	Page     int32
+	Size     int32
 }
 
 type GetCommentRepliesResponse struct {
 	Replies []*CommentInfoDTO
 	Page    int32
 	Size    int32
-	Total   int32
-}
-
-type GetUserCommentsRequest struct {
-	UserID uint64
-	Page   int32
-	Size   int32
-}
-
-type GetUserCommentsResponse struct {
-	Comments []*CommentInfoDTO
-	Page     int32
-	Size     int32
-	Total    int32
 }
 
 type CommentInfoDTO struct {
@@ -105,7 +93,6 @@ type CommentInfoDTO struct {
 	CreatedAt  string
 	UserName   string
 	UserAvatar string
-	Replies    []*CommentInfoDTO
 }
 
 func DeleteCommentRequestFromPB(req *commentpb.DeleteCommentReq) *DeleteCommentRequest {
@@ -145,9 +132,9 @@ func GetCommentRepliesRequestFromPB(req *commentpb.GetCommentRepliesReq) *GetCom
 		return nil
 	}
 	return &GetCommentRepliesRequest{
-		RootID: req.GetRootId(),
-		Page:   req.GetPage(),
-		Size:   req.GetSize(),
+		ParentID: req.GetParentId(),
+		Page:     req.GetPage(),
+		Size:     req.GetSize(),
 	}
 }
 
@@ -159,30 +146,6 @@ func (r *GetCommentRepliesResponse) ToPB() *commentpb.GetCommentRepliesResp {
 		Replies: CommentInfoListToPB(r.Replies),
 		Page:    r.Page,
 		Size:    r.Size,
-		Total:   r.Total,
-	}
-}
-
-func GetUserCommentsRequestFromPB(req *commentpb.GetUserCommentsReq) *GetUserCommentsRequest {
-	if req == nil {
-		return nil
-	}
-	return &GetUserCommentsRequest{
-		UserID: req.GetUserId(),
-		Page:   req.GetPage(),
-		Size:   req.GetSize(),
-	}
-}
-
-func (r *GetUserCommentsResponse) ToPB() *commentpb.GetUserCommentsResp {
-	if r == nil {
-		return nil
-	}
-	return &commentpb.GetUserCommentsResp{
-		Comments: CommentInfoListToPB(r.Comments),
-		Page:     r.Page,
-		Size:     r.Size,
-		Total:    r.Total,
 	}
 }
 
@@ -226,9 +189,6 @@ func CommentInfoToPB(info *CommentInfoDTO) *commentpb.CommentInfo {
 		CreatedAt:  info.CreatedAt,
 		UserName:   info.UserName,
 		UserAvatar: info.UserAvatar,
-	}
-	if len(info.Replies) > 0 {
-		pb.Replies = CommentInfoListToPB(info.Replies)
 	}
 	return pb
 }

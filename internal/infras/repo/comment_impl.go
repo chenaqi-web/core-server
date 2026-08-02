@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jmoiron/sqlx"
-
 	"backend/core-server/internal/model/entity"
 )
 
@@ -133,7 +131,7 @@ LIMIT ?, ?`, commentSelectColumns)
 	return items, nil
 }
 
-func (r *CommentRepo) ListRepliesByRoot(ctx context.Context, rootID uint64, offset, limit int) ([]*entity.Comment, error) {
+func (r *CommentRepo) ListRepliesByParent(ctx context.Context, parentID uint64, offset, limit int) ([]*entity.Comment, error) {
 	var items []*entity.Comment
 	query := fmt.Sprintf(`
 SELECT %s FROM comment
@@ -141,65 +139,8 @@ WHERE parent_id = ? AND deleted_at IS NULL
 ORDER BY created_at ASC
 LIMIT ?, ?`, commentSelectColumns)
 
-	if err := r.db(ctx).SelectContext(ctx, &items, query, rootID, offset, limit); err != nil {
+	if err := r.db(ctx).SelectContext(ctx, &items, query, parentID, offset, limit); err != nil {
 		return nil, err
 	}
 	return items, nil
-}
-
-func (r *CommentRepo) CountRepliesByRoot(ctx context.Context, rootID uint64) (int, error) {
-	var count int
-	const query = `
-SELECT COUNT(1) FROM comment
-WHERE parent_id = ? AND deleted_at IS NULL`
-	if err := r.db(ctx).GetContext(ctx, &count, query, rootID); err != nil {
-		return 0, err
-	}
-	return count, nil
-}
-
-func (r *CommentRepo) ListRepliesByRoots(ctx context.Context, rootIDs []uint64) ([]*entity.Comment, error) {
-	if len(rootIDs) == 0 {
-		return nil, nil
-	}
-
-	baseQuery := fmt.Sprintf(`
-SELECT %s FROM comment
-WHERE parent_id IN (?) AND deleted_at IS NULL
-ORDER BY parent_id, created_at ASC`, commentSelectColumns)
-
-	query, args, err := sqlx.In(baseQuery, rootIDs)
-	if err != nil {
-		return nil, err
-	}
-	query = r.DB.Rebind(query)
-
-	var items []*entity.Comment
-	if err := r.db(ctx).SelectContext(ctx, &items, query, args...); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-func (r *CommentRepo) ListByUser(ctx context.Context, userID uint64, offset, limit int) ([]*entity.Comment, error) {
-	var items []*entity.Comment
-	query := fmt.Sprintf(`
-SELECT %s FROM comment
-WHERE user_id = ? AND deleted_at IS NULL
-ORDER BY created_at DESC
-LIMIT ?, ?`, commentSelectColumns)
-
-	if err := r.db(ctx).SelectContext(ctx, &items, query, userID, offset, limit); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-func (r *CommentRepo) CountByUser(ctx context.Context, userID uint64) (int, error) {
-	var count int
-	const query = `SELECT COUNT(1) FROM comment WHERE user_id = ? AND deleted_at IS NULL`
-	if err := r.db(ctx).GetContext(ctx, &count, query, userID); err != nil {
-		return 0, err
-	}
-	return count, nil
 }

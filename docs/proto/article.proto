@@ -4,7 +4,7 @@ syntax = "proto3";
 // 与数据库表 `blog_posts` 字段对应的文章 proto 定义
 
 package article;
-option go_package = "backend/core-server/internal/rpc/articlepb;articlepb";
+option go_package = "core-server/internal/rpc/articlepb;articlepb";
 
 message Article {
   uint64 id = 1;

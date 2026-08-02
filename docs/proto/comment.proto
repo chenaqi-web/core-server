@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package comment;
-option go_package = "backend/core-server/internal/rpc/commentpb;commentpb";
+option go_package = "core-server/internal/rpc/commentpb;commentpb";
 
 message CommentInfo {
   uint64 id = 1;
@@ -32,6 +32,7 @@ message CreateReplyReq {
   uint64 userId = 2;
   uint64 replyToId = 3;    // @回复目标用户
   string content = 4;
+  uint64 articleId = 5;     // 文章ID
 }
 message CreateReplyResp {
   bool success =1;
@@ -57,7 +58,7 @@ message GetArticleCommentsResp {
 }
 
 message GetCommentRepliesReq {
-  uint64 rootId = 1;
+  uint64 parentId = 1;
   int32 page = 2;
   int32 size = 3;
 }
@@ -65,19 +66,6 @@ message GetCommentRepliesResp {
   repeated CommentInfo replies = 1;
   int32 page = 2;
   int32 size = 3;
-  int32 total = 4;
-}
-
-message GetUserCommentsReq {
-  uint64 userId = 1;
-  int32 page = 2;
-  int32 size = 3;
-}
-message GetUserCommentsResp {
-  repeated CommentInfo comments = 1;
-  int32 page = 2;
-  int32 size = 3;
-  int32 total = 4;
 }
 
 service CommentService {
@@ -86,5 +74,4 @@ service CommentService {
   rpc DeleteComment(DeleteCommentReq) returns (DeleteCommentResp) {}
   rpc GetArticleComments(GetArticleCommentsReq) returns (GetArticleCommentsResp) {}
   rpc GetCommentReplies(GetCommentRepliesReq) returns (GetCommentRepliesResp) {}
-  rpc GetUserComments(GetUserCommentsReq) returns (GetUserCommentsResp) {}
 }

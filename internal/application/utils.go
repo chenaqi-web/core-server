@@ -21,9 +21,8 @@ var (
 	ErrCategoryNotFound     = errors.New("category not found")
 	ErrArticleNotFound      = errors.New("article not found")
 
-	ErrCommentNotFound  = errors.New("comment not found")
-	ErrCommentForbidden = errors.New("comment delete forbidden")
-	ErrCommentInvalid   = errors.New("comment content invalid")
+	ErrCommentNotFound = errors.New("comment not found")
+	ErrCommentInvalid  = errors.New("comment content invalid")
 )
 
 func Page(page int) int {
@@ -85,16 +84,4 @@ func LoadUserMap(ctx context.Context, userRepo domain.UserRepoDomain, userIDs []
 		userMap[user.ID] = user
 	}
 	return userMap, nil
-}
-
-func GroupPreviewReplies(replies []*entity.Comment, limit int) map[uint64][]*entity.Comment {
-	result := make(map[uint64][]*entity.Comment)
-	for _, reply := range replies {
-		items := result[reply.ParentID]
-		if len(items) >= limit {
-			continue
-		}
-		result[reply.ParentID] = append(items, reply)
-	}
-	return result
 }
