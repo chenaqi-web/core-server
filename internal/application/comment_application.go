@@ -70,13 +70,12 @@ func (s *CommentService) CreateReply(ctx context.Context, req *dto.CreateReplyRe
 	// 2.开启事务进行修改
 	err = s.repo.WithTransaction(ctx, func(ctx context.Context) error {
 		_, err = s.repo.CreateReply(ctx, &entity.Comment{
-			ArticleID:   root.ArticleID,
-			UserID:      req.UserID,
-			ParentID:    root.ID,
-			RootID:      1, // 回复通常都不是根评论，用1来划分
-			ReplyToID:   req.ReplyToID,
-			ReplyToName: req.ReplyToName,
-			Content:     req.Content,
+			ArticleID: root.ArticleID,
+			UserID:    req.UserID,
+			ParentID:  root.ID,
+			RootID:    1, // 回复通常都不是根评论，用1来划分
+			ReplyToID: req.ReplyToID,
+			Content:   req.Content,
 		})
 		if err != nil {
 			return err
@@ -98,13 +97,9 @@ func (s *CommentService) CreateReply(ctx context.Context, req *dto.CreateReplyRe
 	return true, nil
 }
 
-// todo 修改一下删除评论
+// todo 修改一下删除评论（如果是一级评论，则直接删除，如果不是，则可以先返回成功，后续异步删除）
 
 func (s *CommentService) DeleteComment(ctx context.Context, req *dto.DeleteCommentRequest) error {
-	if req == nil {
-		return ErrCommentInvalid
-	}
-
 	comment, err := s.repo.GetByID(ctx, req.ID)
 	if err != nil {
 		s.log.Error(err.Error())
@@ -133,35 +128,13 @@ func (s *CommentService) GetArticleComments(ctx context.Context, req *dto.GetArt
 	size := Size(int(req.Size))
 	offset := (page - 1) * size
 
-	comments, err := s.repo.ListTopByArticle(ctx, req.ArticleID, offset, size, req.OrderBy)
-	if err != nil {
-		s.log.Error(err.Error())
-		return nil, err
-	}
-	total, err := s.repo.CountTopByArticle(ctx, req.ArticleID)
+	comments, err := s.repo.ListTopByArticle(ctx, req.ArticleID, offset, size)
 	if err != nil {
 		s.log.Error(err.Error())
 		return nil, err
 	}
 
-	rootIDs := make([]uint64, 0, len(comments))
-	for _, c := range comments {
-		rootIDs = append(rootIDs, c.ID)
-	}
-
-	allReplies, err := s.repo.ListRepliesByRoots(ctx, rootIDs)
-	if err != nil {
-		s.log.Error(err.Error())
-		return nil, err
-	}
-
-	previewMap := GroupPreviewReplies(allReplies, previewReplyLimit)
-	allComments := append([]*entity.Comment{}, comments...)
-	for _, replies := range previewMap {
-		allComments = append(allComments, replies...)
-	}
-
-	authorMap, err := LoadUserMap(ctx, s.userRepo, CollectCommentUserIDs(allComments))
+	authorMap, err := LoadUserMap(ctx, s.userRepo, CollectCommentUserIDs(comments))
 	if err != nil {
 		s.log.Error(err.Error())
 		return nil, err
@@ -169,18 +142,13 @@ func (s *CommentService) GetArticleComments(ctx context.Context, req *dto.GetArt
 
 	items := make([]*dto.CommentInfoDTO, 0, len(comments))
 	for _, c := range comments {
-		info := dto.CommentInfoFromEntity(c, authorMap[c.UserID])
-		for _, reply := range previewMap[c.ID] {
-			info.Replies = append(info.Replies, dto.CommentInfoFromEntity(reply, authorMap[reply.UserID]))
-		}
-		items = append(items, info)
+		items = append(items, dto.CommentInfoFromEntity(c, authorMap[c.UserID]))
 	}
 
 	return &dto.GetArticleCommentsResponse{
 		Comments: items,
 		Page:     int32(page),
 		Size:     int32(size),
-		Total:    int32(total),
 	}, nil
 }
 

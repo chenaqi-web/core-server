@@ -147,3 +147,5 @@ WHERE id = ? AND deleted_at IS NULL`
 	_, err := r.db(ctx).ExecContext(ctx, query, delta, time.Now(), articleID)
 	return err
 }
+
+// todo 记得写管理员文章删除

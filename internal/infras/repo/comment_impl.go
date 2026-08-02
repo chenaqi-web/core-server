@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -22,21 +21,20 @@ func NewCommentRepo(client *DBClient) *CommentRepo {
 }
 
 const commentSelectColumns = `
-id, article_id, user_id, parent_id, root_id, reply_to_id, reply_to_name,
+id, article_id, user_id, parent_id, root_id, reply_to_id,
 content, like_count, child_count, created_at, deleted_at`
 
 func (r *CommentRepo) CreateComment(ctx context.Context, comment *entity.Comment) (uint64, error) {
 	now := time.Now()
 	const query = `
 INSERT INTO comment
-    (article_id, user_id, parent_id, root_id, reply_to_id, reply_to_name,
+    (article_id, user_id, parent_id, root_id, reply_to_id,
      content, like_count, child_count, created_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	result, err := r.db(ctx).ExecContext(ctx, query,
 		comment.ArticleID, comment.UserID, comment.ParentID, comment.RootID,
-		comment.ReplyToID, comment.ReplyToName, comment.Content,
-		comment.LikeCount, comment.ChildCount, now,
+		comment.ReplyToID, comment.Content, comment.LikeCount, comment.ChildCount, now,
 	)
 	if err != nil {
 		return 0, err
@@ -52,14 +50,13 @@ func (r *CommentRepo) CreateReply(ctx context.Context, comment *entity.Comment) 
 	now := time.Now()
 	const query = `
 INSERT INTO comment
-    (article_id, user_id, parent_id, root_id, reply_to_id, reply_to_name,
+    (article_id, user_id, parent_id, root_id, reply_to_id,
      content, like_count, child_count, created_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	result, err := r.db(ctx).ExecContext(ctx, query,
 		comment.ArticleID, comment.UserID, comment.ParentID, comment.RootID,
-		comment.ReplyToID, comment.ReplyToName, comment.Content,
-		comment.LikeCount, comment.ChildCount, now,
+		comment.ReplyToID, comment.Content, comment.LikeCount, comment.ChildCount, now,
 	)
 	if err != nil {
 		return 0, err
@@ -122,34 +119,18 @@ WHERE id = ? AND deleted_at IS NULL`
 	return err
 }
 
-func (r *CommentRepo) ListTopByArticle(ctx context.Context, articleID uint64, offset, limit int, orderBy string) ([]*entity.Comment, error) {
-	orderClause := "ORDER BY created_at DESC"
-	if strings.EqualFold(orderBy, "hot") {
-		orderClause = "ORDER BY like_count DESC, created_at DESC"
-	}
-
+func (r *CommentRepo) ListTopByArticle(ctx context.Context, articleID uint64, offset, limit int) ([]*entity.Comment, error) {
 	var items []*entity.Comment
 	query := fmt.Sprintf(`
 SELECT %s FROM comment
 WHERE article_id = ? AND parent_id = 0 AND deleted_at IS NULL
-%s
-LIMIT ?, ?`, commentSelectColumns, orderClause)
+ORDER BY created_at DESC
+LIMIT ?, ?`, commentSelectColumns)
 
 	if err := r.db(ctx).SelectContext(ctx, &items, query, articleID, offset, limit); err != nil {
 		return nil, err
 	}
 	return items, nil
-}
-
-func (r *CommentRepo) CountTopByArticle(ctx context.Context, articleID uint64) (int, error) {
-	var count int
-	const query = `
-SELECT COUNT(1) FROM comment
-WHERE article_id = ? AND parent_id = 0 AND deleted_at IS NULL`
-	if err := r.db(ctx).GetContext(ctx, &count, query, articleID); err != nil {
-		return 0, err
-	}
-	return count, nil
 }
 
 func (r *CommentRepo) ListRepliesByRoot(ctx context.Context, rootID uint64, offset, limit int) ([]*entity.Comment, error) {

@@ -29,11 +29,10 @@ func CreateCommentRequestFromPB(req *commentpb.CreateCommentReq) *CreateCommentR
 //创建回复
 
 type CreateReplyRequest struct {
-	RootID      uint64
-	UserID      uint64
-	ReplyToID   uint64
-	ReplyToName string
-	Content     string
+	RootID    uint64
+	UserID    uint64
+	ReplyToID uint64
+	Content   string
 }
 
 func CreateReplyRequestFromPB(req *commentpb.CreateReplyReq) *CreateReplyRequest {
@@ -41,11 +40,10 @@ func CreateReplyRequestFromPB(req *commentpb.CreateReplyReq) *CreateReplyRequest
 		return nil
 	}
 	return &CreateReplyRequest{
-		RootID:      req.GetRootId(),
-		UserID:      req.GetUserId(),
-		ReplyToID:   req.GetReplyToId(),
-		ReplyToName: req.GetReplyToName(),
-		Content:     req.GetContent(),
+		RootID:    req.GetRootId(),
+		UserID:    req.GetUserId(),
+		ReplyToID: req.GetReplyToId(),
+		Content:   req.GetContent(),
 	}
 }
 
@@ -60,14 +58,12 @@ type GetArticleCommentsRequest struct {
 	ArticleID uint64
 	Page      int32
 	Size      int32
-	OrderBy   string
 }
 
 type GetArticleCommentsResponse struct {
 	Comments []*CommentInfoDTO
 	Page     int32
 	Size     int32
-	Total    int32
 }
 
 type GetCommentRepliesRequest struct {
@@ -97,20 +93,19 @@ type GetUserCommentsResponse struct {
 }
 
 type CommentInfoDTO struct {
-	ID          uint64
-	ArticleID   uint64
-	UserID      uint64
-	ParentID    uint64
-	RootID      uint64
-	ReplyToID   uint64
-	ReplyToName string
-	Content     string
-	LikeCount   uint32
-	ChildCount  uint32
-	CreatedAt   string
-	UserName    string
-	UserAvatar  string
-	Replies     []*CommentInfoDTO
+	ID         uint64
+	ArticleID  uint64
+	UserID     uint64
+	ParentID   uint64
+	RootID     uint64
+	ReplyToID  uint64
+	Content    string
+	LikeCount  uint32
+	ChildCount uint32
+	CreatedAt  string
+	UserName   string
+	UserAvatar string
+	Replies    []*CommentInfoDTO
 }
 
 func DeleteCommentRequestFromPB(req *commentpb.DeleteCommentReq) *DeleteCommentRequest {
@@ -131,7 +126,6 @@ func GetArticleCommentsRequestFromPB(req *commentpb.GetArticleCommentsReq) *GetA
 		ArticleID: req.GetArticleId(),
 		Page:      req.GetPage(),
 		Size:      req.GetSize(),
-		OrderBy:   req.GetOrderBy(),
 	}
 }
 
@@ -143,7 +137,6 @@ func (r *GetArticleCommentsResponse) ToPB() *commentpb.GetArticleCommentsResp {
 		Comments: CommentInfoListToPB(r.Comments),
 		Page:     r.Page,
 		Size:     r.Size,
-		Total:    r.Total,
 	}
 }
 
@@ -198,17 +191,16 @@ func CommentInfoFromEntity(c *entity.Comment, author *entity.User) *CommentInfoD
 		return nil
 	}
 	info := &CommentInfoDTO{
-		ID:          c.ID,
-		ArticleID:   c.ArticleID,
-		UserID:      c.UserID,
-		ParentID:    c.ParentID,
-		RootID:      c.RootID,
-		ReplyToID:   c.ReplyToID,
-		ReplyToName: c.ReplyToName,
-		Content:     c.Content,
-		LikeCount:   c.LikeCount,
-		ChildCount:  c.ChildCount,
-		CreatedAt:   c.CreatedAt.Format(time.DateTime),
+		ID:         c.ID,
+		ArticleID:  c.ArticleID,
+		UserID:     c.UserID,
+		ParentID:   c.ParentID,
+		RootID:     c.RootID,
+		ReplyToID:  c.ReplyToID,
+		Content:    c.Content,
+		LikeCount:  c.LikeCount,
+		ChildCount: c.ChildCount,
+		CreatedAt:  c.CreatedAt.Format(time.DateTime),
 	}
 	if author != nil {
 		info.UserName = author.Name
@@ -222,19 +214,18 @@ func CommentInfoToPB(info *CommentInfoDTO) *commentpb.CommentInfo {
 		return nil
 	}
 	pb := &commentpb.CommentInfo{
-		Id:          info.ID,
-		ArticleId:   info.ArticleID,
-		UserId:      info.UserID,
-		ParentId:    info.ParentID,
-		RootId:      info.RootID,
-		ReplyToId:   info.ReplyToID,
-		ReplyToName: info.ReplyToName,
-		Content:     info.Content,
-		LikeCount:   info.LikeCount,
-		ChildCount:  info.ChildCount,
-		CreatedAt:   info.CreatedAt,
-		UserName:    info.UserName,
-		UserAvatar:  info.UserAvatar,
+		Id:         info.ID,
+		ArticleId:  info.ArticleID,
+		UserId:     info.UserID,
+		ParentId:   info.ParentID,
+		RootId:     info.RootID,
+		ReplyToId:  info.ReplyToID,
+		Content:    info.Content,
+		LikeCount:  info.LikeCount,
+		ChildCount: info.ChildCount,
+		CreatedAt:  info.CreatedAt,
+		UserName:   info.UserName,
+		UserAvatar: info.UserAvatar,
 	}
 	if len(info.Replies) > 0 {
 		pb.Replies = CommentInfoListToPB(info.Replies)

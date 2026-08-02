@@ -6,7 +6,6 @@ CREATE TABLE `comment`
     `parent_id`     bigint unsigned NOT NULL DEFAULT '0' COMMENT '父评论ID',
     `root_id`       bigint unsigned NOT NULL DEFAULT '0' COMMENT '根评论ID',
     `reply_to_id`   bigint unsigned NOT NULL DEFAULT '0' COMMENT '回复目标用户ID',
-    `reply_to_name` varchar(64)     NOT NULL DEFAULT '' COMMENT '回复目标用户名',
     `content`       text            NOT NULL COMMENT '评论内容',
     `like_count`    int unsigned    NOT NULL DEFAULT '0' COMMENT '点赞数',
     `child_count`   int unsigned    NOT NULL DEFAULT '0' COMMENT '子评论数',

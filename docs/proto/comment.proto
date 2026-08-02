@@ -10,14 +10,12 @@ message CommentInfo {
   uint64 parentId = 4;
   uint64 rootId = 5;
   uint64 replyToId = 6;
-  string replyToName = 7;
   string content = 8;
   uint32 likeCount = 9;
   uint32 childCount = 10;
   string createdAt = 11;
   string userName = 12;
   string userAvatar = 13;
-  repeated CommentInfo replies = 14;
 }
 
 message CreateCommentReq {
@@ -33,8 +31,7 @@ message CreateReplyReq {
   uint64 rootId = 1;       // 一级评论ID
   uint64 userId = 2;
   uint64 replyToId = 3;    // @回复目标用户
-  string replyToName = 4;
-  string content = 5;
+  string content = 4;
 }
 message CreateReplyResp {
   bool success =1;
@@ -52,13 +49,11 @@ message GetArticleCommentsReq {
   uint64 articleId = 1;
   int32 page = 2;
   int32 size = 3;
-  string orderBy = 4;
 }
 message GetArticleCommentsResp {
   repeated CommentInfo comments = 1;
   int32 page = 2;
   int32 size = 3;
-  int32 total = 4;
 }
 
 message GetCommentRepliesReq {
