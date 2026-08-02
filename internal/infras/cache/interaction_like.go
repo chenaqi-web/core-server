@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"backend/core-server/internal/infras/cache/scripts"
+	"core-server/internal/infras/cache/scripts"
 
 	"github.com/redis/go-redis/v9"
 )

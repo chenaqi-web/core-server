@@ -9,7 +9,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 
-	"backend/core-server/internal/config"
+	"core-server/internal/config"
 )
 
 type DBClient struct {

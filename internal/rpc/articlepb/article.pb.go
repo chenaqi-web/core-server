@@ -992,7 +992,7 @@ const file_article_proto_rawDesc = "" +
 	"\x0eListMyArticles\x12\x1e.article.ListMyArticlesRequest\x1a\x1f.article.ListMyArticlesResponse\"\x00\x12S\n" +
 	"\x0eListByCategory\x12\x1e.article.ListByCategoryRequest\x1a\x1f.article.ListByCategoryResponse\"\x00\x12S\n" +
 	"\x0eSearchArticles\x12\x1e.article.SearchArticlesRequest\x1a\x1f.article.SearchArticlesResponse\"\x00\x12P\n" +
-	"\rDeleteArticle\x12\x1d.article.DeleteArticleRequest\x1a\x1e.article.DeleteArticleResponse\"\x00B6Z4backend/core-server/internal/rpc/articlepb;articlepbb\x06proto3"
+	"\rDeleteArticle\x12\x1d.article.DeleteArticleRequest\x1a\x1e.article.DeleteArticleResponse\"\x00B.Z,core-server/internal/rpc/articlepb;articlepbb\x06proto3"
 
 var (
 	file_article_proto_rawDescOnce sync.Once

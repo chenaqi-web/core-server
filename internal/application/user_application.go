@@ -1,9 +1,9 @@
 package application
 
 import (
-	"backend/core-server/internal/config"
-	"backend/core-server/internal/domain"
-	"backend/core-server/internal/infras/clog"
+	"core-server/internal/config"
+	"core-server/internal/domain"
+	"core-server/internal/infras/clog"
 )
 
 // 编排层，编排逻辑

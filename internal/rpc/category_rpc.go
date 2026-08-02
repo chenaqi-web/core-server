@@ -3,9 +3,9 @@ package rpc
 import (
 	"context"
 
-	"backend/core-server/internal/application"
-	"backend/core-server/internal/model/entity"
-	"backend/core-server/internal/rpc/categorypb"
+	"core-server/internal/application"
+	"core-server/internal/model/entity"
+	"core-server/internal/rpc/categorypb"
 )
 
 type CategoryRPC struct {

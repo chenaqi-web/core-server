@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 
-	"backend/core-server/internal/config"
-	"backend/core-server/internal/domain"
-	"backend/core-server/internal/infras/clog"
-	"backend/core-server/internal/infras/repo"
-	"backend/core-server/internal/model/entity"
+	"core-server/internal/config"
+	"core-server/internal/domain"
+	"core-server/internal/infras/clog"
+	"core-server/internal/infras/repo"
+	"core-server/internal/model/entity"
 )
 
 type CategoryService struct {

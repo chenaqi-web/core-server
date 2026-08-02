@@ -106,7 +106,7 @@ const file_user_proto_rawDesc = "" +
 	"\bLoginReq\"\v\n" +
 	"\tLoginResp29\n" +
 	"\vUserService\x12*\n" +
-	"\x05Login\x12\x0e.user.LoginReq\x1a\x0f.user.LoginResp\"\x00B0Z.backend/core-server/internal/rpc/userpb;userpbb\x06proto3"
+	"\x05Login\x12\x0e.user.LoginReq\x1a\x0f.user.LoginResp\"\x00B(Z&core-server/internal/rpc/userpb;userpbb\x06proto3"
 
 var (
 	file_user_proto_rawDescOnce sync.Once

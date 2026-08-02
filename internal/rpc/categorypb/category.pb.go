@@ -711,7 +711,7 @@ const file_category_proto_rawDesc = "" +
 	"\tListTypes\x12\x1a.category.ListTypesRequest\x1a\x1b.category.ListTypesResponse\"\x00\x12U\n" +
 	"\x0eCreateCategory\x12\x1f.category.CreateCategoryRequest\x1a .category.CreateCategoryResponse\"\x00\x12U\n" +
 	"\x0eDeleteCategory\x12\x1f.category.DeleteCategoryRequest\x1a .category.DeleteCategoryResponse\"\x00\x12U\n" +
-	"\x0eListCategories\x12\x1f.category.ListCategoriesRequest\x1a .category.ListCategoriesResponse\"\x00B8Z6backend/core-server/internal/rpc/categorypb;categorypbb\x06proto3"
+	"\x0eListCategories\x12\x1f.category.ListCategoriesRequest\x1a .category.ListCategoriesResponse\"\x00B0Z.core-server/internal/rpc/categorypb;categorypbb\x06proto3"
 
 var (
 	file_category_proto_rawDescOnce sync.Once

@@ -1,6 +1,6 @@
 package aggregate
 
-import "backend/core-server/internal/model/entity"
+import "core-server/internal/model/entity"
 
 type CommentAggregate struct {
 	Comment *entity.Comment

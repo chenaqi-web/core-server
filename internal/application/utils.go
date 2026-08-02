@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"backend/core-server/internal/domain"
-	"backend/core-server/internal/model/entity"
+	"core-server/internal/domain"
+	"core-server/internal/model/entity"
 )
 
 const (

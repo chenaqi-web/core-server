@@ -3,9 +3,9 @@ package rpc
 import (
 	"context"
 
-	"backend/core-server/internal/application"
-	"backend/core-server/internal/model/dto"
-	"backend/core-server/internal/rpc/commentpb"
+	"core-server/internal/application"
+	"core-server/internal/model/dto"
+	"core-server/internal/rpc/commentpb"
 )
 
 type CommentRPC struct {

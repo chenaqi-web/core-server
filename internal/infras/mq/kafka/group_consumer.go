@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"backend/core-server/internal/config"
+	"core-server/internal/config"
 
 	"github.com/IBM/sarama"
 )

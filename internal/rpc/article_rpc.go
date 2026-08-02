@@ -3,9 +3,9 @@ package rpc
 import (
 	"context"
 
-	"backend/core-server/internal/application"
-	"backend/core-server/internal/model/aggregate"
-	"backend/core-server/internal/rpc/articlepb"
+	"core-server/internal/application"
+	"core-server/internal/model/aggregate"
+	"core-server/internal/rpc/articlepb"
 )
 
 type ArticleRPC struct {

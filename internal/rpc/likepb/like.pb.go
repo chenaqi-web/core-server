@@ -275,7 +275,7 @@ const file_like_proto_rawDesc = "" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess2\x93\x01\n" +
 	"\vLikeService\x128\n" +
 	"\aThumbUp\x12\x14.like.ThumbUpRequest\x1a\x15.like.ThumbUpResponse\"\x00\x12J\n" +
-	"\rCancelThumbUp\x12\x1a.like.CancelThumbUpRequest\x1a\x1b.like.CancelThumbUpResponse\"\x00B0Z.backend/core-server/internal/rpc/likepb;likepbb\x06proto3"
+	"\rCancelThumbUp\x12\x1a.like.CancelThumbUpRequest\x1a\x1b.like.CancelThumbUpResponse\"\x00B(Z&core-server/internal/rpc/likepb;likepbb\x06proto3"
 
 var (
 	file_like_proto_rawDescOnce sync.Once

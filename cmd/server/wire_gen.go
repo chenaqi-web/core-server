@@ -7,14 +7,14 @@
 package main
 
 import (
-	"backend/core-server/internal/application"
-	"backend/core-server/internal/config"
-	"backend/core-server/internal/infras/cache"
-	"backend/core-server/internal/infras/clog"
-	"backend/core-server/internal/infras/mq/kafka"
-	"backend/core-server/internal/infras/repo"
-	"backend/core-server/internal/jobs/job-dbsync"
-	"backend/core-server/internal/rpc"
+	"core-server/internal/application"
+	"core-server/internal/config"
+	"core-server/internal/infras/cache"
+	"core-server/internal/infras/clog"
+	"core-server/internal/infras/mq/kafka"
+	"core-server/internal/infras/repo"
+	"core-server/internal/jobs/job-dbsync"
+	"core-server/internal/rpc"
 )
 
 // Injectors from wire.go:

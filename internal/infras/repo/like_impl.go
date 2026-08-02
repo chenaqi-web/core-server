@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"backend/core-server/internal/model/entity"
+	"core-server/internal/model/entity"
 )
 
 type LikeRepo struct {

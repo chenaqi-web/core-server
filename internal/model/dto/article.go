@@ -3,7 +3,7 @@ package dto
 import (
 	"time"
 
-	"backend/core-server/internal/model/entity"
+	"core-server/internal/model/entity"
 )
 
 // AuthorDTO 文章作者展示信息，来源于 user 表，不含 password 等敏感字段。

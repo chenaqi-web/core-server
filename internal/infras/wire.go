@@ -1,11 +1,11 @@
 package infras
 
 import (
-	"backend/core-server/internal/domain"
-	"backend/core-server/internal/infras/cache"
-	"backend/core-server/internal/infras/clog"
-	"backend/core-server/internal/infras/mq/kafka"
-	"backend/core-server/internal/infras/repo"
+	"core-server/internal/domain"
+	"core-server/internal/infras/cache"
+	"core-server/internal/infras/clog"
+	"core-server/internal/infras/mq/kafka"
+	"core-server/internal/infras/repo"
 
 	"github.com/google/wire"
 )

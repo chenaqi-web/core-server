@@ -1,13 +1,13 @@
 package application
 
 import (
-	"backend/core-server/internal/config"
-	"backend/core-server/internal/domain"
-	"backend/core-server/internal/infras/clog"
-	"backend/core-server/internal/infras/repo"
-	"backend/core-server/internal/model/dto"
-	"backend/core-server/internal/model/entity"
 	"context"
+	"core-server/internal/config"
+	"core-server/internal/domain"
+	"core-server/internal/infras/clog"
+	"core-server/internal/infras/repo"
+	"core-server/internal/model/dto"
+	"core-server/internal/model/entity"
 	"errors"
 )
 

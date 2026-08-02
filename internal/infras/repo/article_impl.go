@@ -6,7 +6,7 @@ import (
 	"errors"
 	"time"
 
-	"backend/core-server/internal/model/entity"
+	"core-server/internal/model/entity"
 )
 
 type ArticleRepo struct {

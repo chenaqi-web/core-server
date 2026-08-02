@@ -3,7 +3,7 @@
 package aggregate
 
 import (
-	"backend/core-server/internal/model/entity"
+	"core-server/internal/model/entity"
 )
 
 // ArticleAggregate 文章展示聚合根：文章本体 + 作者（user 表，通过 author_id 关联）。

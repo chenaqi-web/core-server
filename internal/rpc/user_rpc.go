@@ -1,9 +1,9 @@
 package rpc
 
 import (
-	"backend/core-server/internal/application"
-	"backend/core-server/internal/rpc/userpb"
 	"context"
+	"core-server/internal/application"
+	"core-server/internal/rpc/userpb"
 )
 
 type UserRPC struct {

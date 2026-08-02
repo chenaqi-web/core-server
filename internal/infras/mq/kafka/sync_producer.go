@@ -1,11 +1,11 @@
 package kafka
 
 import (
-	"backend/core-server/internal/infras/clog"
+	"core-server/internal/infras/clog"
 	"fmt"
 	"time"
 
-	"backend/core-server/internal/config"
+	"core-server/internal/config"
 
 	"github.com/IBM/sarama"
 	"go.uber.org/zap"

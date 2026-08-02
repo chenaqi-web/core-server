@@ -776,7 +776,7 @@ const file_comment_proto_rawDesc = "" +
 	"\vCreateReply\x12\x17.comment.CreateReplyReq\x1a\x18.comment.CreateReplyResp\"\x00\x12H\n" +
 	"\rDeleteComment\x12\x19.comment.DeleteCommentReq\x1a\x1a.comment.DeleteCommentResp\"\x00\x12W\n" +
 	"\x12GetArticleComments\x12\x1e.comment.GetArticleCommentsReq\x1a\x1f.comment.GetArticleCommentsResp\"\x00\x12T\n" +
-	"\x11GetCommentReplies\x12\x1d.comment.GetCommentRepliesReq\x1a\x1e.comment.GetCommentRepliesResp\"\x00B6Z4backend/core-server/internal/rpc/commentpb;commentpbb\x06proto3"
+	"\x11GetCommentReplies\x12\x1d.comment.GetCommentRepliesReq\x1a\x1e.comment.GetCommentRepliesResp\"\x00B.Z,core-server/internal/rpc/commentpb;commentpbb\x06proto3"
 
 var (
 	file_comment_proto_rawDescOnce sync.Once

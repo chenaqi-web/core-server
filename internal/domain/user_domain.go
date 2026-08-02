@@ -1,8 +1,8 @@
 package domain
 
 import (
-	"backend/core-server/internal/model/entity"
 	"context"
+	"core-server/internal/model/entity"
 )
 
 type UserRepo interface {

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync"
 
-	"backend/core-server/internal/config"
+	"core-server/internal/config"
 
 	"github.com/hashicorp/go-multierror"
 	"golang.org/x/sync/errgroup"

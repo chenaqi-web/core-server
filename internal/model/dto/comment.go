@@ -3,8 +3,8 @@ package dto
 import (
 	"time"
 
-	"backend/core-server/internal/model/entity"
-	"backend/core-server/internal/rpc/commentpb"
+	"core-server/internal/model/entity"
+	"core-server/internal/rpc/commentpb"
 )
 
 // 创建评论

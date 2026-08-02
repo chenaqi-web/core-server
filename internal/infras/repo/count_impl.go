@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"backend/core-server/internal/model/entity"
+	"core-server/internal/model/entity"
 )
 
 type CountRepo struct {

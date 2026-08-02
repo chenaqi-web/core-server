@@ -1,19 +1,19 @@
 package application
 
 import (
-	"backend/core-server/internal/infras/clog"
 	"context"
+	"core-server/internal/infras/clog"
 	"encoding/json"
 	"errors"
 	"time"
 
-	"backend/core-server/internal/config"
-	"backend/core-server/internal/domain"
-	"backend/core-server/internal/infras/cache"
-	"backend/core-server/internal/infras/mq/kafka"
-	"backend/core-server/internal/model/entity"
-	"backend/core-server/internal/model/enum"
-	"backend/core-server/internal/model/event"
+	"core-server/internal/config"
+	"core-server/internal/domain"
+	"core-server/internal/infras/cache"
+	"core-server/internal/infras/mq/kafka"
+	"core-server/internal/model/entity"
+	"core-server/internal/model/enum"
+	"core-server/internal/model/event"
 
 	"github.com/avast/retry-go"
 	"go.uber.org/zap"

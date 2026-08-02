@@ -7,7 +7,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	"backend/core-server/internal/model/entity"
+	"core-server/internal/model/entity"
 )
 
 type UserRepo struct {

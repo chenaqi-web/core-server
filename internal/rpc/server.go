@@ -1,19 +1,19 @@
 package rpc
 
 import (
-	"backend/core-server/internal/rpc/articlepb"
+	"core-server/internal/rpc/articlepb"
 	"fmt"
 	"log"
 	"net"
 
-	"backend/core-server/internal/config"
-	"backend/core-server/internal/infras/cache"
-	"backend/core-server/internal/infras/mq/kafka"
-	"backend/core-server/internal/infras/repo"
-	jobdbsync "backend/core-server/internal/jobs/job-dbsync"
-	"backend/core-server/internal/rpc/categorypb"
-	"backend/core-server/internal/rpc/commentpb"
-	"backend/core-server/internal/rpc/likepb"
+	"core-server/internal/config"
+	"core-server/internal/infras/cache"
+	"core-server/internal/infras/mq/kafka"
+	"core-server/internal/infras/repo"
+	jobdbsync "core-server/internal/jobs/job-dbsync"
+	"core-server/internal/rpc/categorypb"
+	"core-server/internal/rpc/commentpb"
+	"core-server/internal/rpc/likepb"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"

@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"backend/core-server/internal/infras/cache"
+	"core-server/internal/infras/cache"
 
 	"github.com/IBM/sarama"
 	"github.com/avast/retry-go"

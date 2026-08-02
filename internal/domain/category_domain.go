@@ -3,7 +3,7 @@ package domain
 import (
 	"context"
 
-	"backend/core-server/internal/model/entity"
+	"core-server/internal/model/entity"
 )
 
 type CategoryRepo interface {

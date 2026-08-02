@@ -1,11 +1,11 @@
 package jobdbsync
 
 import (
-	"backend/core-server/internal/model/entity"
-	"backend/core-server/internal/model/enum"
 	"context"
+	"core-server/internal/model/entity"
+	"core-server/internal/model/enum"
 
-	"backend/core-server/internal/model/event"
+	"core-server/internal/model/event"
 
 	"go.uber.org/zap"
 )

@@ -1,8 +1,8 @@
 package cache
 
 import (
-	"backend/core-server/internal/config"
 	"context"
+	"core-server/internal/config"
 	"fmt"
 	"log"
 	"time"

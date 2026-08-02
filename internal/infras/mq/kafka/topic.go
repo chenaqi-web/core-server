@@ -1,7 +1,7 @@
 package kafka
 
 import (
-	"backend/core-server/internal/config"
+	"core-server/internal/config"
 	"fmt"
 
 	"github.com/IBM/sarama"

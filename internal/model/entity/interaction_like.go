@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"backend/core-server/internal/model/enum"
+	"core-server/internal/model/enum"
 	"time"
 )
 

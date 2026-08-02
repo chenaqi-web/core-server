@@ -1,16 +1,16 @@
 package application
 
 import (
-	"backend/core-server/internal/infras/repo"
-	"backend/core-server/internal/rpc/articlepb"
 	"context"
+	"core-server/internal/infras/repo"
+	"core-server/internal/rpc/articlepb"
 	"errors"
 
-	"backend/core-server/internal/config"
-	"backend/core-server/internal/domain"
-	"backend/core-server/internal/infras/clog"
-	"backend/core-server/internal/model/aggregate"
-	"backend/core-server/internal/model/entity"
+	"core-server/internal/config"
+	"core-server/internal/domain"
+	"core-server/internal/infras/clog"
+	"core-server/internal/model/aggregate"
+	"core-server/internal/model/entity"
 )
 
 type ArticleService struct {

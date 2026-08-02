@@ -3,8 +3,8 @@ package rpc
 import (
 	"context"
 
-	"backend/core-server/internal/application"
-	"backend/core-server/internal/rpc/likepb"
+	"core-server/internal/application"
+	"core-server/internal/rpc/likepb"
 )
 
 type LikeRPC struct {

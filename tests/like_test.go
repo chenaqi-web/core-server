@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"backend/core-server/internal/rpc/likepb"
+	"core-server/internal/rpc/likepb"
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
