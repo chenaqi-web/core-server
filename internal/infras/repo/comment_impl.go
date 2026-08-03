@@ -99,6 +99,19 @@ WHERE id = ? AND user_id = ? AND deleted_at IS NULL`
 	return nil
 }
 
+func (r *CommentRepo) SoftDeleteRepliesByParent(ctx context.Context, parentID uint64) (int64, error) {
+	now := time.Now()
+	const query = `
+UPDATE comment
+SET deleted_at = ?
+WHERE parent_id = ? AND deleted_at IS NULL`
+	result, err := r.db(ctx).ExecContext(ctx, query, now, parentID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 func (r *CommentRepo) IncrementChildCount(ctx context.Context, rootID uint64) error {
 	const query = `
 UPDATE comment

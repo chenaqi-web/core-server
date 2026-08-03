@@ -9,6 +9,7 @@ type CommentRepo interface {
 	CreateComment(ctx context.Context, comment *entity.Comment) (uint64, error)
 	CreateReply(ctx context.Context, comment *entity.Comment) (uint64, error)
 	SoftDelete(ctx context.Context, id, userID uint64) error
+	SoftDeleteRepliesByParent(ctx context.Context, parentID uint64) (int64, error)
 
 	GetByID(ctx context.Context, id uint64) (*entity.Comment, error)
 	IncrementChildCount(ctx context.Context, rootID uint64) error
