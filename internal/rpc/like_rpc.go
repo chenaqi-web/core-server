@@ -22,7 +22,6 @@ func (l *LikeRPC) ThumbUp(ctx context.Context, request *likepb.ThumbUpRequest) (
 		request.GetUserID(),
 		request.GetObjectType(),
 		request.GetObjectID(),
-		request.GetObjectOwnerID(),
 	); err != nil {
 		return nil, err
 	}
@@ -35,7 +34,6 @@ func (l *LikeRPC) CancelThumbUp(ctx context.Context, request *likepb.CancelThumb
 		request.GetUserID(),
 		request.GetObjectType(),
 		request.GetObjectID(),
-		request.GetObjectOwnerID(),
 	); err != nil {
 		return nil, err
 	}

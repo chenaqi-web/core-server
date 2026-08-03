@@ -12,14 +12,13 @@ import (
 
 func (c *MessageQueueConsumer) handleUserLike(ctx context.Context, msg *event.EventUserThumbUp) error {
 	ent := &entity.InteractionLike{
-		UserID:        msg.UserID,
-		ObjectType:    enum.ParseObjectType(msg.ObjectType),
-		ObjectID:      msg.ObjectID,
-		ObjectOwnerID: msg.ObjectOwnerID,
-		Status:        entity.ParseLikeStatusType(msg.Status),
-		Version:       msg.Timestamp,
+		UserID:     msg.UserID,
+		ObjectType: enum.ParseObjectType(msg.ObjectType),
+		ObjectID:   msg.ObjectID,
+		Status:     entity.ParseLikeStatusType(msg.Status),
+		Version:    msg.Timestamp,
 	}
-
+	// upsert
 	err := c.likeRepo.WithTransaction(ctx, func(ctx context.Context) error {
 		res, err := c.likeRepo.Upsert(ctx, ent)
 		if err != nil {
@@ -29,11 +28,13 @@ func (c *MessageQueueConsumer) handleUserLike(ctx context.Context, msg *event.Ev
 			}
 			return err
 		}
+		// 如果等于 0则无需更新计数，直接返回即可
 		if res == 0 {
 			return nil
 		}
 
-		c.likeCountAggregator.Push(ctx, enum.InteractionTypeLike.String(), msg.ObjectType, msg.ObjectID)
+		// 计数聚合器，后续统一写入(前提是成功写入了)
+		c.CountAggregator.Push(ctx, enum.InteractionTypeLike.String(), msg.ObjectType, msg.ObjectID)
 		return nil
 	})
 	if err != nil {
@@ -45,12 +46,11 @@ func (c *MessageQueueConsumer) handleUserLike(ctx context.Context, msg *event.Ev
 
 func (c *MessageQueueConsumer) handleUserCancelThumbUp(ctx context.Context, msg *event.EventUserCancelThumbUp) error {
 	ent := &entity.InteractionLike{
-		UserID:        msg.UserID,
-		ObjectType:    enum.ParseObjectType(msg.ObjectType),
-		ObjectID:      msg.ObjectID,
-		ObjectOwnerID: msg.ObjectOwnerID,
-		Version:       msg.Timestamp,
-		Status:        entity.LikeStatusTypeNothing,
+		UserID:     msg.UserID,
+		ObjectType: enum.ParseObjectType(msg.ObjectType),
+		ObjectID:   msg.ObjectID,
+		Version:    msg.Timestamp,
+		Status:     entity.LikeStatusTypeNothing,
 	}
 
 	mark := msg.IsDeletedInCache
@@ -59,12 +59,13 @@ func (c *MessageQueueConsumer) handleUserCancelThumbUp(ctx context.Context, msg 
 
 	err := c.likeRepo.WithTransaction(ctx, func(ctx context.Context) error {
 		var err error
+		// 条件更新，且它的状态必须是点赞
 		affected, err = c.likeRepo.UpdateWithCondition(ctx, condition, ent)
 		if err != nil {
 			return err
 		}
 		if affected == 1 {
-			c.likeCountAggregator.Pop(ctx, enum.InteractionTypeLike.String(), msg.ObjectType, msg.ObjectID)
+			c.CountAggregator.Pop(ctx, enum.InteractionTypeLike.String(), msg.ObjectType, msg.ObjectID)
 		}
 		return nil
 	})
@@ -73,6 +74,7 @@ func (c *MessageQueueConsumer) handleUserCancelThumbUp(ctx context.Context, msg 
 		return err
 	}
 
+	// 缓存没有，数据库有，需要处理缓存 -1
 	if affected == 1 && mark == 0 {
 		if err := c.likeCache.CompensationCountDecr(ctx, msg.ObjectID, msg.ObjectType); err != nil {
 			return err

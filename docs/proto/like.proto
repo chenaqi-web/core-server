@@ -12,8 +12,9 @@ option go_package = "core-server/internal/rpc/likepb;likepb";
 message ThumbUpRequest {
   string userID = 1 ;
   string objectType = 2 ;
-  string objectID = 3 ;
-  string objectOwnerID = 4;
+  string objectID = 3;
+  reserved 4;
+  reserved "objectOwnerID";
 }
 
 message ThumbUpResponse {
@@ -23,8 +24,9 @@ message ThumbUpResponse {
 message CancelThumbUpRequest{
   string userID = 1 ;
   string objectType = 2 ;
-  string objectID = 3 ;
-  string objectOwnerID = 4 ;
+  string objectID = 3;
+  reserved 4;
+  reserved "objectOwnerID";
 }
 
 message CancelThumbUpResponse{

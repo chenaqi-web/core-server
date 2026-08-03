@@ -7,12 +7,11 @@ type Message struct {
 }
 
 type EventUserThumbUp struct {
-	Timestamp     int64  `json:"timestamp"`
-	UserID        string `json:"user_id"`
-	ObjectID      string `json:"object_id"`
-	ObjectType    string `json:"object_type"`
-	ObjectOwnerID string `json:"object_owner_id"`
-	Status        string `json:"status"`
+	Timestamp  int64  `json:"timestamp"`
+	UserID     string `json:"user_id"`
+	ObjectID   string `json:"object_id"`
+	ObjectType string `json:"object_type"`
+	Status     string `json:"status"`
 }
 
 type EventUserCancelThumbUp struct {
@@ -20,6 +19,5 @@ type EventUserCancelThumbUp struct {
 	UserID           string `json:"user_id"`
 	ObjectID         string `json:"object_id"`
 	ObjectType       string `json:"object_type"`
-	ObjectOwnerID    string `json:"object_owner_id"`
 	IsDeletedInCache int    `json:"is_deleted_in_cache"`
 }

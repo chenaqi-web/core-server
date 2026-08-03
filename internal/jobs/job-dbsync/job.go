@@ -40,7 +40,7 @@ type MessageQueueConsumer struct {
 	likeCache domain.LikeCacheDomain
 
 	// 聚合器
-	likeCountAggregator *jobaggregator.ObjectCountAggregator
+	CountAggregator *jobaggregator.ObjectCountAggregator
 
 	// 死信topic 和 死信生产者
 	dlqTopic string
@@ -71,7 +71,7 @@ func NewMessageQueueConsumer(
 		dlqTopic:     cfg.Kafka.DlqTopicName(),
 	}
 
-	consumer.likeCountAggregator = jobaggregator.NewObjectCountAggregator(
+	consumer.CountAggregator = jobaggregator.NewObjectCountAggregator(
 		logger,
 		countRepo,
 		cfg.CountAggregator.FlushDuration(),
@@ -85,7 +85,7 @@ func NewMessageQueueConsumer(
 func (c *MessageQueueConsumer) Start() error {
 	// 1. 加载消息处理handler
 	c.kafkaManager.SetBatchHandler(c.batchHandleMessages)
-	c.likeCountAggregator.Start()
+	c.CountAggregator.Start()
 
 	// 2.启动所有的消费者
 	if err := c.kafkaManager.StartGroupConsumers(); err != nil {
@@ -97,7 +97,7 @@ func (c *MessageQueueConsumer) Start() error {
 }
 
 func (c *MessageQueueConsumer) Stop() error {
-	c.likeCountAggregator.Stop()
+	c.CountAggregator.Stop()
 	return c.kafkaManager.StopGroupConsumers()
 }
 

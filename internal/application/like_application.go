@@ -70,7 +70,7 @@ func (s *LikeService) HasThumbUp(ctx context.Context, userID, objectType, object
 	return interaction != nil, nil
 }
 
-func (s *LikeService) ThumbUp(ctx context.Context, userID, objectType, objectID, objectOwnerID string) error {
+func (s *LikeService) ThumbUp(ctx context.Context, userID, objectType, objectID string) error {
 	// 1. 先查询缓存，判断是否点赞
 	exists, err := s.HasThumbUp(ctx, userID, objectType, objectID)
 	if err != nil {
@@ -88,12 +88,11 @@ func (s *LikeService) ThumbUp(ctx context.Context, userID, objectType, objectID,
 
 	// 3，提交任务（异步落库）
 	payload := &event.EventUserThumbUp{
-		Timestamp:     score,
-		UserID:        userID,
-		ObjectType:    objectType,
-		ObjectID:      objectID,
-		ObjectOwnerID: objectOwnerID,
-		Status:        entity.LikeStatusTypeThumbUp.String(),
+		Timestamp:  score,
+		UserID:     userID,
+		ObjectType: objectType,
+		ObjectID:   objectID,
+		Status:     entity.LikeStatusTypeThumbUp.String(),
 	}
 	eventBytes, _ := json.Marshal(payload)
 
@@ -109,7 +108,7 @@ func (s *LikeService) ThumbUp(ctx context.Context, userID, objectType, objectID,
 	return nil
 }
 
-func (s *LikeService) CancelThumbUp(ctx context.Context, userID, objectType, objectID, objectOwnerID string) error {
+func (s *LikeService) CancelThumbUp(ctx context.Context, userID, objectType, objectID string) error {
 	// 1. 先查询缓存，有就删除
 	// result 就返回两个值 0和1，0表示没有，1表示有且成功删除
 	result, score, err := s.cache.CancelThumbUp(ctx, userID, objectType, objectID)
@@ -125,7 +124,7 @@ func (s *LikeService) CancelThumbUp(ctx context.Context, userID, objectType, obj
 			return err
 		}
 		if res == nil {
-			return ErrLikeNotExists
+			return nil
 		}
 	}
 
@@ -137,7 +136,6 @@ func (s *LikeService) CancelThumbUp(ctx context.Context, userID, objectType, obj
 			UserID:           userID,
 			ObjectType:       objectType,
 			ObjectID:         objectID,
-			ObjectOwnerID:    objectOwnerID,
 			IsDeletedInCache: result,
 		}
 		body, _ := json.Marshal(payload)
