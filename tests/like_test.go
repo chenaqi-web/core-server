@@ -59,10 +59,9 @@ func TestConcurrentThumbUp_100Users(t *testing.T) {
 
 			userID := fmt.Sprintf("concurrent_thumbup_user_%03d", i)
 			resp, err := client.ThumbUp(ctx, &likepb.ThumbUpRequest{
-				UserID:        userID,
-				ObjectType:    likeObjectType,
-				ObjectID:      objectID,
-				ObjectOwnerID: likeOwnerID,
+				UserID:     userID,
+				ObjectType: likeObjectType,
+				ObjectID:   objectID,
 			})
 			if err != nil {
 				atomic.AddInt64(&failed, 1)
@@ -96,10 +95,9 @@ func TestConcurrentCancelThumbUp_100Users(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		userID := fmt.Sprintf("concurrent_cancel_user_%03d", i)
 		_, err := client.ThumbUp(ctx, &likepb.ThumbUpRequest{
-			UserID:        userID,
-			ObjectType:    likeObjectType,
-			ObjectID:      objectID,
-			ObjectOwnerID: likeOwnerID,
+			UserID:     userID,
+			ObjectType: likeObjectType,
+			ObjectID:   objectID,
 		})
 		cancel()
 		require.NoError(t, err, "prepare ThumbUp user=%s", userID)
@@ -122,10 +120,9 @@ func TestConcurrentCancelThumbUp_100Users(t *testing.T) {
 
 			userID := fmt.Sprintf("concurrent_cancel_user_%03d", i)
 			resp, err := client.CancelThumbUp(ctx, &likepb.CancelThumbUpRequest{
-				UserID:        userID,
-				ObjectType:    likeObjectType,
-				ObjectID:      objectID,
-				ObjectOwnerID: likeOwnerID,
+				UserID:     userID,
+				ObjectType: likeObjectType,
+				ObjectID:   objectID,
 			})
 			if err != nil {
 				atomic.AddInt64(&failed, 1)
@@ -170,10 +167,9 @@ func TestConcurrentThumbUp_SameUser(t *testing.T) {
 			defer cancel()
 
 			_, err := client.ThumbUp(ctx, &likepb.ThumbUpRequest{
-				UserID:        userID,
-				ObjectType:    likeObjectType,
-				ObjectID:      objectID,
-				ObjectOwnerID: likeOwnerID,
+				UserID:     userID,
+				ObjectType: likeObjectType,
+				ObjectID:   objectID,
 			})
 			if err != nil {
 				atomic.AddInt64(&failed, 1)
@@ -192,10 +188,9 @@ func TestConcurrentThumbUp_SameUser(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	_, err := client.CancelThumbUp(ctx, &likepb.CancelThumbUpRequest{
-		UserID:        userID,
-		ObjectType:    likeObjectType,
-		ObjectID:      objectID,
-		ObjectOwnerID: likeOwnerID,
+		UserID:     userID,
+		ObjectType: likeObjectType,
+		ObjectID:   objectID,
 	})
 	require.NoError(t, err)
 }
@@ -212,36 +207,32 @@ func TestThumbUpThenCancel(t *testing.T) {
 	objectID := fmt.Sprintf("%s_single", likeObjectID)
 
 	resp, err := client.ThumbUp(ctx, &likepb.ThumbUpRequest{
-		UserID:        userID,
-		ObjectType:    likeObjectType,
-		ObjectID:      objectID,
-		ObjectOwnerID: likeOwnerID,
+		UserID:     userID,
+		ObjectType: likeObjectType,
+		ObjectID:   objectID,
 	})
 	require.NoError(t, err)
 	require.True(t, resp.GetSuccess())
 
 	_, err = client.ThumbUp(ctx, &likepb.ThumbUpRequest{
-		UserID:        userID,
-		ObjectType:    likeObjectType,
-		ObjectID:      objectID,
-		ObjectOwnerID: likeOwnerID,
+		UserID:     userID,
+		ObjectType: likeObjectType,
+		ObjectID:   objectID,
 	})
 	require.Error(t, err, "second ThumbUp should fail with already liked")
 
 	cancelResp, err := client.CancelThumbUp(ctx, &likepb.CancelThumbUpRequest{
-		UserID:        userID,
-		ObjectType:    likeObjectType,
-		ObjectID:      objectID,
-		ObjectOwnerID: likeOwnerID,
+		UserID:     userID,
+		ObjectType: likeObjectType,
+		ObjectID:   objectID,
 	})
 	require.NoError(t, err)
 	require.True(t, cancelResp.GetSuccess())
 
 	_, err = client.CancelThumbUp(ctx, &likepb.CancelThumbUpRequest{
-		UserID:        userID,
-		ObjectType:    likeObjectType,
-		ObjectID:      objectID,
-		ObjectOwnerID: likeOwnerID,
+		UserID:     userID,
+		ObjectType: likeObjectType,
+		ObjectID:   objectID,
 	})
 	require.Error(t, err, "second CancelThumbUp should fail with like not exists")
 }

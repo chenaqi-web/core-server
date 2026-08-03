@@ -27,14 +27,12 @@ func (r *LikeRepo) Upsert(ctx context.Context, like *entity.InteractionLike) (in
 
 	const sqlQuery = `
 INSERT INTO interaction_like
-  (id, user_id, object_type, object_id, object_owner_id, status, version, created_at, updated_at)
+  (id, user_id, object_type, object_id, status, version, created_at, updated_at)
 VALUES
-  (?, ?, ?, ?, ?, ?, ?, NOW(3), NOW(3))
+  (?, ?, ?, ?, ?, ?, NOW(3), NOW(3))
 ON DUPLICATE KEY UPDATE
   status = IF(@skip := (status = ? AND version >= VALUES(version)), status, VALUES(status)),
   version = IF(@skip, version, VALUES(version)),
-  object_owner_id = IF(@skip, object_owner_id,
-    IF(VALUES(object_owner_id) <> '', VALUES(object_owner_id), object_owner_id)),
   updated_at = IF(@skip, updated_at, NOW(3))
 `
 
@@ -45,7 +43,6 @@ ON DUPLICATE KEY UPDATE
 		like.UserID,
 		like.ObjectType,
 		like.ObjectID,
-		like.ObjectOwnerID,
 		like.Status,
 		like.Version,
 		entity.LikeStatusTypeThumbUp,
@@ -96,7 +93,7 @@ WHERE user_id = ? AND object_type = ? AND object_id = ? AND status = ? AND versi
 func (r *LikeRepo) QueryWithCondition(ctx context.Context, userID, objectType, objectID, status string) (*entity.InteractionLike, error) {
 	var like entity.InteractionLike
 	const sqlQuery = `
-SELECT id, created_at, updated_at, user_id, object_type, object_id, object_owner_id, status, version
+SELECT id, created_at, updated_at, user_id, object_type, object_id, status, version
 FROM interaction_like
 WHERE user_id = ? AND object_type = ? AND object_id = ? AND status = ?
 LIMIT 1`

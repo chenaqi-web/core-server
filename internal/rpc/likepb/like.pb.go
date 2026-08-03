@@ -30,7 +30,6 @@ type ThumbUpRequest struct {
 	UserID        string                 `protobuf:"bytes,1,opt,name=userID,proto3" json:"userID,omitempty"`
 	ObjectType    string                 `protobuf:"bytes,2,opt,name=objectType,proto3" json:"objectType,omitempty"`
 	ObjectID      string                 `protobuf:"bytes,3,opt,name=objectID,proto3" json:"objectID,omitempty"`
-	ObjectOwnerID string                 `protobuf:"bytes,4,opt,name=objectOwnerID,proto3" json:"objectOwnerID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -86,13 +85,6 @@ func (x *ThumbUpRequest) GetObjectID() string {
 	return ""
 }
 
-func (x *ThumbUpRequest) GetObjectOwnerID() string {
-	if x != nil {
-		return x.ObjectOwnerID
-	}
-	return ""
-}
-
 type ThumbUpResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
@@ -142,7 +134,6 @@ type CancelThumbUpRequest struct {
 	UserID        string                 `protobuf:"bytes,1,opt,name=userID,proto3" json:"userID,omitempty"`
 	ObjectType    string                 `protobuf:"bytes,2,opt,name=objectType,proto3" json:"objectType,omitempty"`
 	ObjectID      string                 `protobuf:"bytes,3,opt,name=objectID,proto3" json:"objectID,omitempty"`
-	ObjectOwnerID string                 `protobuf:"bytes,4,opt,name=objectOwnerID,proto3" json:"objectOwnerID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -198,13 +189,6 @@ func (x *CancelThumbUpRequest) GetObjectID() string {
 	return ""
 }
 
-func (x *CancelThumbUpRequest) GetObjectOwnerID() string {
-	if x != nil {
-		return x.ObjectOwnerID
-	}
-	return ""
-}
-
 type CancelThumbUpResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
@@ -254,23 +238,21 @@ var File_like_proto protoreflect.FileDescriptor
 const file_like_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"like.proto\x12\x04like\"\x8a\x01\n" +
+	"like.proto\x12\x04like\"y\n" +
 	"\x0eThumbUpRequest\x12\x16\n" +
 	"\x06userID\x18\x01 \x01(\tR\x06userID\x12\x1e\n" +
 	"\n" +
 	"objectType\x18\x02 \x01(\tR\n" +
 	"objectType\x12\x1a\n" +
-	"\bobjectID\x18\x03 \x01(\tR\bobjectID\x12$\n" +
-	"\robjectOwnerID\x18\x04 \x01(\tR\robjectOwnerID\"+\n" +
+	"\bobjectID\x18\x03 \x01(\tR\bobjectIDJ\x04\b\x04\x10\x05R\robjectOwnerID\"+\n" +
 	"\x0fThumbUpResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x90\x01\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x7f\n" +
 	"\x14CancelThumbUpRequest\x12\x16\n" +
 	"\x06userID\x18\x01 \x01(\tR\x06userID\x12\x1e\n" +
 	"\n" +
 	"objectType\x18\x02 \x01(\tR\n" +
 	"objectType\x12\x1a\n" +
-	"\bobjectID\x18\x03 \x01(\tR\bobjectID\x12$\n" +
-	"\robjectOwnerID\x18\x04 \x01(\tR\robjectOwnerID\"1\n" +
+	"\bobjectID\x18\x03 \x01(\tR\bobjectIDJ\x04\b\x04\x10\x05R\robjectOwnerID\"1\n" +
 	"\x15CancelThumbUpResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess2\x93\x01\n" +
 	"\vLikeService\x128\n" +
