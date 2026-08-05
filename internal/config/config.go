@@ -13,9 +13,18 @@ type Config struct {
 	Server          ServerConfig          `yaml:"server"`
 	Mysql           MySQLConfig           `yaml:"Mysql"`
 	Redis           RedisConfig           `yaml:"Redis"`
+	Email           EmailConfig           `yaml:"Email"`
 	Kafka           KafkaConfig           `yaml:"Kafka"`
 	CountAggregator CountAggregatorConfig `yaml:"CountAggregator"`
 	Log             LogConfig             `yaml:"Log"`
+}
+
+type EmailConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+	From     string `yaml:"from"`
 }
 
 type ServerConfig struct {

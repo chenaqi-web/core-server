@@ -11,6 +11,7 @@ import (
 	"core-server/internal/config"
 	"core-server/internal/infras/cache"
 	"core-server/internal/infras/clog"
+	"core-server/internal/infras/mail"
 	"core-server/internal/infras/mq/kafka"
 	"core-server/internal/infras/repo"
 	"core-server/internal/jobs/job-dbsync"
@@ -42,6 +43,10 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 	countRepo := repo.NewCountRepo(dbClient)
 	iLikeCache := cache.NewILikeCache(cacheClient)
 	messageQueueConsumer := jobdbsync.NewMessageQueueConsumer(cfg, log, syncProducer, kafkaManager, cacheClient, likeRepo, countRepo, iLikeCache)
+	userRepo := repo.NewUserRepo(dbClient)
+	sender := mail.NewSender(cfg)
+	userService := application.NewUserService(userRepo, cacheClient, sender)
+	authRPC := rpc.NewAuthRPC(userService)
 	likeService, err := application.NewLikeService(log, likeRepo, iLikeCache, syncProducer, cfg)
 	if err != nil {
 		return nil, err
@@ -54,7 +59,6 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 	}
 	categoryRPC := rpc.NewCategoryRPC(categoryService)
 	articleRepo := repo.NewArticleRepo(dbClient)
-	userRepo := repo.NewUserRepo(dbClient)
 	articleService, err := application.NewArticleService(log, articleRepo, userRepo, cfg)
 	if err != nil {
 		return nil, err
@@ -66,7 +70,7 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 		return nil, err
 	}
 	commentRPC := rpc.NewCommentRPC(commentService)
-	server, err := rpc.NewServer(cfg, dbClient, cacheClient, syncProducer, kafkaManager, messageQueueConsumer, likeRPC, categoryRPC, articleRPC, commentRPC)
+	server, err := rpc.NewServer(cfg, dbClient, cacheClient, syncProducer, kafkaManager, messageQueueConsumer, authRPC, likeRPC, categoryRPC, articleRPC, commentRPC)
 	if err != nil {
 		return nil, err
 	}

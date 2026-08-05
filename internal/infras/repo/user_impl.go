@@ -21,12 +21,31 @@ func NewUserRepo(client *DBClient) *UserRepo {
 func (r *UserRepo) GetByID(ctx context.Context, id uint64) (*entity.User, error) {
 	var u entity.User
 	const query = `
-SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, sex, age
+SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, status, auth_version, sex, age
 FROM user
 WHERE id = ? AND deleted_at IS NULL
 LIMIT 1`
 
 	err := r.db(ctx).GetContext(ctx, &u, query, id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &u, nil
+}
+
+// 根据用户名查询用户
+func (r *UserRepo) GetByName(ctx context.Context, name string) (*entity.User, error) {
+	var u entity.User
+	const query = `
+SELECT id, created_at, updated_at, deleted_at, name, password, phone, avatar, email, role, status, auth_version, sex, age
+FROM user
+WHERE name = ? AND deleted_at IS NULL
+LIMIT 1`
+
+	err := r.db(ctx).GetContext(ctx, &u, query, name)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -42,7 +61,7 @@ func (r *UserRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User,
 	}
 
 	const baseQuery = `
-SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, sex, age
+SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, status, auth_version, sex, age
 FROM user
 WHERE id IN (?) AND deleted_at IS NULL`
 

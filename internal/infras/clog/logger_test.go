@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"backend/core-server/internal/config"
+	"core-server/internal/config"
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"

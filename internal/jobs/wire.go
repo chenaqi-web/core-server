@@ -3,7 +3,7 @@ package jobs
 import (
 	"log/slog"
 
-	jobdbsync "backend/core-server/internal/jobs/job-dbsync"
+	jobdbsync "core-server/internal/jobs/job-dbsync"
 
 	"github.com/google/wire"
 )

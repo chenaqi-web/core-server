@@ -4,6 +4,7 @@ import (
 	"core-server/internal/domain"
 	"core-server/internal/infras/cache"
 	"core-server/internal/infras/clog"
+	"core-server/internal/infras/mail"
 	"core-server/internal/infras/mq/kafka"
 	"core-server/internal/infras/repo"
 
@@ -51,4 +52,5 @@ var JobProviderSet = wire.NewSet(
 	CacheProviderSet,
 	MQProviderSet,
 	LogProviderSet,
+	mail.NewSender,
 )
