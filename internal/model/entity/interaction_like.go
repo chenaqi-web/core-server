@@ -6,12 +6,12 @@ import (
 )
 
 type InteractionLike struct {
-	ID         string          `db:"id" json:"id"`
+	ID         uint64          `db:"id" json:"id"`
 	CreatedAt  time.Time       `db:"created_at" json:"-"`
 	UpdatedAt  time.Time       `db:"updated_at" json:"-"`
-	UserID     string          `db:"user_id" json:"user_id"`
+	UserID     uint64          `db:"user_id" json:"user_id"`
 	ObjectType enum.ObjectType `db:"object_type" json:"object_type"`
-	ObjectID   string          `db:"object_id" json:"object_id"`
+	ObjectID   uint64          `db:"object_id" json:"object_id"`
 	Status     LikeStatusType  `db:"status" json:"status"`
 	Version    int64           `db:"version" json:"version"`
 }

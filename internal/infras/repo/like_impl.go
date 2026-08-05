@@ -5,7 +5,6 @@ import (
 	"core-server/internal/model/entity"
 	"database/sql"
 	"errors"
-	"fmt"
 )
 
 type LikeRepo struct {
@@ -20,15 +19,11 @@ func NewLikeRepo(client *DBClient) *LikeRepo {
 // 语义与原先一致：若已是 thumb_up 且 version >= 入参 version，则跳过；否则插入或更新。
 // 依赖 uk_like_user_object(user_id, object_type, object_id)。
 func (r *LikeRepo) Upsert(ctx context.Context, like *entity.InteractionLike) (int, error) {
-	if like.ID == "" {
-		like.ID = fmt.Sprintf("%s:%s:%s", like.UserID, like.ObjectType, like.ObjectID)
-	}
-
 	const sqlQuery = `
 INSERT INTO interaction_like
-  (id, user_id, object_type, object_id, status, version, created_at, updated_at)
+  (user_id, object_type, object_id, status, version, created_at, updated_at)
 VALUES
-  (?, ?, ?, ?, ?, ?, NOW(3), NOW(3))
+  (?, ?, ?, ?, ?, NOW(3), NOW(3))
 ON DUPLICATE KEY UPDATE
   status = IF(@skip := (status = ? AND version >= VALUES(version)), status, VALUES(status)),
   version = IF(@skip, version, VALUES(version)),
@@ -38,7 +33,6 @@ ON DUPLICATE KEY UPDATE
 	result, err := r.db(ctx).ExecContext(
 		ctx,
 		sqlQuery,
-		like.ID,
 		like.UserID,
 		like.ObjectType,
 		like.ObjectID,
@@ -89,7 +83,7 @@ WHERE user_id = ? AND object_type = ? AND object_id = ? AND status = ? AND versi
 	return int(rowsAffected), nil
 }
 
-func (r *LikeRepo) QueryWithCondition(ctx context.Context, userID, objectType, objectID, status string) (*entity.InteractionLike, error) {
+func (r *LikeRepo) QueryWithCondition(ctx context.Context, userID uint64, objectType string, objectID uint64, status string) (*entity.InteractionLike, error) {
 	var like entity.InteractionLike
 	const sqlQuery = `
 SELECT id, created_at, updated_at, user_id, object_type, object_id, status, version
@@ -107,7 +101,7 @@ LIMIT 1`
 	return &like, nil
 }
 
-func (r *LikeRepo) CountUserLiked(ctx context.Context, userID, objectType string) (int64, error) {
+func (r *LikeRepo) CountUserLiked(ctx context.Context, userID uint64, objectType string) (int64, error) {
 	var count int64
 	const sqlQuery = `
 SELECT COUNT(1)
@@ -119,7 +113,7 @@ WHERE user_id = ? AND object_type = ? AND status = ?`
 	return count, nil
 }
 
-func (r *LikeRepo) PageQueryLikeObjects(ctx context.Context, userID, objectType string, offset, limit int) ([]*entity.InteractionLike, error) {
+func (r *LikeRepo) PageQueryLikeObjects(ctx context.Context, userID uint64, objectType string, offset, limit int) ([]*entity.InteractionLike, error) {
 	var items []*entity.InteractionLike
 	const sqlQuery = `
 SELECT id, created_at, updated_at, user_id, object_type, object_id, status, version

@@ -14,4 +14,4 @@ CREATE TABLE IF NOT EXISTS `interaction_like` (
     UNIQUE KEY `uk_user_object` (`user_id`, `object_type`, `object_id`),
     KEY `idx_user_id` (`user_id`),
     KEY `idx_created_at` (`created_at`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='点赞交互表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='点赞交互表';

@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"core-server/internal/application"
@@ -19,11 +20,19 @@ func NewLikeRPC(likeService *application.LikeService) *LikeRPC {
 }
 
 func (l *LikeRPC) ThumbUp(ctx context.Context, request *likepb.ThumbUpRequest) (*likepb.ThumbUpResponse, error) {
+	userID, err := strconv.ParseUint(request.GetUserID(), 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid userID: %w", err)
+	}
+	objectID, err := strconv.ParseUint(request.GetObjectID(), 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid objectID: %w", err)
+	}
 	if err := l.LikeService.ThumbUp(
 		ctx,
-		request.GetUserID(),
+		userID,
 		request.GetObjectType(),
-		request.GetObjectID(),
+		objectID,
 	); err != nil {
 		return nil, err
 	}
@@ -31,11 +40,19 @@ func (l *LikeRPC) ThumbUp(ctx context.Context, request *likepb.ThumbUpRequest) (
 }
 
 func (l *LikeRPC) CancelThumbUp(ctx context.Context, request *likepb.CancelThumbUpRequest) (*likepb.CancelThumbUpResponse, error) {
+	userID, err := strconv.ParseUint(request.GetUserID(), 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid userID: %w", err)
+	}
+	objectID, err := strconv.ParseUint(request.GetObjectID(), 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid objectID: %w", err)
+	}
 	if err := l.LikeService.CancelThumbUp(
 		ctx,
-		request.GetUserID(),
+		userID,
 		request.GetObjectType(),
-		request.GetObjectID(),
+		objectID,
 	); err != nil {
 		return nil, err
 	}
@@ -43,7 +60,11 @@ func (l *LikeRPC) CancelThumbUp(ctx context.Context, request *likepb.CancelThumb
 }
 
 func (l *LikeRPC) PageQueryUserLikeList(ctx context.Context, request *likepb.PageQueryUserLikeListRequest) (*likepb.PageQueryUserLikeListResponse, error) {
-	articles, total, err := l.LikeService.UserLikeList(ctx, strconv.Itoa(int(request.GetUserID())), request.GetObjectType(), int(request.GetPage()), int(request.GetPageSize()))
+	userID, err := strconv.ParseUint(request.GetUserID(), 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid userID: %w", err)
+	}
+	articles, total, err := l.LikeService.UserLikeList(ctx, userID, request.GetObjectType(), int(request.GetPage()), int(request.GetPageSize()))
 	if err != nil {
 		return nil, err
 	}

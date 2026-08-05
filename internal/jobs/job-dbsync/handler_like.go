@@ -24,7 +24,7 @@ func (c *MessageQueueConsumer) handleUserLike(ctx context.Context, msg *event.Ev
 		if err != nil {
 			_, _, cacheErr := c.likeCache.CancelThumbUp(ctx, msg.UserID, msg.ObjectType, msg.ObjectID)
 			if cacheErr != nil {
-				c.logger.Error("cache cancel thumb up failed", zap.String("user_id", msg.UserID), zap.Error(cacheErr))
+				c.logger.Error("cache cancel thumb up failed", zap.Uint64("user_id", msg.UserID), zap.Error(cacheErr))
 			}
 			return err
 		}
@@ -39,6 +39,11 @@ func (c *MessageQueueConsumer) handleUserLike(ctx context.Context, msg *event.Ev
 	})
 	if err != nil {
 		c.logger.Error("handle user like failed", zap.Any("msg", msg), zap.Error(err))
+		return err
+	}
+	// 当点赞成功之后，给用户的点赞数量+1 (这个地方可以先不聚合)
+	err = c.userRepo.IncrementLikeCount(ctx, msg.UserID)
+	if err != nil {
 		return err
 	}
 	return nil
@@ -80,5 +85,12 @@ func (c *MessageQueueConsumer) handleUserCancelThumbUp(ctx context.Context, msg 
 			return err
 		}
 	}
+
+	// 去掉点赞之后，要对用户的点赞数-1
+	err = c.userRepo.DecrementLikeCount(ctx, msg.UserID)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

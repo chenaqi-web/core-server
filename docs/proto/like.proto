@@ -31,7 +31,7 @@ message CancelThumbUpResponse{
 }
 
 message PageQueryUserLikeListRequest {
-  int32 userID = 1;
+  string userID = 1;
   string objectType = 2;
   int32 page = 3;
   int32 pageSize = 4;

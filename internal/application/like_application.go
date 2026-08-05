@@ -54,7 +54,7 @@ func NewLikeService(
 // =====================================================================================================================
 // 点赞操作
 
-func (s *LikeService) HasThumbUp(ctx context.Context, userID, objectType, objectID string) (bool, error) {
+func (s *LikeService) HasThumbUp(ctx context.Context, userID uint64, objectType string, objectID uint64) (bool, error) {
 	// 1. 首先判断是否点赞(在zset里面)
 	exist, err := s.cache.ExistZSetMember(ctx, userID, objectType, objectID)
 	if err != nil && !errors.Is(err, cache.ErrKeyNotFound) {
@@ -78,7 +78,7 @@ func (s *LikeService) HasThumbUp(ctx context.Context, userID, objectType, object
 	return interaction != nil, nil
 }
 
-func (s *LikeService) ThumbUp(ctx context.Context, userID, objectType, objectID string) error {
+func (s *LikeService) ThumbUp(ctx context.Context, userID uint64, objectType string, objectID uint64) error {
 	// 1. 先查询缓存，判断是否点赞
 	exists, err := s.HasThumbUp(ctx, userID, objectType, objectID)
 	if err != nil {
@@ -116,7 +116,7 @@ func (s *LikeService) ThumbUp(ctx context.Context, userID, objectType, objectID 
 	return nil
 }
 
-func (s *LikeService) CancelThumbUp(ctx context.Context, userID, objectType, objectID string) error {
+func (s *LikeService) CancelThumbUp(ctx context.Context, userID uint64, objectType string, objectID uint64) error {
 	// 1. 先查询缓存，有就删除
 	// result 就返回两个值 0和1，0表示没有，1表示有且成功删除
 	result, score, err := s.cache.CancelThumbUp(ctx, userID, objectType, objectID)
@@ -175,7 +175,7 @@ func (s *LikeService) sendMessage(msg *event.Message) error {
 
 	// 3.发送消息到mq，重试3次
 	err = retry.Do(func() error {
-		return s.producer.SendMessage(topic, msg.UserID, value)
+		return s.producer.SendMessage(topic, strconv.FormatUint(msg.UserID, 10), value)
 	},
 		retry.Attempts(3),
 		retry.MaxDelay(10*time.Second),
@@ -190,7 +190,7 @@ func (s *LikeService) sendMessage(msg *event.Message) error {
 // =====================================================================================================================
 // 点赞列表方面
 
-func (s *LikeService) UserLikeList(ctx context.Context, userID string, objectType string, page, pageSize int) ([]*aggregate.ArticleAggregate, int64, error) {
+func (s *LikeService) UserLikeList(ctx context.Context, userID uint64, objectType string, page, pageSize int) ([]*aggregate.ArticleAggregate, int64, error) {
 	if page <= 0 {
 		page = 1
 	}
@@ -198,23 +198,11 @@ func (s *LikeService) UserLikeList(ctx context.Context, userID string, objectTyp
 		pageSize = 10
 	}
 
-	// 1) 先查缓存总数，拿不到再查数据库
-	total, err := s.cache.QueryUserLikeTotalCount(ctx, userID, objectType)
-	if err != nil && !errors.Is(err, cache.ErrKeyNotFound) {
-		s.log.Error("query user like total count from cache failed", zap.Error(err))
-		// 后续降级查DB
-		total = -1
+	// 1) 直接从 user 表查询用户点赞总数，不再走缓存
+	total, err := s.userRepo.GetLikeCount(ctx, userID)
+	if err != nil {
+		return nil, 0, err
 	}
-	if total < 0 {
-		total, err = s.repo.CountUserLiked(ctx, userID, objectType)
-		if err != nil {
-			return nil, 0, err
-		}
-		if err := s.cache.SetUserThumbUpTotalCount(ctx, userID, objectType, total); err != nil {
-			s.log.Error("set user like total count cache failed", zap.Error(err))
-		}
-	}
-
 	if total == 0 {
 		return nil, 0, nil
 	}
@@ -240,7 +228,7 @@ func (s *LikeService) UserLikeList(ctx context.Context, userID string, objectTyp
 		return nil, 0, err
 	}
 
-	ids := make([]string, 0, len(likes))
+	ids := make([]uint64, 0, len(likes))
 	scores := make([]float64, 0, len(likes))
 	for _, like := range likes {
 		ids = append(ids, like.ObjectID)
@@ -259,17 +247,15 @@ func (s *LikeService) UserLikeList(ctx context.Context, userID string, objectTyp
 	return articles, total, nil
 }
 
-func (s *LikeService) loadArticlesByIDs(ctx context.Context, ids []string) ([]*aggregate.ArticleAggregate, error) {
+// todo 这个加载数据可能后续在改，可以换成批量处理，暂时够用
+
+func (s *LikeService) loadArticlesByIDs(ctx context.Context, ids []uint64) ([]*aggregate.ArticleAggregate, error) {
 	if len(ids) == 0 {
 		return nil, nil
 	}
 	articles := make([]*aggregate.ArticleAggregate, 0, len(ids))
 	for _, id := range ids {
-		articleID, err := strconv.ParseUint(id, 10, 64)
-		if err != nil {
-			return nil, err
-		}
-		article, err := s.articleRepo.GetByID(ctx, articleID)
+		article, err := s.articleRepo.GetByID(ctx, id)
 		if err != nil {
 			return nil, err
 		}

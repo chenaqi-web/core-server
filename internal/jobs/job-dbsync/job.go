@@ -69,6 +69,7 @@ func NewMessageQueueConsumer(
 		likeRepo:     likeRepo,
 		countRepo:    countRepo,
 		likeCache:    likeCache,
+		userRepo:     userRepo,
 		producer:     producer,
 		dlqTopic:     cfg.Kafka.DlqTopicName(),
 	}

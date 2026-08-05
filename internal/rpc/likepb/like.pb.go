@@ -233,7 +233,7 @@ func (x *CancelThumbUpResponse) GetSuccess() bool {
 
 type PageQueryUserLikeListRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserID        int32                  `protobuf:"varint,1,opt,name=userID,proto3" json:"userID,omitempty"`
+	UserID        string                 `protobuf:"bytes,1,opt,name=userID,proto3" json:"userID,omitempty"`
 	ObjectType    string                 `protobuf:"bytes,2,opt,name=objectType,proto3" json:"objectType,omitempty"`
 	Page          int32                  `protobuf:"varint,3,opt,name=page,proto3" json:"page,omitempty"`
 	PageSize      int32                  `protobuf:"varint,4,opt,name=pageSize,proto3" json:"pageSize,omitempty"`
@@ -271,11 +271,11 @@ func (*PageQueryUserLikeListRequest) Descriptor() ([]byte, []int) {
 	return file_like_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *PageQueryUserLikeListRequest) GetUserID() int32 {
+func (x *PageQueryUserLikeListRequest) GetUserID() string {
 	if x != nil {
 		return x.UserID
 	}
-	return 0
+	return ""
 }
 
 func (x *PageQueryUserLikeListRequest) GetObjectType() string {
@@ -374,7 +374,7 @@ const file_like_proto_rawDesc = "" +
 	"\x15CancelThumbUpResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x86\x01\n" +
 	"\x1cPageQueryUserLikeListRequest\x12\x16\n" +
-	"\x06userID\x18\x01 \x01(\x05R\x06userID\x12\x1e\n" +
+	"\x06userID\x18\x01 \x01(\tR\x06userID\x12\x1e\n" +
 	"\n" +
 	"objectType\x18\x02 \x01(\tR\n" +
 	"objectType\x12\x12\n" +

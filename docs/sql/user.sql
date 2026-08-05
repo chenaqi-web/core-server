@@ -9,6 +9,7 @@ CREATE TABLE `user` (
                         `sex` VARCHAR(10) DEFAULT '' COMMENT '性别：male/female',
                         `age` BIGINT UNSIGNED DEFAULT 0 COMMENT '年龄',
                         `like_count` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '喜欢列表点赞数',
+                        `receive_like_count` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '收到的点赞数',
                         `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
                         `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
                         `deleted_at` DATETIME DEFAULT NULL COMMENT '软删除时间',
