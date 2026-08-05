@@ -16,6 +16,7 @@ message CommentInfo {
   string createdAt = 11;
   string userName = 12;
   string userAvatar = 13;
+  bool isLiked = 14; // 当前用户是否点过赞
 }
 
 message CreateCommentReq {

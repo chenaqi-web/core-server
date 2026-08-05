@@ -52,7 +52,7 @@ func NewLikeService(
 }
 
 // =====================================================================================================================
-// 点赞操作
+// 点赞状态
 
 func (s *LikeService) HasThumbUp(ctx context.Context, userID uint64, objectType string, objectID uint64) (bool, error) {
 	// 1. 首先判断是否点赞(在zset里面)
@@ -77,6 +77,21 @@ func (s *LikeService) HasThumbUp(ctx context.Context, userID uint64, objectType 
 	}
 	return interaction != nil, nil
 }
+
+func (s *LikeService) BatchHasThumbUp(ctx context.Context, userID uint64, objectType string, objectIDs []uint64) (map[uint64]bool, error) {
+	statuses := make(map[uint64]bool, len(objectIDs))
+	for _, objectID := range objectIDs {
+		liked, err := s.HasThumbUp(ctx, userID, objectType, objectID)
+		if err != nil {
+			return nil, err
+		}
+		statuses[objectID] = liked
+	}
+	return statuses, nil
+}
+
+// =====================================================================================================================
+// 点赞操作
 
 func (s *LikeService) ThumbUp(ctx context.Context, userID uint64, objectType string, objectID uint64) error {
 	// 1. 先查询缓存，判断是否点赞

@@ -22,6 +22,8 @@ const (
 	LikeService_ThumbUp_FullMethodName               = "/like.LikeService/ThumbUp"
 	LikeService_CancelThumbUp_FullMethodName         = "/like.LikeService/CancelThumbUp"
 	LikeService_PageQueryUserLikeList_FullMethodName = "/like.LikeService/PageQueryUserLikeList"
+	LikeService_HasLike_FullMethodName               = "/like.LikeService/HasLike"
+	LikeService_BatchLikeStatus_FullMethodName       = "/like.LikeService/BatchLikeStatus"
 )
 
 // LikeServiceClient is the client API for LikeService service.
@@ -31,6 +33,8 @@ type LikeServiceClient interface {
 	ThumbUp(ctx context.Context, in *ThumbUpRequest, opts ...grpc.CallOption) (*ThumbUpResponse, error)
 	CancelThumbUp(ctx context.Context, in *CancelThumbUpRequest, opts ...grpc.CallOption) (*CancelThumbUpResponse, error)
 	PageQueryUserLikeList(ctx context.Context, in *PageQueryUserLikeListRequest, opts ...grpc.CallOption) (*PageQueryUserLikeListResponse, error)
+	HasLike(ctx context.Context, in *HasArticleLikeRequest, opts ...grpc.CallOption) (*HasArticleLikeResponse, error)
+	BatchLikeStatus(ctx context.Context, in *BatchCommentLikeStatusRequest, opts ...grpc.CallOption) (*BatchLikeStatusResponse, error)
 }
 
 type likeServiceClient struct {
@@ -71,6 +75,26 @@ func (c *likeServiceClient) PageQueryUserLikeList(ctx context.Context, in *PageQ
 	return out, nil
 }
 
+func (c *likeServiceClient) HasLike(ctx context.Context, in *HasArticleLikeRequest, opts ...grpc.CallOption) (*HasArticleLikeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(HasArticleLikeResponse)
+	err := c.cc.Invoke(ctx, LikeService_HasLike_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *likeServiceClient) BatchLikeStatus(ctx context.Context, in *BatchCommentLikeStatusRequest, opts ...grpc.CallOption) (*BatchLikeStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BatchLikeStatusResponse)
+	err := c.cc.Invoke(ctx, LikeService_BatchLikeStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LikeServiceServer is the server API for LikeService service.
 // All implementations must embed UnimplementedLikeServiceServer
 // for forward compatibility.
@@ -78,6 +102,8 @@ type LikeServiceServer interface {
 	ThumbUp(context.Context, *ThumbUpRequest) (*ThumbUpResponse, error)
 	CancelThumbUp(context.Context, *CancelThumbUpRequest) (*CancelThumbUpResponse, error)
 	PageQueryUserLikeList(context.Context, *PageQueryUserLikeListRequest) (*PageQueryUserLikeListResponse, error)
+	HasLike(context.Context, *HasArticleLikeRequest) (*HasArticleLikeResponse, error)
+	BatchLikeStatus(context.Context, *BatchCommentLikeStatusRequest) (*BatchLikeStatusResponse, error)
 	mustEmbedUnimplementedLikeServiceServer()
 }
 
@@ -96,6 +122,12 @@ func (UnimplementedLikeServiceServer) CancelThumbUp(context.Context, *CancelThum
 }
 func (UnimplementedLikeServiceServer) PageQueryUserLikeList(context.Context, *PageQueryUserLikeListRequest) (*PageQueryUserLikeListResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method PageQueryUserLikeList not implemented")
+}
+func (UnimplementedLikeServiceServer) HasLike(context.Context, *HasArticleLikeRequest) (*HasArticleLikeResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method HasLike not implemented")
+}
+func (UnimplementedLikeServiceServer) BatchLikeStatus(context.Context, *BatchCommentLikeStatusRequest) (*BatchLikeStatusResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method BatchLikeStatus not implemented")
 }
 func (UnimplementedLikeServiceServer) mustEmbedUnimplementedLikeServiceServer() {}
 func (UnimplementedLikeServiceServer) testEmbeddedByValue()                     {}
@@ -172,6 +204,42 @@ func _LikeService_PageQueryUserLikeList_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LikeService_HasLike_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HasArticleLikeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LikeServiceServer).HasLike(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LikeService_HasLike_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LikeServiceServer).HasLike(ctx, req.(*HasArticleLikeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LikeService_BatchLikeStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchCommentLikeStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LikeServiceServer).BatchLikeStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LikeService_BatchLikeStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LikeServiceServer).BatchLikeStatus(ctx, req.(*BatchCommentLikeStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // LikeService_ServiceDesc is the grpc.ServiceDesc for LikeService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -190,6 +258,14 @@ var LikeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PageQueryUserLikeList",
 			Handler:    _LikeService_PageQueryUserLikeList_Handler,
+		},
+		{
+			MethodName: "HasLike",
+			Handler:    _LikeService_HasLike_Handler,
+		},
+		{
+			MethodName: "BatchLikeStatus",
+			Handler:    _LikeService_BatchLikeStatus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
