@@ -5,12 +5,14 @@ import (
 	"core-server/internal/infras/clog"
 	"encoding/json"
 	"errors"
+	"strconv"
 	"time"
 
 	"core-server/internal/config"
 	"core-server/internal/domain"
 	"core-server/internal/infras/cache"
 	"core-server/internal/infras/mq/kafka"
+	"core-server/internal/model/aggregate"
 	"core-server/internal/model/entity"
 	"core-server/internal/model/enum"
 	"core-server/internal/model/event"
@@ -20,11 +22,13 @@ import (
 )
 
 type LikeService struct {
-	cfg      *config.Config
-	log      *clog.Log
-	producer *kafka.SyncProducer
-	repo     domain.LikeRepoDomain
-	cache    domain.LikeCacheDomain
+	cfg         *config.Config
+	log         *clog.Log
+	producer    *kafka.SyncProducer
+	repo        domain.LikeRepoDomain
+	cache       domain.LikeCacheDomain
+	articleRepo domain.ArticleRepoDomain
+	userRepo    domain.UserRepoDomain
 }
 
 func NewLikeService(
@@ -32,14 +36,18 @@ func NewLikeService(
 	repo domain.LikeRepoDomain,
 	likeCache domain.LikeCacheDomain,
 	producer *kafka.SyncProducer,
+	articleRepo domain.ArticleRepoDomain,
+	userRepo domain.UserRepoDomain,
 	cfg *config.Config,
 ) (*LikeService, error) {
 	return &LikeService{
-		cfg:      cfg,
-		repo:     repo,
-		cache:    likeCache,
-		producer: producer,
-		log:      log,
+		cfg:         cfg,
+		repo:        repo,
+		cache:       likeCache,
+		producer:    producer,
+		articleRepo: articleRepo,
+		userRepo:    userRepo,
+		log:         log,
 	}, nil
 }
 
@@ -181,3 +189,98 @@ func (s *LikeService) sendMessage(msg *event.Message) error {
 
 // =====================================================================================================================
 // 点赞列表方面
+
+func (s *LikeService) UserLikeList(ctx context.Context, userID string, objectType string, page, pageSize int) ([]*aggregate.ArticleAggregate, int64, error) {
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 10
+	}
+
+	// 1) 先查缓存总数，拿不到再查数据库
+	total, err := s.cache.QueryUserLikeTotalCount(ctx, userID, objectType)
+	if err != nil && !errors.Is(err, cache.ErrKeyNotFound) {
+		s.log.Error("query user like total count from cache failed", zap.Error(err))
+		// 后续降级查DB
+		total = -1
+	}
+	if total < 0 {
+		total, err = s.repo.CountUserLiked(ctx, userID, objectType)
+		if err != nil {
+			return nil, 0, err
+		}
+		if err := s.cache.SetUserThumbUpTotalCount(ctx, userID, objectType, total); err != nil {
+			s.log.Error("set user like total count cache failed", zap.Error(err))
+		}
+	}
+
+	if total == 0 {
+		return nil, 0, nil
+	}
+
+	offset := (page - 1) * pageSize
+	if int64(offset) >= total {
+		return nil, total, nil
+	}
+
+	// 2) 先查 zset 热数据
+	cachedIDs, cacheErr := s.cache.PageQueryObjects(ctx, userID, objectType, page, pageSize)
+	if cacheErr == nil && len(cachedIDs) == pageSize {
+		articles, err := s.loadArticlesByIDs(ctx, cachedIDs)
+		if err != nil {
+			return nil, 0, err
+		}
+		return articles, total, nil
+	}
+
+	// 3) 缓存没有命中，或者最后一页不足 pageSize，或者超过 zset 大小，则查数据库
+	likes, err := s.repo.PageQueryLikeObjects(ctx, userID, objectType, offset, pageSize)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	ids := make([]string, 0, len(likes))
+	scores := make([]float64, 0, len(likes))
+	for _, like := range likes {
+		ids = append(ids, like.ObjectID)
+		scores = append(scores, float64(like.Version))
+	}
+
+	// 4) 只要本次分页范围仍在热数据预算内，就回填 zset
+	if err := s.cache.SetLikeList(ctx, userID, objectType, ids, scores); err != nil {
+		s.log.Error("set like list cache failed", zap.Error(err))
+	}
+
+	articles, err := s.loadArticlesByIDs(ctx, ids)
+	if err != nil {
+		return nil, 0, err
+	}
+	return articles, total, nil
+}
+
+func (s *LikeService) loadArticlesByIDs(ctx context.Context, ids []string) ([]*aggregate.ArticleAggregate, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	articles := make([]*aggregate.ArticleAggregate, 0, len(ids))
+	for _, id := range ids {
+		articleID, err := strconv.ParseUint(id, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		article, err := s.articleRepo.GetByID(ctx, articleID)
+		if err != nil {
+			return nil, err
+		}
+		if article == nil {
+			continue
+		}
+		author, err := s.userRepo.GetByID(ctx, article.AuthorID)
+		if err != nil {
+			return nil, err
+		}
+		articles = append(articles, aggregate.NewArticleAggregate(article, author))
+	}
+	return articles, nil
+}

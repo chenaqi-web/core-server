@@ -13,20 +13,23 @@ import (
 )
 
 const (
+	// zset 最大长度
 	defaultMaxLikeSetSize      int64 = 50
 	defaultLikeListExpiration        = 7 * 24 * time.Hour
 	defaultLikeCountExpiration       = 7 * 24 * time.Hour
 )
 
-// 记录用户的点赞关系的列表
+// 记录用户的点赞关系的列表key
 func thumbUpListKey(userID, objectType string) string {
 	return fmt.Sprintf("like:list:%s:%s", userID, objectType)
 }
 
+// 记录对象的点赞数量key
 func objectThumbUpCountKey(objectID, objectType string) string {
 	return fmt.Sprintf("like:count:%s:%s", objectType, objectID)
 }
 
+// 用户点赞总数key
 func userThumbUpCountKey(userID, objectType string) string {
 	return fmt.Sprintf("like:user:count:%s:%s", userID, objectType)
 }
@@ -161,145 +164,63 @@ func (c *ILikeCache) CompensationCountIncr(ctx context.Context, objectID, object
 }
 
 //======================================================================================================================
-//
-//func (c *ILikeCache) SetLikeList(ctx context.Context, userID, objectType string, interactions []*entity.InteractionLike) error {
-//	if len(interactions) == 0 {
-//		return nil
-//	}
-//
-//	keyZSet := thumbUpListKey(userID, objectType)
-//	zs := make([]redis.Z, 0, len(interactions))
-//
-//	pipe := c.Cache.Pipeline()
-//	pipe.Del(ctx, keyZSet)
-//	for _, interaction := range interactions {
-//		zs = append(zs, redis.Z{
-//			Member: interaction.ObjectID,
-//			Score:  float64(interaction.Version),
-//		})
-//	}
-//
-//	pipe.ZAdd(ctx, keyZSet, zs...)
-//	pipe.Expire(ctx, keyZSet, c.randomLikeListExpiration())
-//
-//	_, err := pipe.Exec(ctx)
-//	return err
-//}
-//
-//func (c *ILikeCache) BatchExistZSetMembers(ctx context.Context, userID, objectType string, objectIDs []string) ([]string, error) {
-//	key := thumbUpListKey(userID, objectType)
-//	return batchExistsZSetMembers(ctx, c.Cache, key, objectIDs)
-//}
-//
-//func (c *ILikeCache) PageQueryObjects(ctx context.Context, userID, objectType string, page, size int) ([]string, error) {
-//	key := thumbUpListKey(userID, objectType)
-//	objectIDs, err := c.Cache.ZRevRange(ctx, key, int64(page), int64(size)).Result()
-//	if err != nil {
-//		if errors.Is(err, redis.Nil) {
-//			return nil, nil
-//		}
-//		return nil, err
-//	}
-//	return objectIDs, nil
-//}
-//
-//
-//func (c *ILikeCache) SetUserThumbUpTotalCount(ctx context.Context, userID, objectType string, count int64) error {
-//	key := userThumbUpCountKey(userID, objectType)
-//	_, err := c.Cache.Set(ctx, key, strconv.FormatInt(count, 10), c.randomLikeCountExpiration()).Result()
-//	return err
-//}
-//
-//func (c *ILikeCache) SetNXObjectLikedCount(ctx context.Context, objectID, objectType string, count int64) error {
-//	keyCount := objectThumbUpCountKey(objectID, objectType)
-//	_, err := c.Cache.SetNX(ctx, keyCount, strconv.FormatInt(count, 10), c.randomLikeCountExpiration()).Result()
-//	return err
-//}
-//
-//func (c *ILikeCache) SetNXObjectsLikedCountFromDB(ctx context.Context, records []*entity.InteractionCount) error {
-//	if len(records) == 0 {
-//		return nil
-//	}
-//
-//	pipe := c.Cache.Pipeline()
-//	for _, record := range records {
-//		keyCount := objectThumbUpCountKey(record.ObjectID, record.ObjectType.String())
-//		pipe.SetNX(ctx, keyCount, record.Count, c.randomLikeCountExpiration())
-//	}
-//
-//	_, err := pipe.Exec(ctx)
-//	return err
-//}
-//
-//func (c *ILikeCache) ExpireObjectLikedCount(ctx context.Context, objectType, objectID string) error {
-//	countKey := objectThumbUpCountKey(objectID, objectType)
-//	_, err := c.Cache.Expire(ctx, countKey, c.randomLikeCountExpiration()).Result()
-//	return err
-//}
-//
-//func (c *ILikeCache) QueryUserLikeTotalCount(ctx context.Context, userID, objectType string) (int64, error) {
-//	key := userThumbUpCountKey(userID, objectType)
-//	total, err := c.Cache.Get(ctx, key).Result()
-//	if errors.Is(err, redis.Nil) {
-//		return -1, ErrKeyNotFound
-//	}
-//	if err != nil {
-//		return 0, err
-//	}
-//
-//	count, err := strconv.ParseInt(total, 10, 64)
-//	if err != nil {
-//		return -1, err
-//	}
-//	return count, nil
-//}
-//
-//func (c *ILikeCache) GetObjectLikedCount(ctx context.Context, objectType, objectID string) (int64, error) {
-//	countKey := objectThumbUpCountKey(objectID, objectType)
-//	count, err := c.Cache.Get(ctx, countKey).Result()
-//	if errors.Is(err, redis.Nil) {
-//		return 0, ErrKeyNotFound
-//	}
-//	if err != nil {
-//		return 0, err
-//	}
-//	return strconv.ParseInt(count, 10, 64)
-//}
-//
-//func (c *ILikeCache) QueryObjectLikedCountInBatch(ctx context.Context, objectType string, objectIDs []string) ([]int64, []string, map[string]int, error) {
-//	if len(objectIDs) == 0 {
-//		return nil, nil, nil, fmt.Errorf("invalid empty id list")
-//	}
-//
-//	pipe := c.Cache.Pipeline()
-//	cmdList := make([]*redis.StringCmd, 0, len(objectIDs))
-//	for _, objectID := range objectIDs {
-//		countKey := objectThumbUpCountKey(objectID, objectType)
-//		cmd := pipe.Get(ctx, countKey)
-//		cmdList = append(cmdList, cmd)
-//	}
-//
-//	_, err := pipe.Exec(ctx)
-//	if err != nil && !errors.Is(err, redis.Nil) {
-//		return nil, nil, nil, err
-//	}
-//
-//	counts := make([]int64, len(objectIDs))
-//	missedIDs := make([]string, 0)
-//	missIndex := make(map[string]int)
-//
-//	for i, cmd := range cmdList {
-//		val, err := cmd.Int64()
-//		if errors.Is(err, redis.Nil) {
-//			missedIDs = append(missedIDs, objectIDs[i])
-//			missIndex[objectIDs[i]] = i
-//			continue
-//		}
-//		if err != nil {
-//			return nil, nil, nil, err
-//		}
-//		counts[i] = val
-//	}
-//
-//	return counts, missedIDs, missIndex, nil
-//}
+// 点赞列表
+
+func (c *ILikeCache) SetLikeList(ctx context.Context, userID, objectType string, objectIDs []string, scores []float64) error {
+	if len(objectIDs) == 0 {
+		return nil
+	}
+	if len(objectIDs) != len(scores) {
+		return fmt.Errorf("objectIDs and scores length mismatch")
+	}
+
+	keyZSet := thumbUpListKey(userID, objectType)
+	zs := make([]redis.Z, 0, len(objectIDs))
+	for i, objectID := range objectIDs {
+		zs = append(zs, redis.Z{Member: objectID, Score: scores[i]})
+	}
+
+	pipe := c.Cache.Pipeline()
+	pipe.Del(ctx, keyZSet)
+	pipe.ZAdd(ctx, keyZSet, zs...)
+	pipe.Expire(ctx, keyZSet, c.randomLikeListExpiration())
+	_, err := pipe.Exec(ctx)
+	return err
+}
+
+func (c *ILikeCache) PageQueryObjects(ctx context.Context, userID, objectType string, page, size int) ([]string, error) {
+	key := thumbUpListKey(userID, objectType)
+	start := int64((page - 1) * size)
+	stop := start + int64(size) - 1
+	objectIDs, err := c.Cache.ZRangeArgs(ctx, redis.ZRangeArgs{Key: key, Start: start, Stop: stop, Rev: true}).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return nil, ErrKeyNotFound
+		}
+		return nil, err
+	}
+	return objectIDs, nil
+}
+
+func (c *ILikeCache) SetUserThumbUpTotalCount(ctx context.Context, userID, objectType string, count int64) error {
+	key := userThumbUpCountKey(userID, objectType)
+	_, err := c.Cache.Set(ctx, key, strconv.FormatInt(count, 10), c.randomLikeCountExpiration()).Result()
+	return err
+}
+
+func (c *ILikeCache) QueryUserLikeTotalCount(ctx context.Context, userID, objectType string) (int64, error) {
+	key := userThumbUpCountKey(userID, objectType)
+	total, err := c.Cache.Get(ctx, key).Result()
+	if errors.Is(err, redis.Nil) {
+		return -1, ErrKeyNotFound
+	}
+	if err != nil {
+		return 0, err
+	}
+
+	count, err := strconv.ParseInt(total, 10, 64)
+	if err != nil {
+		return -1, err
+	}
+	return count, nil
+}

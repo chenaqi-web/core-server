@@ -35,6 +35,7 @@ type MessageQueueConsumer struct {
 	// database
 	likeRepo  domain.LikeRepoDomain
 	countRepo domain.CountRepoDomain
+	userRepo  domain.UserRepoDomain
 
 	// cache
 	likeCache domain.LikeCacheDomain
@@ -57,6 +58,7 @@ func NewMessageQueueConsumer(
 	redisClient *cache.CacheClient,
 	likeRepo domain.LikeRepoDomain,
 	countRepo domain.CountRepoDomain,
+	userRepo domain.UserRepoDomain,
 	likeCache domain.LikeCacheDomain,
 ) *MessageQueueConsumer {
 

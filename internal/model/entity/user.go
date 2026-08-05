@@ -18,6 +18,7 @@ type User struct {
 	Role      string       `db:"role"`
 	Sex       string       `db:"sex"`
 	Age       uint64       `db:"age"`
+	LikeCount uint64       `db:"like_count"`
 }
 
 func (User) TableName() string {

@@ -2,11 +2,10 @@ package repo
 
 import (
 	"context"
+	"core-server/internal/model/entity"
 	"database/sql"
 	"errors"
 	"fmt"
-
-	"core-server/internal/model/entity"
 )
 
 type LikeRepo struct {
@@ -106,4 +105,30 @@ LIMIT 1`
 		return nil, err
 	}
 	return &like, nil
+}
+
+func (r *LikeRepo) CountUserLiked(ctx context.Context, userID, objectType string) (int64, error) {
+	var count int64
+	const sqlQuery = `
+SELECT COUNT(1)
+FROM interaction_like
+WHERE user_id = ? AND object_type = ? AND status = ?`
+	if err := r.db(ctx).GetContext(ctx, &count, sqlQuery, userID, objectType, entity.LikeStatusTypeThumbUp.String()); err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (r *LikeRepo) PageQueryLikeObjects(ctx context.Context, userID, objectType string, offset, limit int) ([]*entity.InteractionLike, error) {
+	var items []*entity.InteractionLike
+	const sqlQuery = `
+SELECT id, created_at, updated_at, user_id, object_type, object_id, status, version
+FROM interaction_like
+WHERE user_id = ? AND object_type = ? AND status = ?
+ORDER BY version DESC, updated_at DESC
+LIMIT ?, ?`
+	if err := r.db(ctx).SelectContext(ctx, &items, sqlQuery, userID, objectType, entity.LikeStatusTypeThumbUp.String(), offset, limit); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

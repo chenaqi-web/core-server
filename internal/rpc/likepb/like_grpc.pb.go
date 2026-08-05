@@ -4,9 +4,6 @@
 // - protoc             v5.29.1
 // source: like.proto
 
-// provide user like service
-// 1. add like
-
 package likepb
 
 import (
@@ -22,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	LikeService_ThumbUp_FullMethodName       = "/like.LikeService/ThumbUp"
-	LikeService_CancelThumbUp_FullMethodName = "/like.LikeService/CancelThumbUp"
+	LikeService_ThumbUp_FullMethodName               = "/like.LikeService/ThumbUp"
+	LikeService_CancelThumbUp_FullMethodName         = "/like.LikeService/CancelThumbUp"
+	LikeService_PageQueryUserLikeList_FullMethodName = "/like.LikeService/PageQueryUserLikeList"
 )
 
 // LikeServiceClient is the client API for LikeService service.
@@ -32,6 +30,7 @@ const (
 type LikeServiceClient interface {
 	ThumbUp(ctx context.Context, in *ThumbUpRequest, opts ...grpc.CallOption) (*ThumbUpResponse, error)
 	CancelThumbUp(ctx context.Context, in *CancelThumbUpRequest, opts ...grpc.CallOption) (*CancelThumbUpResponse, error)
+	PageQueryUserLikeList(ctx context.Context, in *PageQueryUserLikeListRequest, opts ...grpc.CallOption) (*PageQueryUserLikeListResponse, error)
 }
 
 type likeServiceClient struct {
@@ -62,12 +61,23 @@ func (c *likeServiceClient) CancelThumbUp(ctx context.Context, in *CancelThumbUp
 	return out, nil
 }
 
+func (c *likeServiceClient) PageQueryUserLikeList(ctx context.Context, in *PageQueryUserLikeListRequest, opts ...grpc.CallOption) (*PageQueryUserLikeListResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PageQueryUserLikeListResponse)
+	err := c.cc.Invoke(ctx, LikeService_PageQueryUserLikeList_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LikeServiceServer is the server API for LikeService service.
 // All implementations must embed UnimplementedLikeServiceServer
 // for forward compatibility.
 type LikeServiceServer interface {
 	ThumbUp(context.Context, *ThumbUpRequest) (*ThumbUpResponse, error)
 	CancelThumbUp(context.Context, *CancelThumbUpRequest) (*CancelThumbUpResponse, error)
+	PageQueryUserLikeList(context.Context, *PageQueryUserLikeListRequest) (*PageQueryUserLikeListResponse, error)
 	mustEmbedUnimplementedLikeServiceServer()
 }
 
@@ -83,6 +93,9 @@ func (UnimplementedLikeServiceServer) ThumbUp(context.Context, *ThumbUpRequest) 
 }
 func (UnimplementedLikeServiceServer) CancelThumbUp(context.Context, *CancelThumbUpRequest) (*CancelThumbUpResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CancelThumbUp not implemented")
+}
+func (UnimplementedLikeServiceServer) PageQueryUserLikeList(context.Context, *PageQueryUserLikeListRequest) (*PageQueryUserLikeListResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method PageQueryUserLikeList not implemented")
 }
 func (UnimplementedLikeServiceServer) mustEmbedUnimplementedLikeServiceServer() {}
 func (UnimplementedLikeServiceServer) testEmbeddedByValue()                     {}
@@ -141,6 +154,24 @@ func _LikeService_CancelThumbUp_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LikeService_PageQueryUserLikeList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PageQueryUserLikeListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LikeServiceServer).PageQueryUserLikeList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LikeService_PageQueryUserLikeList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LikeServiceServer).PageQueryUserLikeList(ctx, req.(*PageQueryUserLikeListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // LikeService_ServiceDesc is the grpc.ServiceDesc for LikeService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -155,6 +186,10 @@ var LikeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CancelThumbUp",
 			Handler:    _LikeService_CancelThumbUp_Handler,
+		},
+		{
+			MethodName: "PageQueryUserLikeList",
+			Handler:    _LikeService_PageQueryUserLikeList_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -4,12 +4,10 @@
 // 	protoc        v5.29.1
 // source: like.proto
 
-// provide user like service
-// 1. add like
-
 package likepb
 
 import (
+	articlepb "core-server/internal/rpc/articlepb"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -233,31 +231,162 @@ func (x *CancelThumbUpResponse) GetSuccess() bool {
 	return false
 }
 
+type PageQueryUserLikeListRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserID        int32                  `protobuf:"varint,1,opt,name=userID,proto3" json:"userID,omitempty"`
+	ObjectType    string                 `protobuf:"bytes,2,opt,name=objectType,proto3" json:"objectType,omitempty"`
+	Page          int32                  `protobuf:"varint,3,opt,name=page,proto3" json:"page,omitempty"`
+	PageSize      int32                  `protobuf:"varint,4,opt,name=pageSize,proto3" json:"pageSize,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PageQueryUserLikeListRequest) Reset() {
+	*x = PageQueryUserLikeListRequest{}
+	mi := &file_like_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PageQueryUserLikeListRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PageQueryUserLikeListRequest) ProtoMessage() {}
+
+func (x *PageQueryUserLikeListRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_like_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PageQueryUserLikeListRequest.ProtoReflect.Descriptor instead.
+func (*PageQueryUserLikeListRequest) Descriptor() ([]byte, []int) {
+	return file_like_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *PageQueryUserLikeListRequest) GetUserID() int32 {
+	if x != nil {
+		return x.UserID
+	}
+	return 0
+}
+
+func (x *PageQueryUserLikeListRequest) GetObjectType() string {
+	if x != nil {
+		return x.ObjectType
+	}
+	return ""
+}
+
+func (x *PageQueryUserLikeListRequest) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *PageQueryUserLikeListRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+type PageQueryUserLikeListResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Articles      []*articlepb.Article   `protobuf:"bytes,1,rep,name=articles,proto3" json:"articles,omitempty"`
+	Total         int64                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PageQueryUserLikeListResponse) Reset() {
+	*x = PageQueryUserLikeListResponse{}
+	mi := &file_like_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PageQueryUserLikeListResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PageQueryUserLikeListResponse) ProtoMessage() {}
+
+func (x *PageQueryUserLikeListResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_like_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PageQueryUserLikeListResponse.ProtoReflect.Descriptor instead.
+func (*PageQueryUserLikeListResponse) Descriptor() ([]byte, []int) {
+	return file_like_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *PageQueryUserLikeListResponse) GetArticles() []*articlepb.Article {
+	if x != nil {
+		return x.Articles
+	}
+	return nil
+}
+
+func (x *PageQueryUserLikeListResponse) GetTotal() int64 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
 var File_like_proto protoreflect.FileDescriptor
 
 const file_like_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"like.proto\x12\x04like\"y\n" +
+	"like.proto\x12\x04like\x1a\rarticle.proto\"d\n" +
 	"\x0eThumbUpRequest\x12\x16\n" +
 	"\x06userID\x18\x01 \x01(\tR\x06userID\x12\x1e\n" +
 	"\n" +
 	"objectType\x18\x02 \x01(\tR\n" +
 	"objectType\x12\x1a\n" +
-	"\bobjectID\x18\x03 \x01(\tR\bobjectIDJ\x04\b\x04\x10\x05R\robjectOwnerID\"+\n" +
+	"\bobjectID\x18\x03 \x01(\tR\bobjectID\"+\n" +
 	"\x0fThumbUpResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x7f\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"j\n" +
 	"\x14CancelThumbUpRequest\x12\x16\n" +
 	"\x06userID\x18\x01 \x01(\tR\x06userID\x12\x1e\n" +
 	"\n" +
 	"objectType\x18\x02 \x01(\tR\n" +
 	"objectType\x12\x1a\n" +
-	"\bobjectID\x18\x03 \x01(\tR\bobjectIDJ\x04\b\x04\x10\x05R\robjectOwnerID\"1\n" +
+	"\bobjectID\x18\x03 \x01(\tR\bobjectID\"1\n" +
 	"\x15CancelThumbUpResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess2\x93\x01\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x86\x01\n" +
+	"\x1cPageQueryUserLikeListRequest\x12\x16\n" +
+	"\x06userID\x18\x01 \x01(\x05R\x06userID\x12\x1e\n" +
+	"\n" +
+	"objectType\x18\x02 \x01(\tR\n" +
+	"objectType\x12\x12\n" +
+	"\x04page\x18\x03 \x01(\x05R\x04page\x12\x1a\n" +
+	"\bpageSize\x18\x04 \x01(\x05R\bpageSize\"c\n" +
+	"\x1dPageQueryUserLikeListResponse\x12,\n" +
+	"\barticles\x18\x01 \x03(\v2\x10.article.ArticleR\barticles\x12\x14\n" +
+	"\x05total\x18\x02 \x01(\x03R\x05total2\xf7\x01\n" +
 	"\vLikeService\x128\n" +
 	"\aThumbUp\x12\x14.like.ThumbUpRequest\x1a\x15.like.ThumbUpResponse\"\x00\x12J\n" +
-	"\rCancelThumbUp\x12\x1a.like.CancelThumbUpRequest\x1a\x1b.like.CancelThumbUpResponse\"\x00B(Z&core-server/internal/rpc/likepb;likepbb\x06proto3"
+	"\rCancelThumbUp\x12\x1a.like.CancelThumbUpRequest\x1a\x1b.like.CancelThumbUpResponse\"\x00\x12b\n" +
+	"\x15PageQueryUserLikeList\x12\".like.PageQueryUserLikeListRequest\x1a#.like.PageQueryUserLikeListResponse\"\x00B(Z&core-server/internal/rpc/likepb;likepbb\x06proto3"
 
 var (
 	file_like_proto_rawDescOnce sync.Once
@@ -271,23 +400,29 @@ func file_like_proto_rawDescGZIP() []byte {
 	return file_like_proto_rawDescData
 }
 
-var file_like_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_like_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_like_proto_goTypes = []any{
-	(*ThumbUpRequest)(nil),        // 0: like.ThumbUpRequest
-	(*ThumbUpResponse)(nil),       // 1: like.ThumbUpResponse
-	(*CancelThumbUpRequest)(nil),  // 2: like.CancelThumbUpRequest
-	(*CancelThumbUpResponse)(nil), // 3: like.CancelThumbUpResponse
+	(*ThumbUpRequest)(nil),                // 0: like.ThumbUpRequest
+	(*ThumbUpResponse)(nil),               // 1: like.ThumbUpResponse
+	(*CancelThumbUpRequest)(nil),          // 2: like.CancelThumbUpRequest
+	(*CancelThumbUpResponse)(nil),         // 3: like.CancelThumbUpResponse
+	(*PageQueryUserLikeListRequest)(nil),  // 4: like.PageQueryUserLikeListRequest
+	(*PageQueryUserLikeListResponse)(nil), // 5: like.PageQueryUserLikeListResponse
+	(*articlepb.Article)(nil),             // 6: article.Article
 }
 var file_like_proto_depIdxs = []int32{
-	0, // 0: like.LikeService.ThumbUp:input_type -> like.ThumbUpRequest
-	2, // 1: like.LikeService.CancelThumbUp:input_type -> like.CancelThumbUpRequest
-	1, // 2: like.LikeService.ThumbUp:output_type -> like.ThumbUpResponse
-	3, // 3: like.LikeService.CancelThumbUp:output_type -> like.CancelThumbUpResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	6, // 0: like.PageQueryUserLikeListResponse.articles:type_name -> article.Article
+	0, // 1: like.LikeService.ThumbUp:input_type -> like.ThumbUpRequest
+	2, // 2: like.LikeService.CancelThumbUp:input_type -> like.CancelThumbUpRequest
+	4, // 3: like.LikeService.PageQueryUserLikeList:input_type -> like.PageQueryUserLikeListRequest
+	1, // 4: like.LikeService.ThumbUp:output_type -> like.ThumbUpResponse
+	3, // 5: like.LikeService.CancelThumbUp:output_type -> like.CancelThumbUpResponse
+	5, // 6: like.LikeService.PageQueryUserLikeList:output_type -> like.PageQueryUserLikeListResponse
+	4, // [4:7] is the sub-list for method output_type
+	1, // [1:4] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_like_proto_init() }
@@ -301,7 +436,7 @@ func file_like_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_like_proto_rawDesc), len(file_like_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

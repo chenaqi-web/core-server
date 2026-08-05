@@ -3,6 +3,7 @@ syntax = "proto3";
 // provide user like service
 // 1. add like
 
+import "article.proto";
 
 package like;
 //import "idl/validate/validate.proto";
@@ -13,8 +14,6 @@ message ThumbUpRequest {
   string userID = 1 ;
   string objectType = 2 ;
   string objectID = 3;
-  reserved 4;
-  reserved "objectOwnerID";
 }
 
 message ThumbUpResponse {
@@ -25,16 +24,26 @@ message CancelThumbUpRequest{
   string userID = 1 ;
   string objectType = 2 ;
   string objectID = 3;
-  reserved 4;
-  reserved "objectOwnerID";
 }
 
 message CancelThumbUpResponse{
   bool success = 1;
 }
 
+message PageQueryUserLikeListRequest {
+  int32 userID = 1;
+  string objectType = 2;
+  int32 page = 3;
+  int32 pageSize = 4;
+}
+
+message PageQueryUserLikeListResponse {
+  repeated article.Article articles = 1;
+  int64 total = 2;
+}
 
 service LikeService {
   rpc ThumbUp(ThumbUpRequest) returns (ThumbUpResponse){};
   rpc CancelThumbUp(CancelThumbUpRequest) returns (CancelThumbUpResponse){};
+  rpc PageQueryUserLikeList(PageQueryUserLikeListRequest) returns (PageQueryUserLikeListResponse){};
 }

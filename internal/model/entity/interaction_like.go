@@ -26,7 +26,7 @@ func (InteractionLike) TableName() string {
 type LikeStatusType string
 
 const (
-	LikeStatusTypeUnknown LikeStatusType = "unknown"
+	LikeStatusTypeUnknown LikeStatusType = "unknown" // 这个状态用来规避就是删除实体之后，所有的点赞关系置为此，表示失效
 	LikeStatusTypeThumbUp LikeStatusType = "thumb_up"
 	LikeStatusTypeNothing LikeStatusType = "nothing" // 设计此状态是为了避免频繁删除数据
 )
