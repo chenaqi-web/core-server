@@ -4,12 +4,6 @@ package auth;
 
 option go_package = "core-server/internal/rpc/authpb;authpb";
 
-enum EmailCodePurpose {
-  EMAIL_CODE_PURPOSE_UNSPECIFIED = 0;
-  EMAIL_CODE_PURPOSE_REGISTER = 1;
-  EMAIL_CODE_PURPOSE_RESET_PASSWORD = 2;
-}
-
 message UserInfo {
   uint64 id = 1;
   string username = 2;
@@ -21,22 +15,6 @@ message UserInfo {
   string role = 8;
   string status = 9;
   uint64 auth_version = 10;
-}
-
-message TokenPair {
-  string access_token = 1;
-  string refresh_token = 2;
-  int64 access_expires_in = 3;
-  int64 refresh_expires_in = 4;
-}
-
-message SendEmailCodeRequest {
-  string email = 1;
-  EmailCodePurpose purpose = 2;
-}
-
-message SendEmailCodeResponse {
-  bool success = 1;
 }
 
 message RegisterRequest {
@@ -63,20 +41,10 @@ message LoginRequest {
 
 message EmailLoginRequest {
   string email = 1;
-  string password = 2;
 }
 
 message LoginResponse {
   UserInfo user = 1;
-  TokenPair tokens = 2;
-}
-
-message RefreshTokenRequest {
-  string refresh_token = 1;
-}
-
-message RefreshTokenResponse {
-  TokenPair tokens = 1;
 }
 
 message LogoutRequest {
@@ -87,36 +55,9 @@ message LogoutResponse {
   bool success = 1;
 }
 
-message ResetPasswordByEmailRequest {
-  string email = 1;
-  string email_code = 2;
-  string new_password = 3;
-  string confirm_password = 4;
-}
-
-message ResetPasswordByEmailResponse {
-  bool success = 1;
-}
-
-message ValidateAccessRequest {
-  string access_token = 1;
-}
-
-message ValidateAccessResponse {
-  uint64 user_id = 1;
-  string session_id = 2;
-  string role = 3;
-  string status = 4;
-  uint64 auth_version = 5;
-}
-
 service AuthService {
-  rpc SendEmailCode(SendEmailCodeRequest) returns (SendEmailCodeResponse);
   rpc Register(RegisterRequest) returns (RegisterResponse);
   rpc Login(LoginRequest) returns (LoginResponse);
   rpc EmailLogin(EmailLoginRequest) returns (LoginResponse);
-  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
   rpc Logout(LogoutRequest) returns (LogoutResponse);
-  rpc ResetPasswordByEmail(ResetPasswordByEmailRequest) returns (ResetPasswordByEmailResponse);
-  rpc ValidateAccess(ValidateAccessRequest) returns (ValidateAccessResponse);
 }

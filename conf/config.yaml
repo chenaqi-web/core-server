@@ -24,12 +24,6 @@ Redis:
   password: ""
   db: 0
 
-Email:
-  host: "smtp.qq.com"
-  port: 587
-  username: ""
-  password: ""
-  from: ""
 
 Kafka:
   Version: "4.2.0"

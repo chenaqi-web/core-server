@@ -55,6 +55,24 @@ LIMIT 1`
 	return &u, nil
 }
 
+func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*entity.User, error) {
+	var u entity.User
+	const query = `
+SELECT id, created_at, updated_at, deleted_at, name, password, phone, avatar, email, role, status, auth_version, sex, age
+FROM user
+WHERE email = ? AND deleted_at IS NULL
+LIMIT 1`
+
+	err := r.db(ctx).GetContext(ctx, &u, query, email)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &u, nil
+}
+
 func (r *UserRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User, error) {
 	if len(ids) == 0 {
 		return nil, nil
