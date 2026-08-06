@@ -3,5 +3,6 @@
   <component name="DataSourcePerFileMappings">
     <file url="file://$PROJECT_DIR$/docs/sql/count.sql" value="086b6039-5f57-42a5-90e2-a50ba1f22de2" />
     <file url="file://$PROJECT_DIR$/docs/sql/like.sql" value="086b6039-5f57-42a5-90e2-a50ba1f22de2" />
+    <file url="file://$PROJECT_DIR$/docs/sql/user.sql" value="086b6039-5f57-42a5-90e2-a50ba1f22de2" />
   </component>
 </project>
