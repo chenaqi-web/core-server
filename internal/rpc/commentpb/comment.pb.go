@@ -35,6 +35,7 @@ type CommentInfo struct {
 	CreatedAt     string                 `protobuf:"bytes,11,opt,name=createdAt,proto3" json:"createdAt,omitempty"`
 	UserName      string                 `protobuf:"bytes,12,opt,name=userName,proto3" json:"userName,omitempty"`
 	UserAvatar    string                 `protobuf:"bytes,13,opt,name=userAvatar,proto3" json:"userAvatar,omitempty"`
+	IsLiked       bool                   `protobuf:"varint,14,opt,name=isLiked,proto3" json:"isLiked,omitempty"` // 当前用户是否点过赞
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -151,6 +152,13 @@ func (x *CommentInfo) GetUserAvatar() string {
 		return x.UserAvatar
 	}
 	return ""
+}
+
+func (x *CommentInfo) GetIsLiked() bool {
+	if x != nil {
+		return x.IsLiked
+	}
+	return false
 }
 
 type CreateCommentReq struct {
@@ -717,7 +725,7 @@ var File_comment_proto protoreflect.FileDescriptor
 
 const file_comment_proto_rawDesc = "" +
 	"\n" +
-	"\rcomment.proto\x12\acomment\"\xd7\x02\n" +
+	"\rcomment.proto\x12\acomment\"\xf1\x02\n" +
 	"\vCommentInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x1c\n" +
 	"\tarticleId\x18\x02 \x01(\x04R\tarticleId\x12\x16\n" +
@@ -735,7 +743,8 @@ const file_comment_proto_rawDesc = "" +
 	"\buserName\x18\f \x01(\tR\buserName\x12\x1e\n" +
 	"\n" +
 	"userAvatar\x18\r \x01(\tR\n" +
-	"userAvatar\"b\n" +
+	"userAvatar\x12\x18\n" +
+	"\aisLiked\x18\x0e \x01(\bR\aisLiked\"b\n" +
 	"\x10CreateCommentReq\x12\x1c\n" +
 	"\tarticleId\x18\x01 \x01(\x04R\tarticleId\x12\x16\n" +
 	"\x06userId\x18\x02 \x01(\x04R\x06userId\x12\x18\n" +

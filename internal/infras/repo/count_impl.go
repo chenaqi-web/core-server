@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"time"
 
 	"core-server/internal/model/entity"
@@ -36,9 +35,6 @@ LIMIT 1`
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		now := time.Now()
-		if count.ID == "" {
-			count.ID = fmt.Sprintf("%s:%s:%s", count.ObjectType, count.ObjectID, count.InteractionType)
-		}
 		count.Count = delta
 		if count.Count < 0 {
 			count.Count = 0
@@ -46,14 +42,13 @@ LIMIT 1`
 
 		const insertQuery = `
 INSERT INTO interaction_count
-  (id, object_type, object_id, interaction_type, count, created_at, updated_at)
+  (object_type, object_id, interaction_type, count, created_at, updated_at)
 VALUES
-  (?, ?, ?, ?, ?, ?, ?)`
+  (?, ?, ?, ?, ?, ?)`
 
 		_, err := r.db(ctx).ExecContext(
 			ctx,
 			insertQuery,
-			count.ID,
 			count.ObjectType,
 			count.ObjectID,
 			count.InteractionType,

@@ -54,15 +54,15 @@ func (a *ObjectCountAggregator) Stop() {
 	a.Flush()
 }
 
-func (a *ObjectCountAggregator) Push(_ context.Context, interactionType, objectType, objectID string) {
+func (a *ObjectCountAggregator) Push(_ context.Context, interactionType, objectType string, objectID uint64) {
 	a.add(interactionType, objectType, objectID, 1)
 }
 
-func (a *ObjectCountAggregator) Pop(_ context.Context, interactionType, objectType, objectID string) {
+func (a *ObjectCountAggregator) Pop(_ context.Context, interactionType, objectType string, objectID uint64) {
 	a.add(interactionType, objectType, objectID, -1)
 }
 
-func (a *ObjectCountAggregator) add(interactionType, objectType, objectID string, delta int64) {
+func (a *ObjectCountAggregator) add(interactionType, objectType string, objectID uint64, delta int64) {
 	key := getObjectCountDeltaKey(interactionType, objectType, objectID)
 
 	a.mu.Lock()

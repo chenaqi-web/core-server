@@ -6,15 +6,14 @@ import (
 )
 
 type InteractionLike struct {
-	ID            string          `db:"id" json:"id"`
-	CreatedAt     time.Time       `db:"created_at" json:"-"`
-	UpdatedAt     time.Time       `db:"updated_at" json:"-"`
-	UserID        string          `db:"user_id" json:"user_id"`
-	ObjectType    enum.ObjectType `db:"object_type" json:"object_type"`
-	ObjectID      string          `db:"object_id" json:"object_id"`
-	ObjectOwnerID string          `db:"object_owner_id" json:"object_owner_id"`
-	Status        LikeStatusType  `db:"status" json:"status"`
-	Version       int64           `db:"version" json:"version"`
+	ID         uint64          `db:"id" json:"id"`
+	CreatedAt  time.Time       `db:"created_at" json:"-"`
+	UpdatedAt  time.Time       `db:"updated_at" json:"-"`
+	UserID     uint64          `db:"user_id" json:"user_id"`
+	ObjectType enum.ObjectType `db:"object_type" json:"object_type"`
+	ObjectID   uint64          `db:"object_id" json:"object_id"`
+	Status     LikeStatusType  `db:"status" json:"status"`
+	Version    int64           `db:"version" json:"version"`
 }
 
 func (InteractionLike) TableName() string {
@@ -27,7 +26,7 @@ func (InteractionLike) TableName() string {
 type LikeStatusType string
 
 const (
-	LikeStatusTypeUnknown LikeStatusType = "unknown"
+	LikeStatusTypeUnknown LikeStatusType = "unknown" // 这个状态用来规避就是删除实体之后，所有的点赞关系置为此，表示失效
 	LikeStatusTypeThumbUp LikeStatusType = "thumb_up"
 	LikeStatusTypeNothing LikeStatusType = "nothing" // 设计此状态是为了避免频繁删除数据
 )

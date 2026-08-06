@@ -90,8 +90,6 @@ func (s *CommentService) CreateReply(ctx context.Context, req *dto.CreateReplyRe
 	return true, nil
 }
 
-// todo 修改一下删除评论（如果是一级评论，则直接删除，如果不是，则可以先返回成功，后续异步删除）
-
 func (s *CommentService) DeleteComment(ctx context.Context, req *dto.DeleteCommentRequest) error {
 	comment, err := s.repo.GetByID(ctx, req.ID)
 	if err != nil {
@@ -99,21 +97,31 @@ func (s *CommentService) DeleteComment(ctx context.Context, req *dto.DeleteComme
 		return err
 	}
 
-	return s.repo.WithTransaction(ctx, func(ctx context.Context) error {
+	err = s.repo.WithTransaction(ctx, func(ctx context.Context) error {
 		if err := s.repo.SoftDelete(ctx, req.ID, req.UserID); err != nil {
 			if errors.Is(err, repo.ErrNotFound) {
 				return ErrCommentNotFound
 			}
 			return err
 		}
+
+		deletedCount := int64(1)
 		if comment.IsTopLevel() {
-			return s.artRepo.UpdateCommentCount(ctx, comment.ArticleID, -1)
-		}
-		if err := s.repo.DecrementChildCount(ctx, comment.RootID); err != nil {
+			replyCount, err := s.repo.SoftDeleteRepliesByParent(ctx, comment.ID)
+			if err != nil {
+				return err
+			}
+			deletedCount += replyCount
+		} else if err := s.repo.DecrementChildCount(ctx, comment.ParentID); err != nil {
 			return err
 		}
-		return s.artRepo.UpdateCommentCount(ctx, comment.ArticleID, -1)
+
+		return s.artRepo.UpdateCommentCount(ctx, comment.ArticleID, -deletedCount)
 	})
+	if err != nil {
+		s.log.Error(err.Error())
+	}
+	return err
 }
 
 func (s *CommentService) GetArticleComments(ctx context.Context, req *dto.GetArticleCommentsRequest) (*dto.GetArticleCommentsResponse, error) {

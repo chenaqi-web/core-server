@@ -21,7 +21,7 @@ func NewUserRepo(client *DBClient) *UserRepo {
 func (r *UserRepo) GetByID(ctx context.Context, id uint64) (*entity.User, error) {
 	var u entity.User
 	const query = `
-SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, status, auth_version, sex, age
+SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, sex, age, like_count, receive_like_count
 FROM user
 WHERE id = ? AND deleted_at IS NULL
 LIMIT 1`
@@ -79,6 +79,7 @@ func (r *UserRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User,
 	}
 
 	const baseQuery = `
+SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, sex, age, like_count, receive_like_count
 SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, status, auth_version, sex, age
 FROM user
 WHERE id IN (?) AND deleted_at IS NULL`
@@ -94,4 +95,50 @@ WHERE id IN (?) AND deleted_at IS NULL`
 		return nil, err
 	}
 	return users, nil
+}
+
+func (r *UserRepo) GetLikeCount(ctx context.Context, userID uint64) (int64, error) {
+	var count int64
+	const query = `SELECT like_count FROM user WHERE id = ? AND deleted_at IS NULL`
+	if err := r.db(ctx).GetContext(ctx, &count, query, userID); err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (r *UserRepo) GetReceiveLikeCount(ctx context.Context, userID uint64) (int64, error) {
+	var count int64
+	const query = `SELECT receive_like_count FROM user WHERE id = ? AND deleted_at IS NULL`
+	if err := r.db(ctx).GetContext(ctx, &count, query, userID); err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (r *UserRepo) IncrementLikeCount(ctx context.Context, userID uint64) error {
+	const query = `
+UPDATE user
+SET like_count = like_count + 1, updated_at = NOW(3)
+WHERE id = ? AND deleted_at IS NULL`
+	_, err := r.db(ctx).ExecContext(ctx, query, userID)
+	return err
+}
+
+func (r *UserRepo) DecrementLikeCount(ctx context.Context, userID uint64) error {
+	const query = `
+UPDATE user
+SET like_count = CASE WHEN like_count > 0 THEN like_count - 1 ELSE 0 END,
+    updated_at = NOW(3)
+WHERE id = ? AND deleted_at IS NULL`
+	_, err := r.db(ctx).ExecContext(ctx, query, userID)
+	return err
+}
+
+func (r *UserRepo) SetReceiveLikeCount(ctx context.Context, userID uint64, count int64) error {
+	const query = `
+UPDATE user
+SET receive_like_count = ?, updated_at = NOW(3)
+WHERE id = ? AND deleted_at IS NULL`
+	_, err := r.db(ctx).ExecContext(ctx, query, count, userID)
+	return err
 }

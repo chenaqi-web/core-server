@@ -3,6 +3,7 @@ syntax = "proto3";
 // provide user like service
 // 1. add like
 
+import "article.proto";
 
 package like;
 //import "idl/validate/validate.proto";
@@ -10,29 +11,68 @@ option go_package = "core-server/internal/rpc/likepb;likepb";
 
 // 1.点赞操作 和 取消点赞
 message ThumbUpRequest {
-  string userID = 1 ;
-  string objectType = 2 ;
-  string objectID = 3 ;
-  string objectOwnerID = 4;
+  uint64 userID = 1;
+  string objectType = 2;
+  uint64 objectID = 3;
 }
 
 message ThumbUpResponse {
   bool success = 1;
 }
 
-message CancelThumbUpRequest{
-  string userID = 1 ;
-  string objectType = 2 ;
-  string objectID = 3 ;
-  string objectOwnerID = 4 ;
+message CancelThumbUpRequest {
+  uint64 userID = 1;
+  string objectType = 2;
+  uint64 objectID = 3;
 }
 
-message CancelThumbUpResponse{
+message CancelThumbUpResponse {
   bool success = 1;
 }
 
+message PageQueryUserLikeListRequest {
+  uint64 userID = 1;
+  string objectType = 2;
+  int32 page = 3;
+  int32 pageSize = 4;
+}
+
+message PageQueryUserLikeListResponse {
+  repeated article.Article articles = 1;
+  int64 total = 2;
+}
+
+// 查询用户是否点过文章赞
+message HasArticleLikeRequest {
+  uint64 userID = 1;
+  string objectType = 2;
+  uint64 objectID = 3;
+}
+
+message HasArticleLikeResponse {
+  bool isLiked = 1;
+}
+
+// 批量查询用户是否点过赞
+message BatchCommentLikeStatusRequest {
+  uint64 userID = 1;
+  string objectType = 2;
+  repeated uint64 objectIDs = 3;
+}
+
+message LikeStatus {
+  uint64 objectID = 1;
+  bool isLiked = 2;
+}
+
+message BatchLikeStatusResponse {
+  repeated LikeStatus items = 1;
+}
 
 service LikeService {
-  rpc ThumbUp(ThumbUpRequest) returns (ThumbUpResponse){};
-  rpc CancelThumbUp(CancelThumbUpRequest) returns (CancelThumbUpResponse){};
+  rpc ThumbUp(ThumbUpRequest) returns (ThumbUpResponse) {};
+  rpc CancelThumbUp(CancelThumbUpRequest) returns (CancelThumbUpResponse) {};
+  rpc PageQueryUserLikeList(PageQueryUserLikeListRequest) returns (PageQueryUserLikeListResponse) {};
+  rpc HasLike(HasArticleLikeRequest) returns (HasArticleLikeResponse) {};
+  rpc BatchLikeStatus(BatchCommentLikeStatusRequest) returns (BatchLikeStatusResponse) {};
 }
