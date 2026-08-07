@@ -44,9 +44,13 @@ func (r *ArticleRepo) DeleteByID(ctx context.Context, id, authorID uint64) error
 UPDATE blog_article 
 SET deleted_at = ?, updated_at = ? 
 WHERE id = ? 
-  AND deleted_at IS NULL
-  AND author_id = ?`
-	result, err := r.db(ctx).ExecContext(ctx, query, now, now, id, authorID)
+  AND deleted_at IS NULL`
+	args := []any{now, now, id}
+	if authorID != 0 {
+		query += " AND author_id = ?"
+		args = append(args, authorID)
+	}
+	result, err := r.db(ctx).ExecContext(ctx, query, args...)
 	if err != nil {
 		return err
 	}

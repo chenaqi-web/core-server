@@ -161,6 +161,18 @@ func (c *ILikeCache) CompensationCountIncr(ctx context.Context, objectID uint64,
 	return err
 }
 
+func (c *ILikeCache) GetObjectLikeCount(ctx context.Context, objectID uint64, objectType string) (uint64, error) {
+	keyCount := objectThumbUpCountKey(objectID, objectType)
+	count, err := c.Cache.Get(ctx, keyCount).Int64()
+	if errors.Is(err, redis.Nil) {
+		return 0, ErrKeyNotFound
+	}
+	if err != nil {
+		return 0, err
+	}
+	return uint64(count), nil
+}
+
 //======================================================================================================================
 // 点赞列表
 

@@ -36,6 +36,20 @@ func (a *AuthRPC) Login(ctx context.Context, request *authpb.LoginRequest) (*aut
 	return buildLoginResponse(user), nil
 }
 
+func (a *AuthRPC) Register(ctx context.Context, request *authpb.RegisterRequest) (*authpb.RegisterResponse, error) {
+	if request.GetPassword() != request.GetConfirmPassword() {
+		return nil, status.Error(codes.InvalidArgument, "passwords do not match")
+	}
+	user, err := a.userService.Register(ctx, request.GetUsername(), request.GetEmail(), request.GetPassword())
+	if err != nil {
+		if errors.Is(err, application.ErrEmailAlreadyInUse) {
+			return nil, status.Error(codes.AlreadyExists, err.Error())
+		}
+		return nil, status.Error(codes.InvalidArgument, "registration failed")
+	}
+	return &authpb.RegisterResponse{Success: true, User: buildLoginResponse(user).GetUser()}, nil
+}
+
 func (a *AuthRPC) EmailLogin(ctx context.Context, request *authpb.EmailLoginRequest) (*authpb.LoginResponse, error) {
 	email := strings.TrimSpace(request.GetEmail())
 	if email == "" {

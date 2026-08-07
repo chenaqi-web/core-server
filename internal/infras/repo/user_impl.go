@@ -73,14 +73,29 @@ LIMIT 1`
 	return &u, nil
 }
 
+func (r *UserRepo) Create(ctx context.Context, user *entity.User) error {
+	const query = `
+INSERT INTO user (name, password, email, role, status)
+VALUES (?, ?, ?, ?, ?)`
+	result, err := r.db(ctx).ExecContext(ctx, query, user.Name, user.Password, user.Email, user.Role, user.Status)
+	if err != nil {
+		return err
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return err
+	}
+	user.ID = uint64(id)
+	return nil
+}
+
 func (r *UserRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User, error) {
 	if len(ids) == 0 {
 		return nil, nil
 	}
 
 	const baseQuery = `
-SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, sex, age, like_count, receive_like_count
-SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, status, auth_version, sex, age
+SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, sex, age, like_count, receive_like_count, status, auth_version
 FROM user
 WHERE id IN (?) AND deleted_at IS NULL`
 

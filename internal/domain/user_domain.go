@@ -9,6 +9,7 @@ type UserRepo interface {
 	GetByID(ctx context.Context, id uint64) (*entity.User, error)
 	GetByName(ctx context.Context, name string) (*entity.User, error)
 	GetByEmail(ctx context.Context, email string) (*entity.User, error)
+	Create(ctx context.Context, user *entity.User) error
 	ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User, error)
 
 	GetLikeCount(ctx context.Context, userID uint64) (int64, error)

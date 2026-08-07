@@ -3,6 +3,7 @@ package rpc
 import (
 	"core-server/internal/rpc/articlepb"
 	"core-server/internal/rpc/authpb"
+	"core-server/internal/rpc/userpb"
 	"fmt"
 	"log"
 	"net"
@@ -42,6 +43,7 @@ func NewServer(
 	category *CategoryRPC,
 	article *ArticleRPC,
 	comment *CommentRPC,
+	user *UserRPC,
 ) (*Server, error) {
 	engine := grpc.NewServer()
 	authpb.RegisterAuthServiceServer(engine, auth)
@@ -49,6 +51,7 @@ func NewServer(
 	categorypb.RegisterCategoryServiceServer(engine, category)
 	articlepb.RegisterArticleServiceServer(engine, article)
 	commentpb.RegisterCommentServiceServer(engine, comment)
+	userpb.RegisterUserServiceServer(engine, user)
 	reflection.Register(engine)
 
 	return &Server{

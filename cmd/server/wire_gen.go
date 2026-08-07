@@ -68,7 +68,8 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 		return nil, err
 	}
 	commentRPC := rpc.NewCommentRPC(commentService)
-	server, err := rpc.NewServer(cfg, dbClient, cacheClient, syncProducer, kafkaManager, messageQueueConsumer, authRPC, likeRPC, categoryRPC, articleRPC, commentRPC)
+	userRPC := rpc.NewUserRPC(userService)
+	server, err := rpc.NewServer(cfg, dbClient, cacheClient, syncProducer, kafkaManager, messageQueueConsumer, authRPC, likeRPC, categoryRPC, articleRPC, commentRPC, userRPC)
 	if err != nil {
 		return nil, err
 	}

@@ -23,6 +23,7 @@ type LikeRepoDomain interface {
 type LikeCacheDomain interface {
 	CompensationCountDecr(ctx context.Context, objectID uint64, objectType string) error
 	CompensationCountIncr(ctx context.Context, objectID uint64, objectType string) error
+	GetObjectLikeCount(ctx context.Context, objectID uint64, objectType string) (uint64, error)
 
 	ThumbUp(ctx context.Context, userID uint64, objectType string, objectID uint64, score int64) error
 	CancelThumbUp(ctx context.Context, userID uint64, objectType string, objectID uint64) (int, int64, error)
