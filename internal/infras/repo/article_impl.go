@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"core-server/internal/model/entity"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type ArticleRepo struct {
@@ -74,6 +76,29 @@ LIMIT 1`
 		return nil, err
 	}
 	return &a, nil
+}
+
+func (r *ArticleRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*entity.Article, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+
+	const baseQuery = `
+SELECT id, created_at, updated_at, deleted_at, title, summary, content, cover_image, author_id, category_id, is_top, view_count, like_count, comment_count
+FROM blog_article
+WHERE id IN (?) AND deleted_at IS NULL`
+
+	query, args, err := sqlx.In(baseQuery, ids)
+	if err != nil {
+		return nil, err
+	}
+	query = r.DB.Rebind(query)
+
+	var articles []*entity.Article
+	if err := r.db(ctx).SelectContext(ctx, &articles, query, args...); err != nil {
+		return nil, err
+	}
+	return articles, nil
 }
 
 func (r *ArticleRepo) List(ctx context.Context, offset, limit int) ([]*entity.Article, error) {

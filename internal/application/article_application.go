@@ -95,6 +95,10 @@ func (s *ArticleService) GetArticle(ctx context.Context, id uint64) (*aggregate.
 	}
 
 	counts, err := s.countRepo.GetArticleInteractionCount(ctx, article.ID)
+	if err != nil {
+		s.log.Error("GetArticle interaction counts error", zap.Error(err))
+		return nil, err
+	}
 
 	return aggregate.NewArticleAggregate(article, author, counts), nil
 }
@@ -130,17 +134,7 @@ func (s *ArticleService) ListMyArticles(ctx context.Context, authorID uint64, pa
 		return nil, nil
 	}
 
-	author, err := s.userRepo.GetByID(ctx, authorID)
-	if err != nil {
-		s.log.Error(err.Error())
-		return nil, err
-	}
-
-	items := make([]*aggregate.ArticleAggregate, 0, len(articles))
-	for _, article := range articles {
-		items = append(items, aggregate.NewArticleAggregate(article, author, nil))
-	}
-	return items, nil
+	return s.buildArticleAggregates(ctx, articles)
 }
 
 func (s *ArticleService) ListArticlesByCategory(ctx context.Context, categoryID uint64, page, pageSize int) ([]*aggregate.ArticleAggregate, error) {
@@ -182,10 +176,19 @@ func (s *ArticleService) buildArticleAggregates(ctx context.Context, articles []
 		s.log.Error(err.Error())
 		return nil, err
 	}
+	articleIDs := make([]uint64, 0, len(articles))
+	for _, article := range articles {
+		articleIDs = append(articleIDs, article.ID)
+	}
+	statsMap, err := s.countRepo.BatchGetArticleInteractionCounts(ctx, articleIDs)
+	if err != nil {
+		s.log.Error("load article interaction counts error", zap.Error(err))
+		return nil, err
+	}
 
 	items := make([]*aggregate.ArticleAggregate, 0, len(articles))
 	for _, article := range articles {
-		items = append(items, aggregate.NewArticleAggregate(article, authorMap[article.AuthorID], nil))
+		items = append(items, aggregate.NewArticleAggregate(article, authorMap[article.AuthorID], statsMap[article.ID]))
 	}
 	return items, nil
 }

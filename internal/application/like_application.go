@@ -22,13 +22,14 @@ import (
 )
 
 type LikeService struct {
-	cfg         *config.Config
-	log         *clog.Log
-	producer    *kafka.SyncProducer
-	repo        domain.LikeRepoDomain
-	cache       domain.LikeCacheDomain
-	articleRepo domain.ArticleRepoDomain
-	userRepo    domain.UserRepoDomain
+	cfg          *config.Config
+	log          *clog.Log
+	producer     *kafka.SyncProducer
+	repo         domain.LikeRepoDomain
+	cache        domain.LikeCacheDomain
+	articleRepo  domain.ArticleRepoDomain
+	userRepo     domain.UserRepoDomain
+	countService *CountService
 }
 
 func NewLikeService(
@@ -38,16 +39,18 @@ func NewLikeService(
 	producer *kafka.SyncProducer,
 	articleRepo domain.ArticleRepoDomain,
 	userRepo domain.UserRepoDomain,
+	countService *CountService,
 	cfg *config.Config,
 ) (*LikeService, error) {
 	return &LikeService{
-		cfg:         cfg,
-		repo:        repo,
-		cache:       likeCache,
-		producer:    producer,
-		articleRepo: articleRepo,
-		userRepo:    userRepo,
-		log:         log,
+		cfg:          cfg,
+		repo:         repo,
+		cache:        likeCache,
+		producer:     producer,
+		articleRepo:  articleRepo,
+		userRepo:     userRepo,
+		countService: countService,
+		log:          log,
 	}, nil
 }
 
@@ -262,26 +265,40 @@ func (s *LikeService) UserLikeList(ctx context.Context, userID uint64, objectTyp
 	return articles, total, nil
 }
 
-// todo 这个加载数据可能后续在改，可以换成批量处理，暂时够用
-
 func (s *LikeService) loadArticlesByIDs(ctx context.Context, ids []uint64) ([]*aggregate.ArticleAggregate, error) {
 	if len(ids) == 0 {
 		return nil, nil
 	}
-	articles := make([]*aggregate.ArticleAggregate, 0, len(ids))
+
+	storedArticles, err := s.articleRepo.ListByIDs(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+	articleMap := make(map[uint64]*entity.Article, len(storedArticles))
+	for _, article := range storedArticles {
+		articleMap[article.ID] = article
+	}
+
+	authorMap, err := LoadUserMap(ctx, s.userRepo, CollectArticleAuthorIDs(storedArticles))
+	if err != nil {
+		return nil, err
+	}
+	statsMap, err := s.countService.BatchGetArticleInteractionCounts(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+
+	articles := make([]*aggregate.ArticleAggregate, 0, len(storedArticles))
 	for _, id := range ids {
-		article, err := s.articleRepo.GetByID(ctx, id)
-		if err != nil {
-			return nil, err
-		}
-		if article == nil {
+		article, ok := articleMap[id]
+		if !ok {
 			continue
 		}
-		author, err := s.userRepo.GetByID(ctx, article.AuthorID)
-		if err != nil {
-			return nil, err
-		}
-		articles = append(articles, aggregate.NewArticleAggregate(article, author, nil))
+		articles = append(articles, aggregate.NewArticleAggregate(
+			article,
+			authorMap[article.AuthorID],
+			statsMap[article.ID],
+		))
 	}
 	return articles, nil
 }

@@ -6,6 +6,8 @@ import (
 
 	"core-server/internal/model/entity"
 	"core-server/internal/model/enum"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type CountRepo struct {
@@ -55,6 +57,29 @@ FROM interaction_count
 WHERE object_type = ? AND object_id = ?`
 
 	if err := r.db(ctx).SelectContext(ctx, &counts, query, objectType, objectID); err != nil {
+		return nil, err
+	}
+	return counts, nil
+}
+
+func (r *CountRepo) GetByObjects(ctx context.Context, objectType enum.ObjectType, objectIDs []uint64) ([]*entity.InteractionCount, error) {
+	if len(objectIDs) == 0 {
+		return nil, nil
+	}
+
+	const baseQuery = `
+SELECT id, created_at, updated_at, object_type, object_id, interaction_type, count
+FROM interaction_count
+WHERE object_type = ? AND object_id IN (?)`
+
+	query, args, err := sqlx.In(baseQuery, objectType, objectIDs)
+	if err != nil {
+		return nil, err
+	}
+	query = r.DB.Rebind(query)
+
+	var counts []*entity.InteractionCount
+	if err := r.db(ctx).SelectContext(ctx, &counts, query, args...); err != nil {
 		return nil, err
 	}
 	return counts, nil

@@ -9,6 +9,7 @@ type ArticleRepo interface {
 	Create(ctx context.Context, article *entity.Article) error
 	DeleteByID(ctx context.Context, id, authorID uint64) error
 	GetByID(ctx context.Context, id uint64) (*entity.Article, error)
+	ListByIDs(ctx context.Context, ids []uint64) ([]*entity.Article, error)
 
 	List(ctx context.Context, offset, limit int) ([]*entity.Article, error)
 	ListByAuthor(ctx context.Context, authorID uint64, offset, limit int) ([]*entity.Article, error)

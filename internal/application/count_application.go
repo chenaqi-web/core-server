@@ -42,3 +42,38 @@ func (s *CountService) GetArticleInteractionCount(ctx context.Context, articleID
 	}
 	return counts, nil
 }
+
+func (s *CountService) BatchGetArticleInteractionCounts(ctx context.Context, articleIDs []uint64) (map[uint64]*entity.InteractionStats, error) {
+	statsByArticleID := make(map[uint64]*entity.InteractionStats, len(articleIDs))
+	for _, articleID := range articleIDs {
+		statsByArticleID[articleID] = &entity.InteractionStats{}
+	}
+	if len(articleIDs) == 0 {
+		return statsByArticleID, nil
+	}
+
+	storedCounts, err := s.repo.GetByObjects(ctx, enum.ObjectTypeArticle, articleIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, count := range storedCounts {
+		if count.Count < 0 {
+			continue
+		}
+
+		stats, ok := statsByArticleID[count.ObjectID]
+		if !ok {
+			continue
+		}
+		switch count.InteractionType {
+		case enum.InteractionTypeLike:
+			stats.LikeCount = uint64(count.Count)
+		case enum.InteractionTypeComment:
+			stats.CommentCount = uint64(count.Count)
+		case enum.InteractionTypeView:
+			stats.ViewCount = uint64(count.Count)
+		}
+	}
+	return statsByArticleID, nil
+}
