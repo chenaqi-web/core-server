@@ -15,8 +15,6 @@ type ArticleRepo interface {
 	ListByCategory(ctx context.Context, categoryID uint64, offset, limit int) ([]*entity.Article, error)
 
 	Search(ctx context.Context, name string, offset, limit int) ([]*entity.Article, error)
-
-	UpdateCommentCount(ctx context.Context, articleID uint64, delta int64) error
 }
 
 type ArticleRepoDomain interface {

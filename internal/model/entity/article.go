@@ -17,12 +17,13 @@ type Article struct {
 	Content    string `db:"content"`
 	CoverImage string `db:"cover_image"`
 
-	AuthorID     uint64 `db:"author_id"`
-	CategoryID   uint64 `db:"category_id"`
-	IsTop        bool   `db:"is_top"`
-	ViewCount    uint64 `db:"view_count"`
-	LikeCount    uint64 `db:"like_count"`
-	CommentCount uint64 `db:"comment_count"`
+	AuthorID   uint64 `db:"author_id"`
+	CategoryID uint64 `db:"category_id"`
+	IsTop      bool   `db:"is_top"`
+
+	ViewCount    uint64 `db:"-"`
+	LikeCount    uint64 `db:"-"`
+	CommentCount uint64 `db:"-"`
 }
 
 func (Article) TableName() string { return "blog_article" }

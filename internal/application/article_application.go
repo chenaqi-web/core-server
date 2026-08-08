@@ -3,7 +3,6 @@ package application
 import (
 	"context"
 	"core-server/internal/infras/repo"
-	"core-server/internal/model/enum"
 	"core-server/internal/rpc/articlepb"
 	"errors"
 
@@ -15,26 +14,23 @@ import (
 )
 
 type ArticleService struct {
-	cfg       *config.Config
-	log       *clog.Log
-	ArtRepo   domain.ArticleRepoDomain
-	userRepo  domain.UserRepoDomain
-	userCache domain.LikeCacheDomain
+	cfg      *config.Config
+	log      *clog.Log
+	ArtRepo  domain.ArticleRepoDomain
+	userRepo domain.UserRepoDomain
 }
 
 func NewArticleService(
 	log *clog.Log,
 	ArtRepo domain.ArticleRepoDomain,
 	userRepo domain.UserRepoDomain,
-	userCache domain.LikeCacheDomain,
 	cfg *config.Config,
 ) (*ArticleService, error) {
 	return &ArticleService{
-		cfg:       cfg,
-		log:       log,
-		ArtRepo:   ArtRepo,
-		userRepo:  userRepo,
-		userCache: userCache,
+		cfg:      cfg,
+		log:      log,
+		ArtRepo:  ArtRepo,
+		userRepo: userRepo,
 	}, nil
 }
 
@@ -83,22 +79,6 @@ func (s *ArticleService) GetArticle(ctx context.Context, id uint64) (*aggregate.
 	}
 
 	return aggregate.NewArticleAggregate(article, author), nil
-}
-
-// 虽然说在上面的GetArticle里面已经拿到了计数，但是计数会变，且需要写入缓存，这里就单独拿出来处理
-// 还有浏览量
-
-func (s *ArticleService) GetArticleInteractionCount(ctx context.Context, id uint64) (uint64, error) {
-	likeCount, err := s.userCache.GetObjectLikeCount(ctx, id, enum.ObjectTypeArticle.String())
-	if err != nil {
-		article, err := s.ArtRepo.GetByID(ctx, id)
-		if err != nil {
-			s.log.Error(err.Error())
-			return 0, err
-		}
-		likeCount = article.LikeCount
-	}
-	return likeCount, err
 }
 
 // =====================================================================================================================

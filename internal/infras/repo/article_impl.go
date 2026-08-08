@@ -29,7 +29,6 @@ func (r *ArticleRepo) Create(ctx context.Context, article *entity.Article) error
 	_, err := r.db(ctx).ExecContext(ctx, query,
 		article.Title, article.Summary, article.Content, article.CoverImage,
 		article.AuthorID, article.CategoryID, article.IsTop,
-		article.ViewCount, article.LikeCount, article.CommentCount,
 		now, now,
 	)
 	if err != nil {
@@ -141,15 +140,6 @@ LIMIT ?, ?`
 		return nil, err
 	}
 	return items, nil
-}
-
-func (r *ArticleRepo) UpdateCommentCount(ctx context.Context, articleID uint64, delta int64) error {
-	const query = `
-UPDATE blog_article
-SET comment_count = comment_count + ?, updated_at = ?
-WHERE id = ? AND deleted_at IS NULL`
-	_, err := r.db(ctx).ExecContext(ctx, query, delta, time.Now(), articleID)
-	return err
 }
 
 // todo 记得写管理员文章删除
