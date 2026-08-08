@@ -2,12 +2,10 @@ package rpc
 
 import (
 	"context"
-	"core-server/internal/model/entity"
-	"errors"
-	"strings"
-
 	"core-server/internal/application"
+	"core-server/internal/model/dto"
 	"core-server/internal/rpc/authpb"
+	"errors"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -23,7 +21,7 @@ func NewAuthRPC(userService *application.UserService) *AuthRPC {
 }
 
 func (a *AuthRPC) Login(ctx context.Context, request *authpb.LoginRequest) (*authpb.LoginResponse, error) {
-	username := strings.TrimSpace(request.GetUsername())
+	username := request.GetUsername()
 	password := request.GetPassword()
 	if username == "" || password == "" {
 		return nil, status.Error(codes.InvalidArgument, "username and password are required")
@@ -33,25 +31,19 @@ func (a *AuthRPC) Login(ctx context.Context, request *authpb.LoginRequest) (*aut
 	if err != nil {
 		return nil, toLoginError(err)
 	}
-	return buildLoginResponse(user), nil
+	return dto.ToLoginResponse(user), nil
 }
 
 func (a *AuthRPC) Register(ctx context.Context, request *authpb.RegisterRequest) (*authpb.RegisterResponse, error) {
-	if request.GetPassword() != request.GetConfirmPassword() {
-		return nil, status.Error(codes.InvalidArgument, "passwords do not match")
-	}
-	user, err := a.userService.Register(ctx, request.GetUsername(), request.GetEmail(), request.GetPassword())
+	user, err := a.userService.Register(ctx, request.GetUsername(), request.GetEmail(), request.GetPassword(), request.GetConfirmPassword())
 	if err != nil {
-		if errors.Is(err, application.ErrEmailAlreadyInUse) {
-			return nil, status.Error(codes.AlreadyExists, err.Error())
-		}
-		return nil, status.Error(codes.InvalidArgument, "registration failed")
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
-	return &authpb.RegisterResponse{Success: true, User: buildLoginResponse(user).GetUser()}, nil
+	return &authpb.RegisterResponse{Success: true, User: dto.ToLoginResponse(user).GetUser()}, nil
 }
 
 func (a *AuthRPC) EmailLogin(ctx context.Context, request *authpb.EmailLoginRequest) (*authpb.LoginResponse, error) {
-	email := strings.TrimSpace(request.GetEmail())
+	email := request.GetEmail()
 	if email == "" {
 		return nil, status.Error(codes.InvalidArgument, "email and password are required")
 	}
@@ -60,27 +52,18 @@ func (a *AuthRPC) EmailLogin(ctx context.Context, request *authpb.EmailLoginRequ
 	if err != nil {
 		return nil, toLoginError(err)
 	}
-	return buildLoginResponse(user), nil
+	return dto.ToLoginResponse(user), nil
+}
+
+func (a *AuthRPC) ForgotPassword(ctx context.Context, request *authpb.ForgotPasswordRequest) (*authpb.ForgotPasswordResponse, error) {
+	err := a.userService.ForgotPassword(ctx, request.GetEmail(), request.GetNewPassword(), request.GetConfirmPassword())
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+	return &authpb.ForgotPasswordResponse{Success: true}, nil
 }
 
 // =====================================================================================================================
-
-func buildLoginResponse(user *entity.User) *authpb.LoginResponse {
-	return &authpb.LoginResponse{
-		User: &authpb.UserInfo{
-			Id:          user.ID,
-			Username:    user.Name,
-			Email:       user.Email,
-			Phone:       user.Phone,
-			Avatar:      user.Avatar,
-			Sex:         user.Sex,
-			Age:         uint32(user.Age),
-			Role:        user.Role,
-			Status:      user.Status,
-			AuthVersion: user.AuthVersion,
-		},
-	}
-}
 
 func toLoginError(err error) error {
 	switch {

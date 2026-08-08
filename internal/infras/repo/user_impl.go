@@ -46,9 +46,6 @@ WHERE name = ? AND deleted_at IS NULL
 LIMIT 1`
 
 	err := r.db(ctx).GetContext(ctx, &u, query, name)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil
-	}
 	if err != nil {
 		return nil, err
 	}
@@ -64,9 +61,6 @@ WHERE email = ? AND deleted_at IS NULL
 LIMIT 1`
 
 	err := r.db(ctx).GetContext(ctx, &u, query, email)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil
-	}
 	if err != nil {
 		return nil, err
 	}
@@ -156,4 +150,27 @@ SET receive_like_count = ?, updated_at = NOW(3)
 WHERE id = ? AND deleted_at IS NULL`
 	_, err := r.db(ctx).ExecContext(ctx, query, count, userID)
 	return err
+}
+
+func (r *UserRepo) UpdatePassword(ctx context.Context, userID uint64, hashedPassword string) error {
+	const query = `
+UPDATE user 
+SET password = ?, updated_at = NOW() 
+WHERE id = ?`
+
+	result, err := r.db(ctx).ExecContext(ctx, query, hashedPassword, userID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return errors.New("user not found")
+	}
+
+	return nil
 }

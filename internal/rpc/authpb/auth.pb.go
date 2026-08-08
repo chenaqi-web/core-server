@@ -397,27 +397,29 @@ func (x *LoginResponse) GetUser() *UserInfo {
 	return nil
 }
 
-type LogoutRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	RefreshToken  string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+type ForgotPasswordRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Email           string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
+	NewPassword     string                 `protobuf:"bytes,2,opt,name=new_password,json=newPassword,proto3" json:"new_password,omitempty"`
+	ConfirmPassword string                 `protobuf:"bytes,3,opt,name=confirm_password,json=confirmPassword,proto3" json:"confirm_password,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
-func (x *LogoutRequest) Reset() {
-	*x = LogoutRequest{}
+func (x *ForgotPasswordRequest) Reset() {
+	*x = ForgotPasswordRequest{}
 	mi := &file_auth_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *LogoutRequest) String() string {
+func (x *ForgotPasswordRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*LogoutRequest) ProtoMessage() {}
+func (*ForgotPasswordRequest) ProtoMessage() {}
 
-func (x *LogoutRequest) ProtoReflect() protoreflect.Message {
+func (x *ForgotPasswordRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_auth_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -429,39 +431,53 @@ func (x *LogoutRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use LogoutRequest.ProtoReflect.Descriptor instead.
-func (*LogoutRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ForgotPasswordRequest.ProtoReflect.Descriptor instead.
+func (*ForgotPasswordRequest) Descriptor() ([]byte, []int) {
 	return file_auth_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *LogoutRequest) GetRefreshToken() string {
+func (x *ForgotPasswordRequest) GetEmail() string {
 	if x != nil {
-		return x.RefreshToken
+		return x.Email
 	}
 	return ""
 }
 
-type LogoutResponse struct {
+func (x *ForgotPasswordRequest) GetNewPassword() string {
+	if x != nil {
+		return x.NewPassword
+	}
+	return ""
+}
+
+func (x *ForgotPasswordRequest) GetConfirmPassword() string {
+	if x != nil {
+		return x.ConfirmPassword
+	}
+	return ""
+}
+
+type ForgotPasswordResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *LogoutResponse) Reset() {
-	*x = LogoutResponse{}
+func (x *ForgotPasswordResponse) Reset() {
+	*x = ForgotPasswordResponse{}
 	mi := &file_auth_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *LogoutResponse) String() string {
+func (x *ForgotPasswordResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*LogoutResponse) ProtoMessage() {}
+func (*ForgotPasswordResponse) ProtoMessage() {}
 
-func (x *LogoutResponse) ProtoReflect() protoreflect.Message {
+func (x *ForgotPasswordResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_auth_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -473,12 +489,12 @@ func (x *LogoutResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use LogoutResponse.ProtoReflect.Descriptor instead.
-func (*LogoutResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ForgotPasswordResponse.ProtoReflect.Descriptor instead.
+func (*ForgotPasswordResponse) Descriptor() ([]byte, []int) {
 	return file_auth_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *LogoutResponse) GetSuccess() bool {
+func (x *ForgotPasswordResponse) GetSuccess() bool {
 	if x != nil {
 		return x.Success
 	}
@@ -517,17 +533,19 @@ const file_auth_proto_rawDesc = "" +
 	"\x11EmailLoginRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\"3\n" +
 	"\rLoginResponse\x12\"\n" +
-	"\x04user\x18\x01 \x01(\v2\x0e.auth.UserInfoR\x04user\"4\n" +
-	"\rLogoutRequest\x12#\n" +
-	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"*\n" +
-	"\x0eLogoutResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess2\xeb\x01\n" +
+	"\x04user\x18\x01 \x01(\v2\x0e.auth.UserInfoR\x04user\"{\n" +
+	"\x15ForgotPasswordRequest\x12\x14\n" +
+	"\x05email\x18\x01 \x01(\tR\x05email\x12!\n" +
+	"\fnew_password\x18\x02 \x01(\tR\vnewPassword\x12)\n" +
+	"\x10confirm_password\x18\x03 \x01(\tR\x0fconfirmPassword\"2\n" +
+	"\x16ForgotPasswordResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess2\x83\x02\n" +
 	"\vAuthService\x129\n" +
 	"\bRegister\x12\x15.auth.RegisterRequest\x1a\x16.auth.RegisterResponse\x120\n" +
 	"\x05Login\x12\x12.auth.LoginRequest\x1a\x13.auth.LoginResponse\x12:\n" +
 	"\n" +
-	"EmailLogin\x12\x17.auth.EmailLoginRequest\x1a\x13.auth.LoginResponse\x123\n" +
-	"\x06Logout\x12\x13.auth.LogoutRequest\x1a\x14.auth.LogoutResponseB(Z&core-server/internal/rpc/authpb;authpbb\x06proto3"
+	"EmailLogin\x12\x17.auth.EmailLoginRequest\x1a\x13.auth.LoginResponse\x12K\n" +
+	"\x0eForgotPassword\x12\x1b.auth.ForgotPasswordRequest\x1a\x1c.auth.ForgotPasswordResponseB(Z&core-server/internal/rpc/authpb;authpbb\x06proto3"
 
 var (
 	file_auth_proto_rawDescOnce sync.Once
@@ -543,14 +561,14 @@ func file_auth_proto_rawDescGZIP() []byte {
 
 var file_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_auth_proto_goTypes = []any{
-	(*UserInfo)(nil),          // 0: auth.UserInfo
-	(*RegisterRequest)(nil),   // 1: auth.RegisterRequest
-	(*RegisterResponse)(nil),  // 2: auth.RegisterResponse
-	(*LoginRequest)(nil),      // 3: auth.LoginRequest
-	(*EmailLoginRequest)(nil), // 4: auth.EmailLoginRequest
-	(*LoginResponse)(nil),     // 5: auth.LoginResponse
-	(*LogoutRequest)(nil),     // 6: auth.LogoutRequest
-	(*LogoutResponse)(nil),    // 7: auth.LogoutResponse
+	(*UserInfo)(nil),               // 0: auth.UserInfo
+	(*RegisterRequest)(nil),        // 1: auth.RegisterRequest
+	(*RegisterResponse)(nil),       // 2: auth.RegisterResponse
+	(*LoginRequest)(nil),           // 3: auth.LoginRequest
+	(*EmailLoginRequest)(nil),      // 4: auth.EmailLoginRequest
+	(*LoginResponse)(nil),          // 5: auth.LoginResponse
+	(*ForgotPasswordRequest)(nil),  // 6: auth.ForgotPasswordRequest
+	(*ForgotPasswordResponse)(nil), // 7: auth.ForgotPasswordResponse
 }
 var file_auth_proto_depIdxs = []int32{
 	0, // 0: auth.RegisterResponse.user:type_name -> auth.UserInfo
@@ -558,11 +576,11 @@ var file_auth_proto_depIdxs = []int32{
 	1, // 2: auth.AuthService.Register:input_type -> auth.RegisterRequest
 	3, // 3: auth.AuthService.Login:input_type -> auth.LoginRequest
 	4, // 4: auth.AuthService.EmailLogin:input_type -> auth.EmailLoginRequest
-	6, // 5: auth.AuthService.Logout:input_type -> auth.LogoutRequest
+	6, // 5: auth.AuthService.ForgotPassword:input_type -> auth.ForgotPasswordRequest
 	2, // 6: auth.AuthService.Register:output_type -> auth.RegisterResponse
 	5, // 7: auth.AuthService.Login:output_type -> auth.LoginResponse
 	5, // 8: auth.AuthService.EmailLogin:output_type -> auth.LoginResponse
-	7, // 9: auth.AuthService.Logout:output_type -> auth.LogoutResponse
+	7, // 9: auth.AuthService.ForgotPassword:output_type -> auth.ForgotPasswordResponse
 	6, // [6:10] is the sub-list for method output_type
 	2, // [2:6] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name

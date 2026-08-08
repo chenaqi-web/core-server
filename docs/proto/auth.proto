@@ -39,19 +39,12 @@ message LoginResponse {
   UserInfo user = 1;
 }
 
-message LogoutRequest {
-  string refresh_token = 1;
-}
-message LogoutResponse {
-  bool success = 1;
-}
-
-message ResetPasswordRequest {
+message ForgotPasswordRequest {
   string email = 1;
-  string code = 2;
-  string new_password = 3;
+  string new_password = 2;
+  string confirm_password = 3;
 }
-message ResetPasswordResponse {
+message ForgotPasswordResponse {
   bool success = 1;
 }
 
@@ -59,6 +52,5 @@ service AuthService {
   rpc Register(RegisterRequest) returns (RegisterResponse);
   rpc Login(LoginRequest) returns (LoginResponse);
   rpc EmailLogin(EmailLoginRequest) returns (LoginResponse);
-  rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
-  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  rpc ForgotPassword (ForgotPasswordRequest) returns (ForgotPasswordResponse);
 }
