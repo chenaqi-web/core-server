@@ -18,3 +18,9 @@ type InteractionCount struct {
 func (InteractionCount) TableName() string {
 	return "interaction_count"
 }
+
+type InteractionStats struct {
+	LikeCount    uint64 `json:"like_count"`
+	CommentCount uint64 `json:"comment_count"`
+	ViewCount    uint64 `json:"view_count"`
+}

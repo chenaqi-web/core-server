@@ -281,7 +281,7 @@ func (s *LikeService) loadArticlesByIDs(ctx context.Context, ids []uint64) ([]*a
 		if err != nil {
 			return nil, err
 		}
-		articles = append(articles, aggregate.NewArticleAggregate(article, author))
+		articles = append(articles, aggregate.NewArticleAggregate(article, author, nil))
 	}
 	return articles, nil
 }

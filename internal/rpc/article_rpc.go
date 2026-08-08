@@ -100,9 +100,9 @@ func toArticlePB(agg *aggregate.ArticleAggregate) *articlepb.Article {
 		CategoryID:   a.CategoryID,
 		IsTop:        a.IsTop,
 		CoverImage:   a.CoverImage,
-		ViewCount:    a.ViewCount,
-		LikeCount:    a.LikeCount,
-		CommentCount: a.CommentCount,
+		ViewCount:    agg.Stats.ViewCount,
+		LikeCount:    agg.Stats.LikeCount,
+		CommentCount: agg.Stats.CommentCount,
 		CreatedAt:    uint64(a.CreatedAt.Unix()),
 		UpdatedAt:    uint64(a.UpdatedAt.Unix()),
 	}

@@ -57,7 +57,8 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 		return nil, err
 	}
 	categoryRPC := rpc.NewCategoryRPC(categoryService)
-	articleService, err := application.NewArticleService(log, articleRepo, userRepo, cfg)
+	countService := application.NewCountService(countRepo)
+	articleService, err := application.NewArticleService(log, articleRepo, userRepo, countService, cfg)
 	if err != nil {
 		return nil, err
 	}

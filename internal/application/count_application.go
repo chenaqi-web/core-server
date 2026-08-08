@@ -2,27 +2,30 @@ package application
 
 import (
 	"context"
+	"core-server/internal/model/entity"
 
 	"core-server/internal/domain"
-	"core-server/internal/model/dto"
 	"core-server/internal/model/enum"
 )
 
 type CountService struct {
-	repo domain.CountRepoDomain
+	repo      domain.CountRepoDomain
+	likeCache domain.LikeCacheDomain
 }
 
 func NewCountService(repo domain.CountRepoDomain) *CountService {
-	return &CountService{repo: repo}
+	return &CountService{
+		repo: repo,
+	}
 }
 
-func (s *CountService) GetArticleInteractionCount(ctx context.Context, articleID uint64) (*dto.ArticleInteractionCount, error) {
+func (s *CountService) GetArticleInteractionCount(ctx context.Context, articleID uint64) (*entity.InteractionStats, error) {
 	storedCounts, err := s.repo.GetByObject(ctx, enum.ObjectTypeArticle, articleID)
 	if err != nil {
 		return nil, err
 	}
 
-	counts := &dto.ArticleInteractionCount{}
+	counts := &entity.InteractionStats{}
 	for _, count := range storedCounts {
 		if count.Count < 0 {
 			continue

@@ -17,23 +17,26 @@ import (
 )
 
 type ArticleService struct {
-	cfg      *config.Config
-	log      *clog.Log
-	ArtRepo  domain.ArticleRepoDomain
-	userRepo domain.UserRepoDomain
+	cfg       *config.Config
+	log       *clog.Log
+	ArtRepo   domain.ArticleRepoDomain
+	userRepo  domain.UserRepoDomain
+	countRepo *CountService
 }
 
 func NewArticleService(
 	log *clog.Log,
 	ArtRepo domain.ArticleRepoDomain,
 	userRepo domain.UserRepoDomain,
+	countRepo *CountService,
 	cfg *config.Config,
 ) (*ArticleService, error) {
 	return &ArticleService{
-		cfg:      cfg,
-		log:      log,
-		ArtRepo:  ArtRepo,
-		userRepo: userRepo,
+		cfg:       cfg,
+		log:       log,
+		ArtRepo:   ArtRepo,
+		userRepo:  userRepo,
+		countRepo: countRepo,
 	}, nil
 }
 
@@ -91,7 +94,9 @@ func (s *ArticleService) GetArticle(ctx context.Context, id uint64) (*aggregate.
 		return nil, err
 	}
 
-	return aggregate.NewArticleAggregate(article, author), nil
+	counts, err := s.countRepo.GetArticleInteractionCount(ctx, article.ID)
+
+	return aggregate.NewArticleAggregate(article, author, counts), nil
 }
 
 // =====================================================================================================================
@@ -107,6 +112,7 @@ func (s *ArticleService) ListArticles(ctx context.Context, page, pageSize int) (
 		s.log.Error("ListArticles error", zap.Error(err))
 		return nil, err
 	}
+
 	return s.buildArticleAggregates(ctx, articles)
 }
 
@@ -132,7 +138,7 @@ func (s *ArticleService) ListMyArticles(ctx context.Context, authorID uint64, pa
 
 	items := make([]*aggregate.ArticleAggregate, 0, len(articles))
 	for _, article := range articles {
-		items = append(items, aggregate.NewArticleAggregate(article, author))
+		items = append(items, aggregate.NewArticleAggregate(article, author, nil))
 	}
 	return items, nil
 }
@@ -179,7 +185,7 @@ func (s *ArticleService) buildArticleAggregates(ctx context.Context, articles []
 
 	items := make([]*aggregate.ArticleAggregate, 0, len(articles))
 	for _, article := range articles {
-		items = append(items, aggregate.NewArticleAggregate(article, authorMap[article.AuthorID]))
+		items = append(items, aggregate.NewArticleAggregate(article, authorMap[article.AuthorID], nil))
 	}
 	return items, nil
 }
