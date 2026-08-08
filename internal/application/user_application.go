@@ -85,7 +85,7 @@ func (s *UserService) Register(ctx context.Context, username, email, password, c
 	}
 
 	existing, err := s.repo.GetByEmail(ctx, email)
-	if err != nil {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, err
 	}
 	if existing != nil {
@@ -125,5 +125,5 @@ func (s *UserService) ForgotPassword(ctx context.Context, email, password, confi
 	if user.Status != "active" {
 		return ErrUserDisabled
 	}
-	return nil
+	return s.repo.UpdatePassword(ctx, user.ID, utils.Bcrypt(password))
 }
