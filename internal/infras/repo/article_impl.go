@@ -2,8 +2,6 @@ package repo
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"time"
 
 	"core-server/internal/model/entity"
@@ -72,9 +70,6 @@ WHERE id = ? AND deleted_at IS NULL
 LIMIT 1`
 
 	err := r.db(ctx).GetContext(ctx, &a, query, id)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil
-	}
 	if err != nil {
 		return nil, err
 	}

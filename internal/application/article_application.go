@@ -4,6 +4,7 @@ import (
 	"context"
 	"core-server/internal/infras/repo"
 	"core-server/internal/rpc/articlepb"
+	"database/sql"
 	"errors"
 
 	"core-server/internal/config"
@@ -11,6 +12,8 @@ import (
 	"core-server/internal/infras/clog"
 	"core-server/internal/model/aggregate"
 	"core-server/internal/model/entity"
+
+	"go.uber.org/zap"
 )
 
 type ArticleService struct {
@@ -45,18 +48,20 @@ func (s *ArticleService) CreateArticle(ctx context.Context, req *articlepb.Creat
 		CoverImage: req.GetCoverImage(),
 	}
 	if err := s.ArtRepo.Create(ctx, a); err != nil {
-		s.log.Error(err.Error())
+		s.log.Error("CreateArticle error", zap.Error(err))
 		return err
 	}
 	return nil
 }
 
 func (s *ArticleService) DeleteArticle(ctx context.Context, id uint64, authorID uint64) error {
+	// 普通用户的删除文章
 	if err := s.ArtRepo.DeleteByID(ctx, id, authorID); err != nil {
 		if errors.Is(err, repo.ErrNotFound) {
-			s.log.Error(err.Error())
+			s.log.Info("DeleteArticle info", zap.Error(err))
 			return ErrArticleNotFound
 		}
+		s.log.Error(err.Error())
 		return err
 	}
 	return nil
@@ -65,7 +70,11 @@ func (s *ArticleService) DeleteArticle(ctx context.Context, id uint64, authorID 
 func (s *ArticleService) GetArticle(ctx context.Context, id uint64) (*aggregate.ArticleAggregate, error) {
 	article, err := s.ArtRepo.GetByID(ctx, id)
 	if err != nil {
-		s.log.Error(err.Error())
+		if errors.Is(err, sql.ErrNoRows) {
+			s.log.Info("GetArticle info", zap.Error(err))
+			return nil, nil
+		}
+		s.log.Error("GetArticle info", zap.Error(err))
 		return nil, err
 	}
 	if article == nil {
@@ -74,7 +83,11 @@ func (s *ArticleService) GetArticle(ctx context.Context, id uint64) (*aggregate.
 
 	author, err := s.userRepo.GetByID(ctx, article.AuthorID)
 	if err != nil {
-		s.log.Error(err.Error())
+		if errors.Is(err, sql.ErrNoRows) {
+			s.log.Info("GetArticle info", zap.Error(err))
+			return nil, nil
+		}
+		s.log.Error("GetArticle info", zap.Error(err))
 		return nil, err
 	}
 
@@ -91,7 +104,7 @@ func (s *ArticleService) ListArticles(ctx context.Context, page, pageSize int) (
 
 	articles, err := s.ArtRepo.List(ctx, offset, pageSize)
 	if err != nil {
-		s.log.Error(err.Error())
+		s.log.Error("ListArticles error", zap.Error(err))
 		return nil, err
 	}
 	return s.buildArticleAggregates(ctx, articles)
