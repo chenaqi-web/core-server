@@ -41,7 +41,6 @@ type Article struct {
 	UpdatedAt     uint64                 `protobuf:"varint,13,opt,name=updatedAt,proto3" json:"updatedAt,omitempty"`      // unix timestamp (seconds)
 	AuthorName    string                 `protobuf:"bytes,14,opt,name=authorName,proto3" json:"authorName,omitempty"`     // 作者昵称，来自 user.name
 	AuthorAvatar  string                 `protobuf:"bytes,15,opt,name=authorAvatar,proto3" json:"authorAvatar,omitempty"` // 作者头像，来自 user.avatar
-	IsLiked       bool                   `protobuf:"varint,16,opt,name=isLiked,proto3" json:"isLiked,omitempty"`          // 当前用户是否点过赞
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -179,13 +178,6 @@ func (x *Article) GetAuthorAvatar() string {
 		return x.AuthorAvatar
 	}
 	return ""
-}
-
-func (x *Article) GetIsLiked() bool {
-	if x != nil {
-		return x.IsLiked
-	}
-	return false
 }
 
 type CreateArticleRequest struct {
@@ -920,7 +912,7 @@ var File_article_proto protoreflect.FileDescriptor
 
 const file_article_proto_rawDesc = "" +
 	"\n" +
-	"\rarticle.proto\x12\aarticle\"\xcf\x03\n" +
+	"\rarticle.proto\x12\aarticle\"\xb5\x03\n" +
 	"\aArticle\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x18\n" +
@@ -943,8 +935,7 @@ const file_article_proto_rawDesc = "" +
 	"\n" +
 	"authorName\x18\x0e \x01(\tR\n" +
 	"authorName\x12\"\n" +
-	"\fauthorAvatar\x18\x0f \x01(\tR\fauthorAvatar\x12\x18\n" +
-	"\aisLiked\x18\x10 \x01(\bR\aisLiked\"\xd2\x01\n" +
+	"\fauthorAvatar\x18\x0f \x01(\tR\fauthorAvatar\"\xd2\x01\n" +
 	"\x14CreateArticleRequest\x12\x1a\n" +
 	"\bauthorID\x18\x01 \x01(\x04R\bauthorID\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x18\n" +

@@ -43,7 +43,7 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 	userRepo := repo.NewUserRepo(dbClient)
 	iLikeCache := cache.NewILikeCache(cacheClient)
 	messageQueueConsumer := jobdbsync.NewMessageQueueConsumer(cfg, log, syncProducer, kafkaManager, cacheClient, likeRepo, countRepo, userRepo, iLikeCache)
-	userService := application.NewUserService(userRepo, cacheClient, log)
+	userService := application.NewUserService(userRepo, log)
 	authRPC := rpc.NewAuthRPC(userService)
 	articleRepo := repo.NewArticleRepo(dbClient)
 	likeService, err := application.NewLikeService(log, likeRepo, iLikeCache, syncProducer, articleRepo, userRepo, cfg)
@@ -57,14 +57,13 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 		return nil, err
 	}
 	categoryRPC := rpc.NewCategoryRPC(categoryService)
-	countService := application.NewCountService(countRepo)
-	articleService, err := application.NewArticleService(log, articleRepo, userRepo, countService, cfg)
+	articleService, err := application.NewArticleService(log, articleRepo, userRepo, cfg)
 	if err != nil {
 		return nil, err
 	}
 	articleRPC := rpc.NewArticleRPC(articleService)
 	commentRepo := repo.NewCommentRepo(dbClient)
-	commentService, err := application.NewCommentService(log, commentRepo, userRepo, countService, cfg)
+	commentService, err := application.NewCommentService(log, commentRepo, userRepo, countRepo, cfg)
 	if err != nil {
 		return nil, err
 	}
