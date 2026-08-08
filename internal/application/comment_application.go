@@ -8,30 +8,31 @@ import (
 	"core-server/internal/infras/repo"
 	"core-server/internal/model/dto"
 	"core-server/internal/model/entity"
+	"core-server/internal/model/enum"
 	"errors"
 )
 
 type CommentService struct {
-	cfg      *config.Config
-	log      *clog.Log
-	repo     domain.CommentRepoDomain
-	userRepo domain.UserRepoDomain
-	artRepo  domain.ArticleRepoDomain
+	cfg       *config.Config
+	log       *clog.Log
+	repo      domain.CommentRepoDomain
+	userRepo  domain.UserRepoDomain
+	countRepo domain.CountRepoDomain
 }
 
 func NewCommentService(
 	log *clog.Log,
 	repo domain.CommentRepoDomain,
 	userRepo domain.UserRepoDomain,
-	artRepo domain.ArticleRepoDomain,
+	countRepo domain.CountRepoDomain,
 	cfg *config.Config,
 ) (*CommentService, error) {
 	return &CommentService{
-		cfg:      cfg,
-		log:      log,
-		repo:     repo,
-		userRepo: userRepo,
-		artRepo:  artRepo,
+		cfg:       cfg,
+		log:       log,
+		repo:      repo,
+		userRepo:  userRepo,
+		countRepo: countRepo,
 	}, nil
 }
 
@@ -47,7 +48,14 @@ func (s *CommentService) CreateComment(ctx context.Context, req *dto.CreateComme
 		if err != nil {
 			return err
 		}
-		if err = s.artRepo.UpdateCommentCount(ctx, req.ArticleID, 1); err != nil {
+
+		count := &entity.InteractionCount{
+			ObjectType:      enum.ObjectTypeArticle,
+			ObjectID:        req.ArticleID,
+			InteractionType: enum.InteractionTypeComment,
+		}
+
+		if err = s.countRepo.Upsert(ctx, count, 1); err != nil {
 			return err
 		}
 		return nil
@@ -77,8 +85,14 @@ func (s *CommentService) CreateReply(ctx context.Context, req *dto.CreateReplyRe
 		if err = s.repo.IncrementChildCount(ctx, req.ParentID); err != nil {
 			return err
 		}
-		// 修改主表的评论数
-		if err = s.artRepo.UpdateCommentCount(ctx, req.ArticleID, 1); err != nil {
+		// 更新统一计数表中的评论数
+		count := &entity.InteractionCount{
+			ObjectType:      enum.ObjectTypeArticle,
+			ObjectID:        req.ArticleID,
+			InteractionType: enum.InteractionTypeComment,
+		}
+
+		if err = s.countRepo.Upsert(ctx, count, 1); err != nil {
 			return err
 		}
 		return nil
@@ -116,7 +130,16 @@ func (s *CommentService) DeleteComment(ctx context.Context, req *dto.DeleteComme
 			return err
 		}
 
-		return s.artRepo.UpdateCommentCount(ctx, comment.ArticleID, -deletedCount)
+		count := &entity.InteractionCount{
+			ObjectType:      enum.ObjectTypeArticle,
+			ObjectID:        comment.ArticleID,
+			InteractionType: enum.InteractionTypeComment,
+		}
+
+		if err = s.countRepo.Upsert(ctx, count, -1); err != nil {
+			return err
+		}
+		return nil
 	})
 	if err != nil {
 		s.log.Error(err.Error())

@@ -57,13 +57,14 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 		return nil, err
 	}
 	categoryRPC := rpc.NewCategoryRPC(categoryService)
-	articleService, err := application.NewArticleService(log, articleRepo, userRepo, cfg)
+	countService := application.NewCountService(countRepo)
+	articleService, err := application.NewArticleService(log, articleRepo, userRepo, countService, cfg)
 	if err != nil {
 		return nil, err
 	}
 	articleRPC := rpc.NewArticleRPC(articleService)
 	commentRepo := repo.NewCommentRepo(dbClient)
-	commentService, err := application.NewCommentService(log, commentRepo, userRepo, articleRepo, cfg)
+	commentService, err := application.NewCommentService(log, commentRepo, userRepo, countService, cfg)
 	if err != nil {
 		return nil, err
 	}

@@ -10,4 +10,5 @@ var ProviderSet = wire.NewSet(
 	NewCategoryService,
 	NewArticleService,
 	NewCommentService,
+	NewCountService,
 )

@@ -2,11 +2,10 @@ package repo
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"time"
 
 	"core-server/internal/model/entity"
+	"core-server/internal/model/enum"
 )
 
 type CountRepo struct {
@@ -18,60 +17,45 @@ func NewCountRepo(client *DBClient) *CountRepo {
 }
 
 func (r *CountRepo) Upsert(ctx context.Context, count *entity.InteractionCount, delta int64) error {
-	const selectQuery = `
-SELECT id, created_at, updated_at, object_type, object_id, interaction_type, count
-FROM interaction_count
-WHERE object_type = ? AND object_id = ? AND interaction_type = ?
-LIMIT 1`
+	initialCount := delta
+	if initialCount < 0 {
+		initialCount = 0
+	}
 
-	var existing entity.InteractionCount
-	err := r.db(ctx).GetContext(
-		ctx,
-		&existing,
-		selectQuery,
-		count.ObjectType,
-		count.ObjectID,
-		count.InteractionType,
-	)
-	if errors.Is(err, sql.ErrNoRows) {
-		now := time.Now()
-		count.Count = delta
-		if count.Count < 0 {
-			count.Count = 0
-		}
-
-		const insertQuery = `
+	const query = `
 INSERT INTO interaction_count
   (object_type, object_id, interaction_type, count, created_at, updated_at)
 VALUES
-  (?, ?, ?, ?, ?, ?)`
+	(?, ?, ?, ?, ?, ?)
+ON DUPLICATE KEY UPDATE
+  count = GREATEST(count + ?, 0),
+	updated_at = ?`
 
-		_, err := r.db(ctx).ExecContext(
-			ctx,
-			insertQuery,
-			count.ObjectType,
-			count.ObjectID,
-			count.InteractionType,
-			count.Count,
-			now,
-			now,
-		)
-		return err
-	}
-	if err != nil {
-		return err
-	}
-
-	newCount := existing.Count + delta
-	if newCount < 0 {
-		newCount = 0
-	}
-
-	const updateQuery = `
-UPDATE interaction_count
-SET count = ?, updated_at = NOW(3)
-WHERE id = ?`
-
-	_, err = r.db(ctx).ExecContext(ctx, updateQuery, newCount, existing.ID)
+	now := time.Now()
+	_, err := r.db(ctx).ExecContext(
+		ctx,
+		query,
+		count.ObjectType,
+		count.ObjectID,
+		count.InteractionType,
+		initialCount,
+		now,
+		now,
+		delta,
+		now,
+	)
 	return err
+}
+
+func (r *CountRepo) GetByObject(ctx context.Context, objectType enum.ObjectType, objectID uint64) ([]*entity.InteractionCount, error) {
+	var counts []*entity.InteractionCount
+	const query = `
+SELECT id, created_at, updated_at, object_type, object_id, interaction_type, count
+FROM interaction_count
+WHERE object_type = ? AND object_id = ?`
+
+	if err := r.db(ctx).SelectContext(ctx, &counts, query, objectType, objectID); err != nil {
+		return nil, err
+	}
+	return counts, nil
 }
