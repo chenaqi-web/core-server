@@ -36,7 +36,6 @@ LIMIT 1`
 	return &u, nil
 }
 
-// 根据用户名查询用户
 func (r *UserRepo) GetByName(ctx context.Context, name string) (*entity.User, error) {
 	var u entity.User
 	const query = `
