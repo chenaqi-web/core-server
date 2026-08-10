@@ -21,7 +21,7 @@ func NewUserRepo(client *DBClient) *UserRepo {
 func (r *UserRepo) GetByID(ctx context.Context, id uint64) (*entity.User, error) {
 	var u entity.User
 	const query = `
-SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, sex, age, like_count, receive_like_count
+SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, status, auth_version, sex, age, like_count, receive_like_count
 FROM user
 WHERE id = ? AND deleted_at IS NULL
 LIMIT 1`
@@ -148,6 +148,26 @@ UPDATE user
 SET receive_like_count = ?, updated_at = NOW(3)
 WHERE id = ? AND deleted_at IS NULL`
 	_, err := r.db(ctx).ExecContext(ctx, query, count, userID)
+	return err
+}
+
+func (r *UserRepo) UpdateProfile(ctx context.Context, user *entity.User) error {
+	const query = `
+UPDATE user
+SET name = ?, phone = ?, sex = ?, age = ?, updated_at = NOW(3)
+WHERE id = ? AND deleted_at IS NULL`
+
+	_, err := r.db(ctx).ExecContext(ctx, query, user.Name, user.Phone, user.Sex, user.Age, user.ID)
+	return err
+}
+
+func (r *UserRepo) UpdateAvatar(ctx context.Context, userID uint64, avatar string) error {
+	const query = `
+UPDATE user
+SET avatar = ?, updated_at = NOW(3)
+WHERE id = ? AND deleted_at IS NULL`
+
+	_, err := r.db(ctx).ExecContext(ctx, query, avatar, userID)
 	return err
 }
 
