@@ -35,11 +35,10 @@ func NewCategoryService(
 // 一级类型（parent_id = 0）
 
 func (s *CategoryService) CreateType(ctx context.Context, name string) error {
-	err := s.repo.Create(ctx, &entity.Category{
+	if err := s.repo.Create(ctx, &entity.Category{
 		ParentID: entity.RootCategoryParentID,
 		Name:     name,
-	})
-	if err != nil {
+	}); err != nil {
 		s.log.Error("CreateType Error", zap.Error(err))
 		return err
 	}
@@ -76,11 +75,10 @@ func (s *CategoryService) ListTypes(ctx context.Context) ([]*entity.Category, er
 // 子分类
 
 func (s *CategoryService) CreateCategory(ctx context.Context, parentID uint64, name string) error {
-	err := s.repo.Create(ctx, &entity.Category{
+	if err := s.repo.Create(ctx, &entity.Category{
 		ParentID: parentID,
 		Name:     name,
-	})
-	if err != nil {
+	}); err != nil {
 		s.log.Error("CreateCategory Error", zap.Error(err))
 		return err
 	}
