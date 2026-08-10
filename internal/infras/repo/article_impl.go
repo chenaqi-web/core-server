@@ -20,21 +20,27 @@ func NewArticleRepo(client *DBClient) *ArticleRepo {
 func (r *ArticleRepo) Create(ctx context.Context, article *entity.Article) error {
 	now := time.Now()
 	const query = `
-                INSERT INTO blog_article 
-                    (title, summary, content, cover_image, author_id,
-                    category_id, is_top, view_count, like_count, comment_count,
-                    created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+INSERT INTO blog_article 
+    (title, summary, content, cover_image, author_id,
+     category_id, is_top, view_count, like_count, comment_count,
+     created_at, updated_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	_, err := r.db(ctx).ExecContext(ctx, query,
-		article.Title, article.Summary, article.Content, article.CoverImage,
-		article.AuthorID, article.CategoryID, article.IsTop,
-		now, now,
+		article.Title,
+		article.Summary,
+		article.Content,
+		article.CoverImage,
+		article.AuthorID,
+		article.CategoryID,
+		article.IsTop,
+		0,   // view_count 默认 0
+		0,   // like_count 默认 0
+		0,   // comment_count 默认 0
+		now, // created_at
+		now, // updated_at
 	)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (r *ArticleRepo) DeleteByID(ctx context.Context, id, authorID uint64) error {
