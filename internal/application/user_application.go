@@ -8,6 +8,8 @@ import (
 	"core-server/internal/utils"
 	"database/sql"
 	"errors"
+	"strings"
+	"unicode/utf8"
 
 	"go.uber.org/zap"
 )
@@ -17,6 +19,8 @@ var (
 	ErrUserDisabled       = errors.New("user is disabled")
 	ErrEmailAlreadyInUse  = errors.New("email is already registered")
 	ErrUserNotFound       = errors.New("user not found")
+	ErrInvalidUserProfile = errors.New("invalid user profile")
+	ErrUsernameInUse      = errors.New("username is already in use")
 )
 
 type UserService struct {
@@ -32,6 +36,76 @@ func NewUserService(
 		repo: repo,
 		log:  log,
 	}
+}
+
+func (s *UserService) GetProfile(ctx context.Context, userID uint64) (*entity.User, error) {
+	user, err := s.repo.GetByID(ctx, userID)
+	if err != nil {
+		s.log.Error("GetProfile error", zap.Error(err))
+		return nil, err
+	}
+	if user == nil {
+		return nil, ErrUserNotFound
+	}
+	if user.Status != "active" {
+		return nil, ErrUserDisabled
+	}
+	return user, nil
+}
+
+func (s *UserService) UpdateProfile(ctx context.Context, userID uint64, username, phone, sex string, age uint32) (*entity.User, error) {
+	username = strings.TrimSpace(username)
+	phone = strings.TrimSpace(phone)
+	sex = strings.TrimSpace(sex)
+	usernameLength := utf8.RuneCountInString(username)
+	if userID == 0 || usernameLength < 2 || usernameLength > 50 || len(phone) > 20 || age > 150 {
+		return nil, ErrInvalidUserProfile
+	}
+	if sex != "" && sex != "male" && sex != "female" {
+		return nil, ErrInvalidUserProfile
+	}
+
+	user, err := s.GetProfile(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if username != user.Name {
+		existing, findErr := s.repo.GetByName(ctx, username)
+		if findErr != nil && !errors.Is(findErr, sql.ErrNoRows) {
+			return nil, findErr
+		}
+		if existing != nil && existing.ID != userID {
+			return nil, ErrUsernameInUse
+		}
+	}
+
+	user.Name = username
+	user.Phone = phone
+	user.Sex = sex
+	user.Age = uint64(age)
+	if err := s.repo.UpdateProfile(ctx, user); err != nil {
+		s.log.Error("UpdateProfile error", zap.Error(err))
+		return nil, err
+	}
+	return user, nil
+}
+
+func (s *UserService) UpdateAvatar(ctx context.Context, userID uint64, avatar string) (*entity.User, error) {
+	avatar = strings.TrimSpace(avatar)
+	if userID == 0 || avatar == "" || len(avatar) > 500 {
+		return nil, ErrInvalidUserProfile
+	}
+
+	user, err := s.GetProfile(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.repo.UpdateAvatar(ctx, userID, avatar); err != nil {
+		s.log.Error("UpdateAvatar error", zap.Error(err))
+		return nil, err
+	}
+	user.Avatar = avatar
+	return user, nil
 }
 
 func (s *UserService) Login(ctx context.Context, username, password string) (*entity.User, error) {

@@ -1,19 +1,61 @@
 syntax = "proto3";
 
-// provide user like service
-// 1. add like
-
-
 package user;
-//import "idl/validate/validate.proto";
+
 option go_package = "core-server/internal/rpc/userpb;userpb";
+
+message UserInfo {
+  uint64 id = 1;
+  string username = 2;
+  string email = 3;
+  string phone = 4;
+  string avatar = 5;
+  string sex = 6;
+  uint32 age = 7;
+  string role = 8;
+  string status = 9;
+  uint64 like_count = 10;
+  uint64 receive_like_count = 11;
+}
 
 message LoginReq {
 }
+
 message LoginResp {
 }
 
+message GetProfileRequest {
+  uint64 user_id = 1;
+}
+
+message GetProfileResponse {
+  UserInfo user = 1;
+}
+
+message UpdateProfileRequest {
+  uint64 user_id = 1;
+  string username = 2;
+  string phone = 3;
+  string sex = 4;
+  uint32 age = 5;
+}
+
+message UpdateProfileResponse {
+  UserInfo user = 1;
+}
+
+message UpdateAvatarRequest {
+  uint64 user_id = 1;
+  string avatar = 2;
+}
+
+message UpdateAvatarResponse {
+  UserInfo user = 1;
+}
 
 service UserService {
-  rpc Login(LoginReq) returns (LoginResp){};
+  rpc Login(LoginReq) returns (LoginResp);
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
+  rpc UpdateAvatar(UpdateAvatarRequest) returns (UpdateAvatarResponse);
 }

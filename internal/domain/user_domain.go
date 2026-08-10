@@ -18,6 +18,8 @@ type UserRepo interface {
 	IncrementLikeCount(ctx context.Context, userID uint64) error
 	DecrementLikeCount(ctx context.Context, userID uint64) error
 
+	UpdateProfile(ctx context.Context, user *entity.User) error
+	UpdateAvatar(ctx context.Context, userID uint64, avatar string) error
 	UpdatePassword(ctx context.Context, userID uint64, password string) error
 }
 
