@@ -17,8 +17,8 @@ import (
 )
 
 type ArticleService struct {
-	cfg       *config.Config
 	log       *clog.Log
+	cfg       *config.Config
 	ArtRepo   domain.ArticleRepoDomain
 	userRepo  domain.UserRepoDomain
 	countRepo *CountService
@@ -26,10 +26,10 @@ type ArticleService struct {
 
 func NewArticleService(
 	log *clog.Log,
+	cfg *config.Config,
 	ArtRepo domain.ArticleRepoDomain,
 	userRepo domain.UserRepoDomain,
 	countRepo *CountService,
-	cfg *config.Config,
 ) (*ArticleService, error) {
 	return &ArticleService{
 		cfg:       cfg,
@@ -58,13 +58,13 @@ func (s *ArticleService) CreateArticle(ctx context.Context, req *articlepb.Creat
 }
 
 func (s *ArticleService) DeleteArticle(ctx context.Context, id uint64, authorID uint64) error {
-	// 普通用户的删除文章
+	// 这个删除是包含管理员删除的
+	// 当其是管理员的时候，传入的authorID是0,在repo下面是不会加上这个authorId = ? 的判断条件
 	if err := s.ArtRepo.DeleteByID(ctx, id, authorID); err != nil {
 		if errors.Is(err, repo.ErrNotFound) {
-			s.log.Info("DeleteArticle info", zap.Error(err))
 			return ErrArticleNotFound
 		}
-		s.log.Error(err.Error())
+		s.log.Error("DeleteArticle error", zap.Error(err))
 		return err
 	}
 	return nil
@@ -74,7 +74,6 @@ func (s *ArticleService) GetArticle(ctx context.Context, id uint64) (*aggregate.
 	article, err := s.ArtRepo.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			s.log.Info("GetArticle info", zap.Error(err))
 			return nil, nil
 		}
 		s.log.Error("GetArticle info", zap.Error(err))
@@ -87,7 +86,6 @@ func (s *ArticleService) GetArticle(ctx context.Context, id uint64) (*aggregate.
 	author, err := s.userRepo.GetByID(ctx, article.AuthorID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			s.log.Info("GetArticle info", zap.Error(err))
 			return nil, nil
 		}
 		s.log.Error("GetArticle info", zap.Error(err))
@@ -96,7 +94,13 @@ func (s *ArticleService) GetArticle(ctx context.Context, id uint64) (*aggregate.
 
 	counts, err := s.countRepo.GetArticleInteractionCount(ctx, article.ID)
 	if err != nil {
-		s.log.Error("GetArticle interaction counts error", zap.Error(err))
+		s.log.Error("GetArticleInteractionCount error", zap.Error(err))
+		return nil, err
+	}
+
+	// todo 暂时先将这个浏览量增加函数放到这个博客获取的位置
+	if err := s.countRepo.IncrementArticleView(ctx, article.ID); err != nil {
+		s.log.Error("increment article view count error", zap.Error(err))
 		return nil, err
 	}
 
@@ -117,7 +121,7 @@ func (s *ArticleService) ListArticles(ctx context.Context, page, pageSize int) (
 		return nil, err
 	}
 
-	return s.buildArticleAggregates(ctx, articles)
+	return s.BuildArticleAggregates(ctx, articles)
 }
 
 func (s *ArticleService) ListMyArticles(ctx context.Context, authorID uint64, page, pageSize int) ([]*aggregate.ArticleAggregate, error) {
@@ -134,7 +138,7 @@ func (s *ArticleService) ListMyArticles(ctx context.Context, authorID uint64, pa
 		return nil, nil
 	}
 
-	return s.buildArticleAggregates(ctx, articles)
+	return s.BuildArticleAggregates(ctx, articles)
 }
 
 func (s *ArticleService) ListArticlesByCategory(ctx context.Context, categoryID uint64, page, pageSize int) ([]*aggregate.ArticleAggregate, error) {
@@ -147,7 +151,7 @@ func (s *ArticleService) ListArticlesByCategory(ctx context.Context, categoryID 
 		s.log.Error(err.Error())
 		return nil, err
 	}
-	return s.buildArticleAggregates(ctx, articles)
+	return s.BuildArticleAggregates(ctx, articles)
 }
 
 func (s *ArticleService) SearchArticles(ctx context.Context, q string, page, pageSize int) ([]*aggregate.ArticleAggregate, error) {
@@ -160,35 +164,54 @@ func (s *ArticleService) SearchArticles(ctx context.Context, q string, page, pag
 		s.log.Error(err.Error())
 		return nil, err
 	}
-	return s.buildArticleAggregates(ctx, articles)
+	return s.BuildArticleAggregates(ctx, articles)
 }
 
 // =====================================================================================================================
-// 下面是辅助函数
 
-func (s *ArticleService) buildArticleAggregates(ctx context.Context, articles []*entity.Article) ([]*aggregate.ArticleAggregate, error) {
-	if len(articles) == 0 {
-		return nil, nil
+// BuildArticleAggregates  对聚合根的构建
+func (s *ArticleService) BuildArticleAggregates(ctx context.Context, arts []*entity.Article) ([]*aggregate.ArticleAggregate, error) {
+	// 一次遍历同时收集作者ID和文章ID
+	authorIDs := make([]uint64, 0, len(arts))
+	articleIDs := make([]uint64, 0, len(arts))
+	seenAuthors := make(map[uint64]struct{})
+
+	for _, article := range arts {
+		// 收集文章ID
+		articleIDs = append(articleIDs, article.ID)
+
+		// 收集作者ID（去重）
+		if _, ok := seenAuthors[article.AuthorID]; !ok {
+			seenAuthors[article.AuthorID] = struct{}{}
+			authorIDs = append(authorIDs, article.AuthorID)
+		}
 	}
 
-	authorMap, err := LoadUserMap(ctx, s.userRepo, CollectArticleAuthorIDs(articles))
+	// 批量加载用户信息
+	users, err := s.userRepo.ListByIDs(ctx, authorIDs)
 	if err != nil {
-		s.log.Error(err.Error())
 		return nil, err
 	}
-	articleIDs := make([]uint64, 0, len(articles))
-	for _, article := range articles {
-		articleIDs = append(articleIDs, article.ID)
+	authorMap := make(map[uint64]*entity.User, len(users))
+	for _, user := range users {
+		authorMap[user.ID] = user
 	}
+
+	// 批量获取文章互动统计数据
 	statsMap, err := s.countRepo.BatchGetArticleInteractionCounts(ctx, articleIDs)
 	if err != nil {
-		s.log.Error("load article interaction counts error", zap.Error(err))
 		return nil, err
 	}
 
-	items := make([]*aggregate.ArticleAggregate, 0, len(articles))
-	for _, article := range articles {
-		items = append(items, aggregate.NewArticleAggregate(article, authorMap[article.AuthorID], statsMap[article.ID]))
+	// 构建聚合结果
+	items := make([]*aggregate.ArticleAggregate, 0, len(arts))
+	for _, article := range arts {
+		items = append(items, aggregate.NewArticleAggregate(
+			article,
+			authorMap[article.AuthorID],
+			statsMap[article.ID],
+		))
 	}
+
 	return items, nil
 }
