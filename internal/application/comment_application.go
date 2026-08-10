@@ -10,6 +10,8 @@ import (
 	"core-server/internal/model/entity"
 	"core-server/internal/model/enum"
 	"errors"
+
+	"go.uber.org/zap"
 )
 
 type CommentService struct {
@@ -55,13 +57,14 @@ func (s *CommentService) CreateComment(ctx context.Context, req *dto.CreateComme
 			InteractionType: enum.InteractionTypeComment,
 		}
 
+		// 先创建评论关系，如何修改计数表
 		if err = s.countRepo.Upsert(ctx, count, 1); err != nil {
 			return err
 		}
 		return nil
 	})
 	if err != nil {
-		s.log.Error(err.Error())
+		s.log.Error("CreateComment", zap.Error(err))
 		return false, err
 	}
 	return true, nil
@@ -98,20 +101,21 @@ func (s *CommentService) CreateReply(ctx context.Context, req *dto.CreateReplyRe
 		return nil
 	})
 	if err != nil {
-		s.log.Error(err.Error())
+		s.log.Error("CreateReply", zap.Error(err))
 		return false, err
 	}
 	return true, nil
 }
 
 func (s *CommentService) DeleteComment(ctx context.Context, req *dto.DeleteCommentRequest) error {
-	comment, err := s.repo.GetByID(ctx, req.ID)
-	if err != nil {
-		s.log.Error(err.Error())
-		return err
-	}
+	err := s.repo.WithTransaction(ctx, func(ctx context.Context) error {
+		// 1.首先获取该评论的内容
+		comment, err := s.repo.GetByID(ctx, req.ID)
+		if err != nil {
+			return err
+		}
 
-	err = s.repo.WithTransaction(ctx, func(ctx context.Context) error {
+		// 2.首先删除这个评论
 		if err := s.repo.SoftDelete(ctx, req.ID, req.UserID); err != nil {
 			if errors.Is(err, repo.ErrNotFound) {
 				return ErrCommentNotFound
@@ -119,6 +123,7 @@ func (s *CommentService) DeleteComment(ctx context.Context, req *dto.DeleteComme
 			return err
 		}
 
+		// 3.判断是不是根评论(其实也可以异步删除的)
 		deletedCount := int64(1)
 		if comment.IsTopLevel() {
 			replyCount, err := s.repo.SoftDeleteRepliesByParent(ctx, comment.ID)
@@ -136,13 +141,14 @@ func (s *CommentService) DeleteComment(ctx context.Context, req *dto.DeleteComme
 			InteractionType: enum.InteractionTypeComment,
 		}
 
-		if err = s.countRepo.Upsert(ctx, count, -1); err != nil {
+		// 4.修改计数
+		if err = s.countRepo.Upsert(ctx, count, -deletedCount); err != nil {
 			return err
 		}
 		return nil
 	})
 	if err != nil {
-		s.log.Error(err.Error())
+		s.log.Error("DeleteComment", zap.Error(err))
 	}
 	return err
 }
@@ -163,10 +169,17 @@ func (s *CommentService) GetArticleComments(ctx context.Context, req *dto.GetArt
 		s.log.Error(err.Error())
 		return nil, err
 	}
+	likeCounts, err := s.loadCommentLikeCounts(ctx, comments)
+	if err != nil {
+		s.log.Error("load comment like counts error", zap.Error(err))
+		return nil, err
+	}
 
 	items := make([]*dto.CommentInfoDTO, 0, len(comments))
 	for _, c := range comments {
-		items = append(items, dto.CommentInfoFromEntity(c, authorMap[c.UserID]))
+		item := dto.CommentInfoFromEntity(c, authorMap[c.UserID])
+		item.LikeCount = likeCounts[c.ID]
+		items = append(items, item)
 	}
 
 	return &dto.GetArticleCommentsResponse{
@@ -192,10 +205,17 @@ func (s *CommentService) GetCommentReplies(ctx context.Context, req *dto.GetComm
 		s.log.Error(err.Error())
 		return nil, err
 	}
+	likeCounts, err := s.loadCommentLikeCounts(ctx, replies)
+	if err != nil {
+		s.log.Error("load reply like counts error", zap.Error(err))
+		return nil, err
+	}
 
 	items := make([]*dto.CommentInfoDTO, 0, len(replies))
 	for _, reply := range replies {
-		items = append(items, dto.CommentInfoFromEntity(reply, authorMap[reply.UserID]))
+		item := dto.CommentInfoFromEntity(reply, authorMap[reply.UserID])
+		item.LikeCount = likeCounts[reply.ID]
+		items = append(items, item)
 	}
 
 	return &dto.GetCommentRepliesResponse{
@@ -203,4 +223,28 @@ func (s *CommentService) GetCommentReplies(ctx context.Context, req *dto.GetComm
 		Page:    int32(page),
 		Size:    int32(size),
 	}, nil
+}
+
+func (s *CommentService) loadCommentLikeCounts(ctx context.Context, comments []*entity.Comment) (map[uint64]uint32, error) {
+	commentIDs := make([]uint64, 0, len(comments))
+	for _, comment := range comments {
+		if comment != nil {
+			commentIDs = append(commentIDs, comment.ID)
+		}
+	}
+	counts := make(map[uint64]uint32, len(commentIDs))
+	if len(commentIDs) == 0 {
+		return counts, nil
+	}
+
+	storedCounts, err := s.countRepo.GetByObjects(ctx, enum.ObjectTypeComment, commentIDs)
+	if err != nil {
+		return nil, err
+	}
+	for _, count := range storedCounts {
+		if count != nil && count.InteractionType == enum.InteractionTypeLike && count.Count > 0 {
+			counts[count.ObjectID] = uint32(count.Count)
+		}
+	}
+	return counts, nil
 }

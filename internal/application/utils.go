@@ -14,15 +14,13 @@ const (
 )
 
 var (
-	ErrAlreadyLiked  = errors.New("already liked")
-	ErrLikeNotExists = errors.New("like not exists")
+	ErrAlreadyLiked = errors.New("already liked")
 
 	ErrCategoryTypeNotFound = errors.New("category type not found")
 	ErrCategoryNotFound     = errors.New("category not found")
 	ErrArticleNotFound      = errors.New("article not found")
 
 	ErrCommentNotFound = errors.New("comment not found")
-	ErrCommentInvalid  = errors.New("comment content invalid")
 )
 
 func Page(page int) int {
