@@ -18,7 +18,11 @@ message UserInfo {
   uint64 receive_like_count = 11;
 }
 
+message LoginReq {
+}
 
+message LoginResp {
+}
 
 message GetProfileRequest {
   uint64 user_id = 1;
@@ -50,6 +54,7 @@ message UpdateAvatarResponse {
 }
 
 service UserService {
+  rpc Login(LoginReq) returns (LoginResp);
   rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
   rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
   rpc UpdateAvatar(UpdateAvatarRequest) returns (UpdateAvatarResponse);
