@@ -86,6 +86,9 @@ func NewMessageQueueConsumer(
 }
 
 func (c *MessageQueueConsumer) Start() error {
+	if c.kafkaManager == nil {
+		return nil
+	}
 	// 1. 加载消息处理handler
 	c.kafkaManager.SetBatchHandler(c.batchHandleMessages)
 	c.CountAggregator.Start()
@@ -100,6 +103,9 @@ func (c *MessageQueueConsumer) Start() error {
 }
 
 func (c *MessageQueueConsumer) Stop() error {
+	if c.kafkaManager == nil {
+		return nil
+	}
 	c.CountAggregator.Stop()
 	return c.kafkaManager.StopGroupConsumers()
 }
@@ -145,7 +151,7 @@ func (c *MessageQueueConsumer) handleMessageWrapper(
 	handler func(ctx context.Context, msg *event.Message) error,
 ) (err error) {
 	defer func() {
-		if err != nil && c.dlqTopic != "" {
+		if err != nil && c.dlqTopic != "" && c.producer != nil {
 			err = retry.Do(func() error {
 				return c.producer.SendMessage(c.dlqTopic, string(msg.Key), msg.Value)
 			},

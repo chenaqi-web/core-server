@@ -15,6 +15,7 @@ type Topic struct {
 }
 
 type KafkaConfig struct {
+	Enabled                   bool   `yaml:"Enabled"`
 	Version                   string `yaml:"Version"`
 	Host                      string `yaml:"Host"`
 	MaxRetry                  int    `yaml:"MaxRetry"`

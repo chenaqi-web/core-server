@@ -25,6 +25,9 @@ type SyncProducer struct {
 }
 
 func NewSyncProducer(cfg *config.Config, log *clog.Log) (*SyncProducer, error) {
+	if !cfg.Kafka.Enabled {
+		return nil, nil
+	}
 	// 拿到基础配置
 	saramaConfig := sarama.NewConfig()
 

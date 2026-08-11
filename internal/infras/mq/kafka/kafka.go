@@ -36,6 +36,9 @@ type KafkaManager struct {
 
 // NewKafkaManager 新建一个消费者管理对象
 func NewKafkaManager(cfg *config.Config, topicManager *TopicManager) *KafkaManager {
+	if !cfg.Kafka.Enabled || topicManager == nil {
+		return nil
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// 1.初始化Topic
@@ -53,6 +56,9 @@ func NewKafkaManager(cfg *config.Config, topicManager *TopicManager) *KafkaManag
 }
 
 func (km *KafkaManager) Close() error {
+	if km == nil {
+		return nil
+	}
 	if err := km.StopGroupConsumers(); err != nil {
 		return err
 	}
@@ -64,10 +70,16 @@ func (km *KafkaManager) Close() error {
 
 // SetBatchHandler 在定时任务那里设置
 func (km *KafkaManager) SetBatchHandler(handler BatchMessagesHandler) {
+	if km == nil {
+		return
+	}
 	km.batchHandler = handler
 }
 
 func (km *KafkaManager) StartGroupConsumers() error {
+	if km == nil {
+		return nil
+	}
 	// 首先需要设置处理器handler，如果没有则无法消费
 	if km.batchHandler == nil {
 		return errors.New("batch handler is not set")
@@ -128,6 +140,9 @@ func (km *KafkaManager) StartGroupConsumers() error {
 }
 
 func (km *KafkaManager) StopGroupConsumers() error {
+	if km == nil {
+		return nil
+	}
 	km.cancel()
 
 	g, _ := errgroup.WithContext(context.Background())

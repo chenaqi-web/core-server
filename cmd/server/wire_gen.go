@@ -46,7 +46,7 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 	userService := application.NewUserService(userRepo, log)
 	authRPC := rpc.NewAuthRPC(userService)
 	articleRepo := repo.NewArticleRepo(dbClient)
-	countService := application.NewCountService(countRepo)
+	countService := application.NewCountService(log, countRepo)
 	likeService, err := application.NewLikeService(log, likeRepo, iLikeCache, syncProducer, articleRepo, userRepo, countService, cfg)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 		return nil, err
 	}
 	categoryRPC := rpc.NewCategoryRPC(categoryService)
-	articleService, err := application.NewArticleService(log, articleRepo, userRepo, countService, cfg)
+	articleService, err := application.NewArticleService(log, cfg, articleRepo, userRepo, countService)
 	if err != nil {
 		return nil, err
 	}

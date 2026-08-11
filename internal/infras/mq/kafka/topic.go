@@ -16,6 +16,9 @@ type TopicManager struct {
 }
 
 func NewTopicManager(cfg *config.Config) (*TopicManager, error) {
+	if !cfg.Kafka.Enabled {
+		return nil, nil
+	}
 	// 1. 拿到基础配置
 	saramaConfig := sarama.NewConfig()
 	version, err := sarama.ParseKafkaVersion(cfg.Kafka.Version)

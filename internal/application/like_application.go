@@ -97,6 +97,10 @@ func (s *LikeService) BatchHasThumbUp(ctx context.Context, userID uint64, object
 // 点赞操作
 
 func (s *LikeService) ThumbUp(ctx context.Context, userID uint64, objectType string, objectID uint64) error {
+	if !s.cfg.Kafka.Enabled {
+		return s.ThumbUpDirect(ctx, userID, objectType, objectID)
+	}
+
 	// 1. 先查询缓存，判断是否点赞
 	exists, err := s.HasThumbUp(ctx, userID, objectType, objectID)
 	if err != nil {
@@ -135,6 +139,10 @@ func (s *LikeService) ThumbUp(ctx context.Context, userID uint64, objectType str
 }
 
 func (s *LikeService) CancelThumbUp(ctx context.Context, userID uint64, objectType string, objectID uint64) error {
+	if !s.cfg.Kafka.Enabled {
+		return s.CancelThumbUpDirect(ctx, userID, objectType, objectID)
+	}
+
 	// 1. 先查询缓存，有就删除
 	// result 就返回两个值 0和1，0表示没有，1表示有且成功删除
 	result, score, err := s.cache.CancelThumbUp(ctx, userID, objectType, objectID)
@@ -209,6 +217,10 @@ func (s *LikeService) sendMessage(msg *event.Message) error {
 // 点赞列表方面
 
 func (s *LikeService) UserLikeList(ctx context.Context, userID uint64, objectType string, page, pageSize int) ([]*aggregate.ArticleAggregate, int64, error) {
+	if !s.cfg.Kafka.Enabled {
+		return s.UserLikeListDirect(ctx, userID, objectType, page, pageSize)
+	}
+
 	if page <= 0 {
 		page = 1
 	}
@@ -301,4 +313,62 @@ func (s *LikeService) loadArticlesByIDs(ctx context.Context, ids []uint64) ([]*a
 		))
 	}
 	return articles, nil
+}
+
+// =====================================================================================================================
+// 点赞基础
+
+func (s *LikeService) ThumbUpDirect(ctx context.Context, userID uint64, objectType string, objectID uint64) error {
+	liked, err := s.repo.QueryWithCondition(ctx, userID, objectType, objectID, entity.LikeStatusTypeThumbUp.String())
+	if err != nil {
+		return err
+	}
+	if liked != nil {
+		return ErrAlreadyLiked
+	}
+
+	_, err = s.repo.Upsert(ctx, &entity.InteractionLike{
+		UserID:     userID,
+		ObjectType: enum.ParseObjectType(objectType),
+		ObjectID:   objectID,
+		Status:     entity.LikeStatusTypeThumbUp,
+		Version:    time.Now().UnixMicro(),
+	})
+	return err
+}
+
+func (s *LikeService) CancelThumbUpDirect(ctx context.Context, userID uint64, objectType string, objectID uint64) error {
+	_, err := s.repo.UpdateWithCondition(ctx, entity.LikeStatusTypeThumbUp.String(), &entity.InteractionLike{
+		UserID:     userID,
+		ObjectType: enum.ParseObjectType(objectType),
+		ObjectID:   objectID,
+		Status:     entity.LikeStatusTypeNothing,
+		Version:    time.Now().UnixMicro(),
+	})
+	return err
+}
+
+func (s *LikeService) UserLikeListDirect(ctx context.Context, userID uint64, objectType string, page, pageSize int) ([]*aggregate.ArticleAggregate, int64, error) {
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 10
+	}
+
+	total, err := s.repo.CountUserLiked(ctx, userID, objectType)
+	if err != nil || total == 0 {
+		return nil, total, err
+	}
+
+	likes, err := s.repo.PageQueryLikeObjects(ctx, userID, objectType, (page-1)*pageSize, pageSize)
+	if err != nil {
+		return nil, 0, err
+	}
+	ids := make([]uint64, 0, len(likes))
+	for _, like := range likes {
+		ids = append(ids, like.ObjectID)
+	}
+	articles, err := s.loadArticlesByIDs(ctx, ids)
+	return articles, total, err
 }

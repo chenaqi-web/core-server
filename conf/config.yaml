@@ -26,6 +26,7 @@ Redis:
 
 
 Kafka:
+  Enabled: false
   Version: "4.2.0"
   Host: "127.0.0.1:9092"
   MaxRetry: 3
@@ -34,12 +35,6 @@ Kafka:
   # 死信队列，格式: group_id;topic_name;partition_num;replication_factor_num
   DlqTopic: "dlq_group;dlq_topic;1;1"
   LikeTopic: "like_group;like_topic;3;1"
-
-# Local asynchronous queue for likes. Its buffered chan is the queue itself.
-Workpool:
-  Workers: 8
-  QueueSize: 1024
-  ShutdownTimeout: "10s"
 
 CountAggregator:
   FlushInterval: "5s"
