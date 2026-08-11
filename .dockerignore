@@ -1,0 +1,10 @@
+.git
+.github
+.idea
+.tmp-go-cache
+docs
+tests
+README.md
+Makefile
+**/*_test.go
+logs
