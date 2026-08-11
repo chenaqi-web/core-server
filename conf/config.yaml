@@ -35,6 +35,12 @@ Kafka:
   DlqTopic: "dlq_group;dlq_topic;1;1"
   LikeTopic: "like_group;like_topic;3;1"
 
+# Local asynchronous queue for likes. Its buffered chan is the queue itself.
+Workpool:
+  Workers: 8
+  QueueSize: 1024
+  ShutdownTimeout: "10s"
+
 CountAggregator:
   FlushInterval: "5s"
   BufferSize: 100

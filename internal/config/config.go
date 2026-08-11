@@ -14,6 +14,7 @@ type Config struct {
 	Mysql           MySQLConfig           `yaml:"Mysql"`
 	Redis           RedisConfig           `yaml:"Redis"`
 	Kafka           KafkaConfig           `yaml:"Kafka"`
+	WorkPool        WorkpoolConfig        `yaml:"Workpool"`
 	CountAggregator CountAggregatorConfig `yaml:"CountAggregator"`
 	Log             LogConfig             `yaml:"Log"`
 }
