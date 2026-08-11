@@ -58,6 +58,20 @@ func NewLikeService(
 // 点赞状态
 
 func (s *LikeService) HasThumbUp(ctx context.Context, userID uint64, objectType string, objectID uint64) (bool, error) {
+	if !s.cfg.Kafka.Enabled {
+		interaction, err := s.repo.QueryWithCondition(
+			ctx,
+			userID,
+			objectType,
+			objectID,
+			entity.LikeStatusTypeThumbUp.String(),
+		)
+		if err != nil {
+			return false, err
+		}
+		return interaction != nil, nil
+	}
+
 	// 1. 首先判断是否点赞(在zset里面)
 	exist, err := s.cache.ExistZSetMember(ctx, userID, objectType, objectID)
 	if err != nil && !errors.Is(err, cache.ErrKeyNotFound) {
@@ -327,25 +341,43 @@ func (s *LikeService) ThumbUpDirect(ctx context.Context, userID uint64, objectTy
 		return ErrAlreadyLiked
 	}
 
-	_, err = s.repo.Upsert(ctx, &entity.InteractionLike{
-		UserID:     userID,
-		ObjectType: enum.ParseObjectType(objectType),
-		ObjectID:   objectID,
-		Status:     entity.LikeStatusTypeThumbUp,
-		Version:    time.Now().UnixMicro(),
+	return s.repo.WithTransaction(ctx, func(ctx context.Context) error {
+		affected, err := s.repo.Upsert(ctx, &entity.InteractionLike{
+			UserID:     userID,
+			ObjectType: enum.ParseObjectType(objectType),
+			ObjectID:   objectID,
+			Status:     entity.LikeStatusTypeThumbUp,
+			Version:    time.Now().UnixMicro(),
+		})
+		if err != nil || affected == 0 {
+			return err
+		}
+
+		if err := s.countService.AdjustLikeCount(ctx, objectType, objectID, 1); err != nil {
+			return err
+		}
+		return s.userRepo.IncrementLikeCount(ctx, userID)
 	})
-	return err
 }
 
 func (s *LikeService) CancelThumbUpDirect(ctx context.Context, userID uint64, objectType string, objectID uint64) error {
-	_, err := s.repo.UpdateWithCondition(ctx, entity.LikeStatusTypeThumbUp.String(), &entity.InteractionLike{
-		UserID:     userID,
-		ObjectType: enum.ParseObjectType(objectType),
-		ObjectID:   objectID,
-		Status:     entity.LikeStatusTypeNothing,
-		Version:    time.Now().UnixMicro(),
+	return s.repo.WithTransaction(ctx, func(ctx context.Context) error {
+		affected, err := s.repo.UpdateWithCondition(ctx, entity.LikeStatusTypeThumbUp.String(), &entity.InteractionLike{
+			UserID:     userID,
+			ObjectType: enum.ParseObjectType(objectType),
+			ObjectID:   objectID,
+			Status:     entity.LikeStatusTypeNothing,
+			Version:    time.Now().UnixMicro(),
+		})
+		if err != nil || affected == 0 {
+			return err
+		}
+
+		if err := s.countService.AdjustLikeCount(ctx, objectType, objectID, -1); err != nil {
+			return err
+		}
+		return s.userRepo.DecrementLikeCount(ctx, userID)
 	})
-	return err
 }
 
 func (s *LikeService) UserLikeListDirect(ctx context.Context, userID uint64, objectType string, page, pageSize int) ([]*aggregate.ArticleAggregate, int64, error) {

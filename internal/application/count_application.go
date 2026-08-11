@@ -91,3 +91,11 @@ func (s *CountService) BatchGetArticleInteractionCounts(ctx context.Context, art
 	}
 	return statsByArticleID, nil
 }
+
+func (s *CountService) AdjustLikeCount(ctx context.Context, objectType string, objectID uint64, delta int64) error {
+	return s.repo.Upsert(ctx, &entity.InteractionCount{
+		ObjectType:      enum.ParseObjectType(objectType),
+		ObjectID:        objectID,
+		InteractionType: enum.InteractionTypeLike,
+	}, delta)
+}
