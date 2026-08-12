@@ -44,8 +44,7 @@ func (s *CommentService) CreateComment(ctx context.Context, req *dto.CreateComme
 			ArticleID: req.ArticleID,
 			UserID:    req.UserID,
 			Content:   req.Content,
-			// 一级评论，rootID是0
-			RootID: 0,
+			RootID:    0,
 		})
 		if err != nil {
 			return err
@@ -58,10 +57,7 @@ func (s *CommentService) CreateComment(ctx context.Context, req *dto.CreateComme
 		}
 
 		// 先创建评论关系，如何修改计数表
-		if err = s.countRepo.Upsert(ctx, count, 1); err != nil {
-			return err
-		}
-		return nil
+		return s.countRepo.Upsert(ctx, count, 1)
 	})
 	if err != nil {
 		s.log.Error("CreateComment", zap.Error(err))
@@ -73,32 +69,46 @@ func (s *CommentService) CreateComment(ctx context.Context, req *dto.CreateComme
 func (s *CommentService) CreateReply(ctx context.Context, req *dto.CreateReplyRequest) (bool, error) {
 	// 开启事务进行修改
 	err := s.repo.WithTransaction(ctx, func(ctx context.Context) error {
-		_, err := s.repo.CreateReply(ctx, &entity.Comment{
+		rootComment, err := s.repo.GetByID(ctx, req.ParentID)
+		if err != nil {
+			return err
+		}
+		if rootComment == nil || !rootComment.IsTopLevel() || rootComment.ArticleID != req.ArticleID {
+			return ErrCommentNotFound
+		}
+
+		if req.ReplyToID != 0 && req.ReplyToID != rootComment.ID {
+			replyToComment, err := s.repo.GetByID(ctx, req.ReplyToID)
+			if err != nil {
+				return err
+			}
+			if replyToComment == nil || replyToComment.ArticleID != req.ArticleID || replyToComment.ParentID != rootComment.ID {
+				return ErrCommentNotFound
+			}
+		}
+
+		_, err = s.repo.CreateReply(ctx, &entity.Comment{
 			ArticleID: req.ArticleID,
 			UserID:    req.UserID,
-			ParentID:  req.ParentID,
-			RootID:    1, // 回复通常都不是根评论，用1来划分
+			// All replies are second-level comments under the top-level comment.
+			ParentID:  rootComment.ID,
+			RootID:    rootComment.ID,
 			ReplyToID: req.ReplyToID,
 			Content:   req.Content,
 		})
 		if err != nil {
 			return err
 		}
-		// 增加根评论的下面的回复评论数
-		if err = s.repo.IncrementChildCount(ctx, req.ParentID); err != nil {
+		if err = s.repo.IncrementChildCount(ctx, rootComment.ID); err != nil {
 			return err
 		}
-		// 更新统一计数表中的评论数
+
 		count := &entity.InteractionCount{
 			ObjectType:      enum.ObjectTypeArticle,
 			ObjectID:        req.ArticleID,
 			InteractionType: enum.InteractionTypeComment,
 		}
-
-		if err = s.countRepo.Upsert(ctx, count, 1); err != nil {
-			return err
-		}
-		return nil
+		return s.countRepo.Upsert(ctx, count, 1)
 	})
 	if err != nil {
 		s.log.Error("CreateReply", zap.Error(err))
@@ -140,12 +150,7 @@ func (s *CommentService) DeleteComment(ctx context.Context, req *dto.DeleteComme
 			ObjectID:        comment.ArticleID,
 			InteractionType: enum.InteractionTypeComment,
 		}
-
-		// 4.修改计数
-		if err = s.countRepo.Upsert(ctx, count, -deletedCount); err != nil {
-			return err
-		}
-		return nil
+		return s.countRepo.Upsert(ctx, count, -deletedCount)
 	})
 	if err != nil {
 		s.log.Error("DeleteComment", zap.Error(err))
