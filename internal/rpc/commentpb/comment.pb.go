@@ -22,22 +22,23 @@ const (
 )
 
 type CommentInfo struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	ArticleId     uint64                 `protobuf:"varint,2,opt,name=articleId,proto3" json:"articleId,omitempty"`
-	UserId        uint64                 `protobuf:"varint,3,opt,name=userId,proto3" json:"userId,omitempty"`
-	ParentId      uint64                 `protobuf:"varint,4,opt,name=parentId,proto3" json:"parentId,omitempty"`
-	RootId        uint64                 `protobuf:"varint,5,opt,name=rootId,proto3" json:"rootId,omitempty"`
-	ReplyToId     uint64                 `protobuf:"varint,6,opt,name=replyToId,proto3" json:"replyToId,omitempty"`
-	Content       string                 `protobuf:"bytes,8,opt,name=content,proto3" json:"content,omitempty"`
-	LikeCount     uint32                 `protobuf:"varint,9,opt,name=likeCount,proto3" json:"likeCount,omitempty"`
-	ChildCount    uint32                 `protobuf:"varint,10,opt,name=childCount,proto3" json:"childCount,omitempty"`
-	CreatedAt     string                 `protobuf:"bytes,11,opt,name=createdAt,proto3" json:"createdAt,omitempty"`
-	UserName      string                 `protobuf:"bytes,12,opt,name=userName,proto3" json:"userName,omitempty"`
-	UserAvatar    string                 `protobuf:"bytes,13,opt,name=userAvatar,proto3" json:"userAvatar,omitempty"`
-	IsLiked       bool                   `protobuf:"varint,14,opt,name=isLiked,proto3" json:"isLiked,omitempty"` // 当前用户是否点过赞
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Id              uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	ArticleId       uint64                 `protobuf:"varint,2,opt,name=articleId,proto3" json:"articleId,omitempty"`
+	UserId          uint64                 `protobuf:"varint,3,opt,name=userId,proto3" json:"userId,omitempty"`
+	ParentId        uint64                 `protobuf:"varint,4,opt,name=parentId,proto3" json:"parentId,omitempty"`
+	RootId          uint64                 `protobuf:"varint,5,opt,name=rootId,proto3" json:"rootId,omitempty"`
+	ReplyToId       uint64                 `protobuf:"varint,6,opt,name=replyToId,proto3" json:"replyToId,omitempty"`
+	Content         string                 `protobuf:"bytes,8,opt,name=content,proto3" json:"content,omitempty"`
+	LikeCount       uint32                 `protobuf:"varint,9,opt,name=likeCount,proto3" json:"likeCount,omitempty"`
+	ChildCount      uint32                 `protobuf:"varint,10,opt,name=childCount,proto3" json:"childCount,omitempty"`
+	CreatedAt       string                 `protobuf:"bytes,11,opt,name=createdAt,proto3" json:"createdAt,omitempty"`
+	UserName        string                 `protobuf:"bytes,12,opt,name=userName,proto3" json:"userName,omitempty"`
+	UserAvatar      string                 `protobuf:"bytes,13,opt,name=userAvatar,proto3" json:"userAvatar,omitempty"`
+	IsLiked         bool                   `protobuf:"varint,14,opt,name=isLiked,proto3" json:"isLiked,omitempty"` // 当前用户是否点过赞
+	ReplyToUserName string                 `protobuf:"bytes,15,opt,name=replyToUserName,proto3" json:"replyToUserName,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *CommentInfo) Reset() {
@@ -159,6 +160,13 @@ func (x *CommentInfo) GetIsLiked() bool {
 		return x.IsLiked
 	}
 	return false
+}
+
+func (x *CommentInfo) GetReplyToUserName() string {
+	if x != nil {
+		return x.ReplyToUserName
+	}
+	return ""
 }
 
 type CreateCommentReq struct {
@@ -725,7 +733,7 @@ var File_comment_proto protoreflect.FileDescriptor
 
 const file_comment_proto_rawDesc = "" +
 	"\n" +
-	"\rcomment.proto\x12\acomment\"\xf1\x02\n" +
+	"\rcomment.proto\x12\acomment\"\x9b\x03\n" +
 	"\vCommentInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x1c\n" +
 	"\tarticleId\x18\x02 \x01(\x04R\tarticleId\x12\x16\n" +
@@ -744,7 +752,8 @@ const file_comment_proto_rawDesc = "" +
 	"\n" +
 	"userAvatar\x18\r \x01(\tR\n" +
 	"userAvatar\x12\x18\n" +
-	"\aisLiked\x18\x0e \x01(\bR\aisLiked\"b\n" +
+	"\aisLiked\x18\x0e \x01(\bR\aisLiked\x12(\n" +
+	"\x0freplyToUserName\x18\x0f \x01(\tR\x0freplyToUserName\"b\n" +
 	"\x10CreateCommentReq\x12\x1c\n" +
 	"\tarticleId\x18\x01 \x01(\x04R\tarticleId\x12\x16\n" +
 	"\x06userId\x18\x02 \x01(\x04R\x06userId\x12\x18\n" +

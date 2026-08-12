@@ -17,6 +17,7 @@ message CommentInfo {
   string userName = 12;
   string userAvatar = 13;
   bool isLiked = 14; // 当前用户是否点过赞
+  string replyToUserName = 15;
 }
 
 message CreateCommentReq {

@@ -81,18 +81,19 @@ type GetCommentRepliesResponse struct {
 }
 
 type CommentInfoDTO struct {
-	ID         uint64
-	ArticleID  uint64
-	UserID     uint64
-	ParentID   uint64
-	RootID     uint64
-	ReplyToID  uint64
-	Content    string
-	LikeCount  uint32
-	ChildCount uint32
-	CreatedAt  string
-	UserName   string
-	UserAvatar string
+	ID              uint64
+	ArticleID       uint64
+	UserID          uint64
+	ParentID        uint64
+	RootID          uint64
+	ReplyToID       uint64
+	ReplyToUserName string
+	Content         string
+	LikeCount       uint32
+	ChildCount      uint32
+	CreatedAt       string
+	UserName        string
+	UserAvatar      string
 }
 
 func DeleteCommentRequestFromPB(req *commentpb.DeleteCommentReq) *DeleteCommentRequest {
@@ -177,18 +178,19 @@ func CommentInfoToPB(info *CommentInfoDTO) *commentpb.CommentInfo {
 		return nil
 	}
 	pb := &commentpb.CommentInfo{
-		Id:         info.ID,
-		ArticleId:  info.ArticleID,
-		UserId:     info.UserID,
-		ParentId:   info.ParentID,
-		RootId:     info.RootID,
-		ReplyToId:  info.ReplyToID,
-		Content:    info.Content,
-		LikeCount:  info.LikeCount,
-		ChildCount: info.ChildCount,
-		CreatedAt:  info.CreatedAt,
-		UserName:   info.UserName,
-		UserAvatar: info.UserAvatar,
+		Id:              info.ID,
+		ArticleId:       info.ArticleID,
+		UserId:          info.UserID,
+		ParentId:        info.ParentID,
+		RootId:          info.RootID,
+		ReplyToId:       info.ReplyToID,
+		ReplyToUserName: info.ReplyToUserName,
+		Content:         info.Content,
+		LikeCount:       info.LikeCount,
+		ChildCount:      info.ChildCount,
+		CreatedAt:       info.CreatedAt,
+		UserName:        info.UserName,
+		UserAvatar:      info.UserAvatar,
 	}
 	return pb
 }

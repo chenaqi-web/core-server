@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"core-server/internal/model/entity"
+	"github.com/jmoiron/sqlx"
 )
 
 type CommentRepo struct {
@@ -77,6 +78,22 @@ func (r *CommentRepo) GetByID(ctx context.Context, id uint64) (*entity.Comment, 
 		return nil, err
 	}
 	return &c, nil
+}
+
+func (r *CommentRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*entity.Comment, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	var items []*entity.Comment
+	baseQuery := fmt.Sprintf(`SELECT %s FROM comment WHERE id IN (?) AND deleted_at IS NULL`, commentSelectColumns)
+	query, args, err := sqlx.In(baseQuery, ids)
+	if err != nil {
+		return nil, err
+	}
+	if err := r.db(ctx).SelectContext(ctx, &items, query, args...); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 func (r *CommentRepo) SoftDelete(ctx context.Context, id, userID uint64) error {

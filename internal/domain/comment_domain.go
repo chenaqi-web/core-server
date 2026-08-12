@@ -12,6 +12,7 @@ type CommentRepo interface {
 	SoftDeleteRepliesByParent(ctx context.Context, parentID uint64) (int64, error)
 
 	GetByID(ctx context.Context, id uint64) (*entity.Comment, error)
+	ListByIDs(ctx context.Context, ids []uint64) ([]*entity.Comment, error)
 	IncrementChildCount(ctx context.Context, rootID uint64) error
 	DecrementChildCount(ctx context.Context, rootID uint64) error
 

@@ -205,7 +205,24 @@ func (s *CommentService) GetCommentReplies(ctx context.Context, req *dto.GetComm
 		return nil, err
 	}
 
-	authorMap, err := LoadUserMap(ctx, s.userRepo, CollectCommentUserIDs(replies))
+	replyToIDs := make([]uint64, 0, len(replies))
+	for _, reply := range replies {
+		if reply != nil && reply.ReplyToID != 0 {
+			replyToIDs = append(replyToIDs, reply.ReplyToID)
+		}
+	}
+	replyToComments, err := s.repo.ListByIDs(ctx, replyToIDs)
+	if err != nil {
+		s.log.Error("load reply targets error", zap.Error(err))
+		return nil, err
+	}
+	replyToCommentMap := make(map[uint64]*entity.Comment, len(replyToComments))
+	allComments := append(append([]*entity.Comment{}, replies...), replyToComments...)
+	for _, comment := range replyToComments {
+		replyToCommentMap[comment.ID] = comment
+	}
+
+	authorMap, err := LoadUserMap(ctx, s.userRepo, CollectCommentUserIDs(allComments))
 	if err != nil {
 		s.log.Error(err.Error())
 		return nil, err
@@ -220,6 +237,11 @@ func (s *CommentService) GetCommentReplies(ctx context.Context, req *dto.GetComm
 	for _, reply := range replies {
 		item := dto.CommentInfoFromEntity(reply, authorMap[reply.UserID])
 		item.LikeCount = likeCounts[reply.ID]
+		if replyToComment := replyToCommentMap[reply.ReplyToID]; replyToComment != nil {
+			if replyToUser := authorMap[replyToComment.UserID]; replyToUser != nil {
+				item.ReplyToUserName = replyToUser.Name
+			}
+		}
 		items = append(items, item)
 	}
 
