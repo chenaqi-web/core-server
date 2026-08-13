@@ -56,6 +56,26 @@ func (u *UserRPC) UpdateAvatar(ctx context.Context, request *userpb.UpdateAvatar
 	return &userpb.UpdateAvatarResponse{User: dto.ToUserInfo(user)}, nil
 }
 
+func (u *UserRPC) ListUsers(ctx context.Context, request *userpb.ListUsersRequest) (*userpb.ListUsersResponse, error) {
+	users, total, err := u.UserService.List(ctx, request.GetKeyword(), request.GetPage(), request.GetPageSize())
+	if err != nil {
+		return nil, userError(err)
+	}
+	items := make([]*userpb.UserInfo, 0, len(users))
+	for _, user := range users {
+		items = append(items, dto.ToUserInfo(user))
+	}
+	return &userpb.ListUsersResponse{Users: items, Total: total}, nil
+}
+
+func (u *UserRPC) UpdateUserStatus(ctx context.Context, request *userpb.UpdateUserStatusRequest) (*userpb.UpdateUserStatusResponse, error) {
+	err := u.UserService.UpdateStatus(ctx, request.GetUserId(), request.GetStatus())
+	if err != nil {
+		return nil, userError(err)
+	}
+	return &userpb.UpdateUserStatusResponse{Success: true}, nil
+}
+
 func userError(err error) error {
 	switch {
 	case errors.Is(err, application.ErrInvalidUserProfile):

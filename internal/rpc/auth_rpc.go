@@ -71,6 +71,8 @@ func toLoginError(err error) error {
 		return status.Error(codes.Unauthenticated, "authentication failed")
 	case errors.Is(err, application.ErrUserDisabled):
 		return status.Error(codes.PermissionDenied, "user is disabled")
+	case errors.Is(err, application.ErrUserBlocked):
+		return status.Error(codes.PermissionDenied, "USER_BLOCKED")
 	default:
 		return status.Error(codes.Internal, "login failed")
 	}

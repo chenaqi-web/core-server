@@ -4,11 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 
 	"core-server/internal/model/entity"
 )
+
+const userListColumns = `id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, sex, age, like_count, receive_like_count, status, auth_version`
 
 type UserRepo struct {
 	*DBClient
@@ -105,6 +108,30 @@ WHERE id IN (?) AND deleted_at IS NULL`
 	return users, nil
 }
 
+func (r *UserRepo) List(ctx context.Context, keyword string, limit, offset uint32) ([]*entity.User, uint64, error) {
+	keyword = strings.TrimSpace(keyword)
+	where := "WHERE deleted_at IS NULL"
+	args := make([]any, 0, 3)
+	if keyword != "" {
+		where += " AND (name LIKE ? OR email LIKE ?)"
+		like := "%" + keyword + "%"
+		args = append(args, like, like)
+	}
+
+	var total uint64
+	if err := r.db(ctx).GetContext(ctx, &total, "SELECT COUNT(*) FROM user "+where, args...); err != nil {
+		return nil, 0, err
+	}
+
+	query := "SELECT " + userListColumns + " FROM user " + where + " ORDER BY id DESC LIMIT ? OFFSET ?"
+	args = append(args, limit, offset)
+	var users []*entity.User
+	if err := r.db(ctx).SelectContext(ctx, &users, query, args...); err != nil {
+		return nil, 0, err
+	}
+	return users, total, nil
+}
+
 func (r *UserRepo) GetLikeCount(ctx context.Context, userID uint64) (int64, error) {
 	var count int64
 	const query = `SELECT like_count FROM user WHERE id = ? AND deleted_at IS NULL`
@@ -191,5 +218,23 @@ WHERE id = ?`
 		return errors.New("user not found")
 	}
 
+	return nil
+}
+
+func (r *UserRepo) UpdateStatus(ctx context.Context, userID uint64, status string) error {
+	result, err := r.db(ctx).ExecContext(ctx, `
+UPDATE user
+SET status = ?, auth_version = auth_version + 1, updated_at = NOW(3)
+WHERE id = ? AND deleted_at IS NULL`, status, userID)
+	if err != nil {
+		return err
+	}
+	changed, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if changed == 0 {
+		return sql.ErrNoRows
+	}
 	return nil
 }

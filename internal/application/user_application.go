@@ -17,6 +17,7 @@ import (
 var (
 	ErrInvalidCredentials = errors.New("invalid username or password")
 	ErrUserDisabled       = errors.New("user is disabled")
+	ErrUserBlocked        = errors.New("USER_BLOCKED")
 	ErrEmailAlreadyInUse  = errors.New("email is already registered")
 	ErrUserNotFound       = errors.New("user not found")
 	ErrInvalidUserProfile = errors.New("invalid user profile")
@@ -47,8 +48,8 @@ func (s *UserService) GetProfile(ctx context.Context, userID uint64) (*entity.Us
 	if user == nil {
 		return nil, ErrUserNotFound
 	}
-	if user.Status != "active" {
-		return nil, ErrUserDisabled
+	if user.Status != entity.StatusApproved {
+		return nil, userStatusError(user.Status)
 	}
 	return user, nil
 }
@@ -128,8 +129,8 @@ func (s *UserService) Login(ctx context.Context, username, password string) (*en
 	}
 
 	// 状态是否是active
-	if user.Status != "active" {
-		return nil, ErrUserDisabled
+	if user.Status != entity.StatusApproved {
+		return nil, userStatusError(user.Status)
 	}
 	return user, nil
 }
@@ -147,8 +148,8 @@ func (s *UserService) EmailLogin(ctx context.Context, email string) (*entity.Use
 		return nil, err
 	}
 
-	if user.Status != "active" {
-		return nil, ErrUserDisabled
+	if user.Status != entity.StatusApproved {
+		return nil, userStatusError(user.Status)
 	}
 	return user, nil
 }
@@ -171,7 +172,7 @@ func (s *UserService) Register(ctx context.Context, username, email, password, c
 		Email:       email,
 		Password:    utils.Bcrypt(password),
 		Role:        entity.UserRoleUser,
-		Status:      "active",
+		Status:      entity.StatusApproved,
 		AuthVersion: 1,
 	}
 	if err := s.repo.Create(ctx, user); err != nil {
@@ -196,8 +197,35 @@ func (s *UserService) ForgotPassword(ctx context.Context, email, password, confi
 		return err
 	}
 
-	if user.Status != "active" {
-		return ErrUserDisabled
+	if user.Status != entity.StatusApproved {
+		return userStatusError(user.Status)
 	}
 	return s.repo.UpdatePassword(ctx, user.ID, utils.Bcrypt(password))
+}
+
+func (s *UserService) List(ctx context.Context, keyword string, page, pageSize uint32) ([]*entity.User, uint64, error) {
+	if page == 0 {
+		page = 1
+	}
+	if pageSize == 0 || pageSize > 100 {
+		pageSize = 20
+	}
+	return s.repo.List(ctx, keyword, pageSize, (page-1)*pageSize)
+}
+
+func (s *UserService) UpdateStatus(ctx context.Context, userID uint64, status string) error {
+	if userID == 0 || !entity.IsValidUserStatus(status) {
+		return ErrInvalidUserProfile
+	}
+	if err := s.repo.UpdateStatus(ctx, userID, status); err != nil {
+		return err
+	}
+	return nil
+}
+
+func userStatusError(status string) error {
+	if status == entity.StatusBlocked {
+		return ErrUserBlocked
+	}
+	return ErrUserDisabled
 }

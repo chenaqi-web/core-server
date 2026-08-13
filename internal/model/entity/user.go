@@ -20,8 +20,8 @@ type User struct {
 	Age              uint64       `db:"age"`
 	LikeCount        uint64       `db:"like_count"`
 	ReceiveLikeCount uint64       `db:"receive_like_count"`
-	Status      string       `db:"status"`
-	AuthVersion uint64       `db:"auth_version"`
+	Status           string       `db:"status"`
+	AuthVersion      uint64       `db:"auth_version"`
 }
 
 func (User) TableName() string {
@@ -35,3 +35,12 @@ const (
 	UserRoleAdmin = "admin"
 	UserRoleUser  = "user"
 )
+
+const (
+	StatusApproved = "approved" // 已通过
+	StatusBlocked  = "blocked"  // 拉黑中
+)
+
+func IsValidUserStatus(status string) bool {
+	return status == StatusApproved || status == StatusBlocked
+}
