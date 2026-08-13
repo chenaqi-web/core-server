@@ -32,7 +32,6 @@ type UserInfo struct {
 	Age           uint32                 `protobuf:"varint,7,opt,name=age,proto3" json:"age,omitempty"`
 	Role          string                 `protobuf:"bytes,8,opt,name=role,proto3" json:"role,omitempty"`
 	Status        string                 `protobuf:"bytes,9,opt,name=status,proto3" json:"status,omitempty"`
-	AuthVersion   uint64                 `protobuf:"varint,10,opt,name=auth_version,json=authVersion,proto3" json:"auth_version,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -128,13 +127,6 @@ func (x *UserInfo) GetStatus() string {
 		return x.Status
 	}
 	return ""
-}
-
-func (x *UserInfo) GetAuthVersion() uint64 {
-	if x != nil {
-		return x.AuthVersion
-	}
-	return 0
 }
 
 type RegisterRequest struct {
@@ -506,7 +498,7 @@ var File_auth_proto protoreflect.FileDescriptor
 const file_auth_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"auth.proto\x12\x04auth\"\xed\x01\n" +
+	"auth.proto\x12\x04auth\"\xca\x01\n" +
 	"\bUserInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x14\n" +
@@ -516,9 +508,7 @@ const file_auth_proto_rawDesc = "" +
 	"\x03sex\x18\x06 \x01(\tR\x03sex\x12\x10\n" +
 	"\x03age\x18\a \x01(\rR\x03age\x12\x12\n" +
 	"\x04role\x18\b \x01(\tR\x04role\x12\x16\n" +
-	"\x06status\x18\t \x01(\tR\x06status\x12!\n" +
-	"\fauth_version\x18\n" +
-	" \x01(\x04R\vauthVersion\"\x8a\x01\n" +
+	"\x06status\x18\t \x01(\tR\x06status\"\x8a\x01\n" +
 	"\x0fRegisterRequest\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1a\n" +

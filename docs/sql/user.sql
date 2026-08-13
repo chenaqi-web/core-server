@@ -7,7 +7,6 @@ CREATE TABLE `user` (
                         `email` VARCHAR(100) DEFAULT '' COMMENT '邮箱',
                         `role` VARCHAR(20) DEFAULT 'user' COMMENT '角色：admin/user/guest',
                         `status` VARCHAR(20) NOT NULL DEFAULT 'approved' COMMENT '用户状态：approved-已通过, blocked-已拉黑',
-                        `auth_version` BIGINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '认证版本',
                         `sex` VARCHAR(10) DEFAULT '' COMMENT '性别：male/female',
                         `age` BIGINT UNSIGNED DEFAULT 0 COMMENT '年龄',
                         `like_count` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '喜欢列表点赞数',

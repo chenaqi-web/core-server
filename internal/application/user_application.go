@@ -168,12 +168,11 @@ func (s *UserService) Register(ctx context.Context, username, email, password, c
 	}
 
 	user := &entity.User{
-		Name:        username,
-		Email:       email,
-		Password:    utils.Bcrypt(password),
-		Role:        entity.UserRoleUser,
-		Status:      entity.StatusApproved,
-		AuthVersion: 1,
+		Name:     username,
+		Email:    email,
+		Password: utils.Bcrypt(password),
+		Role:     entity.UserRoleUser,
+		Status:   entity.StatusApproved,
 	}
 	if err := s.repo.Create(ctx, user); err != nil {
 		return nil, err

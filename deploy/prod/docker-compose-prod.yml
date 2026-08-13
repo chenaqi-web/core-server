@@ -1,0 +1,59 @@
+# 生产环境（阿里云 Ubuntu）: ~/chenaqiweb/backend/deploy
+# 数据目录 : /home/docker
+# 部署对象 MySQL / Redis / Chroma
+# docker网络 : chenaqi-net
+# 启动：docker compose -f docker-compose-prod.yml up -d --build
+services:
+  mysql:
+    image: docker.m.daocloud.io/library/mysql:8.4.7
+    container_name: mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "chenaqi+cola20260813"
+      MYSQL_DATABASE: renai
+      TZ: Asia/Shanghai
+    volumes:
+      - /home/docker/mysql:/var/lib/mysql
+    networks:
+      - chenaqi-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: docker.m.daocloud.io/library/redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass "chenaqi+cola20260813" --appendonly yes
+    volumes:
+      - /home/docker/redis:/data
+    networks:
+      - chenaqi-net
+    restart: unless-stopped
+
+  chroma:
+    image: docker.m.daocloud.io/chromadb/chroma:1.5.9
+    container_name: chroma
+    ports:
+      - "8000:8000"
+    volumes:
+      - /home/docker/chroma:/chroma/chroma
+    environment:
+      IS_PERSISTENT: "TRUE"
+      PERSIST_DIRECTORY: /chroma/chroma
+      CHROMA_SERVER_AUTHN_PROVIDER: chromadb.auth.token_authn.TokenAuthenticationServerProvider
+      CHROMA_SERVER_AUTHN_CREDENTIALS: "chenaqi+cola20260813"
+      CHROMA_AUTH_TOKEN_TRANSPORT_HEADER: Authorization
+    networks:
+      - chenaqi-net
+    restart: unless-stopped
+
+networks:
+  chenaqi-net:
+    name: chenaqi-net
+    driver: bridge

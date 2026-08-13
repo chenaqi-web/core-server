@@ -1,0 +1,39 @@
+server:
+  addr: "0.0.0.0:8081"
+
+Log:
+  Level: "debug"
+  Mode: "console"
+  Filename: "logs/core-server.log"
+
+Mysql:
+  Host: "mysql"
+  Port: "3306"
+  username: "root"
+  password: "chenaqi+cola+20260813"
+  dbname: "renai"
+  config: "charset=utf8mb4&parseTime=True&loc=Local"
+  Max_Idle_Conn: 10
+  Max_Open_Conn: 100
+
+Redis:
+  Host: "redis-filterbloom"
+  Port: "6379"
+  username: "root"
+  password: "chenaqi+cola+20260813"
+  db: 0
+
+Kafka:
+  Enabled: false
+  Version: "4.2.0"
+  Host: "kafka:9092"
+  MaxRetry: 3
+  Timeout: 10
+  ConsumerMaxProcessingTime: 10
+  DlqTopic: "dlq_group;dlq_topic;1;1"
+  LikeTopic: "like_group;like_topic;3;1"
+
+CountAggregator:
+  FlushInterval: "5s"
+  BufferSize: 100
+  DBTimeout: "10s"

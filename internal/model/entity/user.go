@@ -21,7 +21,6 @@ type User struct {
 	LikeCount        uint64       `db:"like_count"`
 	ReceiveLikeCount uint64       `db:"receive_like_count"`
 	Status           string       `db:"status"`
-	AuthVersion      uint64       `db:"auth_version"`
 }
 
 func (User) TableName() string {

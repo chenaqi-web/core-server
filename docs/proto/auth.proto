@@ -14,7 +14,6 @@ message UserInfo {
   uint32 age = 7;
   string role = 8;
   string status = 9;
-  uint64 auth_version = 10;
 }
 
 message RegisterRequest {
