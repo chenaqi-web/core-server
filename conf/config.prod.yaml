@@ -10,17 +10,17 @@ Mysql:
   Host: "mysql"
   Port: "3306"
   username: "root"
-  password: "chenaqi+cola+20260813"
+  password: ""
   dbname: "renai"
   config: "charset=utf8mb4&parseTime=True&loc=Local"
   Max_Idle_Conn: 10
   Max_Open_Conn: 100
 
 Redis:
-  Host: "redis-filterbloom"
+  Host: "redis"
   Port: "6379"
   username: "root"
-  password: "chenaqi+cola+20260813"
+  password: ""
   db: 0
 
 Kafka:
