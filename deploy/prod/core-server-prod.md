@@ -6,10 +6,18 @@
 
 ## 一.首次部署
 
-构建镜像。`CONFIG_FILE` 指定生产配置，该配置会使用网络中的 `mysql` 与 `redis` 作为服务地址：
+先确认共享网络已经存在：
 
 ```bash
+docker network inspect chenaqi-net >/dev/null 2>&1 || docker network create --driver bridge chenaqi-net
+```
+
+构建镜像。`CONFIG_FILE` 指定生产配置，该配置会使用网络中的 `mysql` 与 `redis` 作为服务地址：
+
 cd /home/newweb/core-server
+
+
+```bash
 docker build \
   -f deploy/prod/Dockerfile \
   --build-arg CONFIG_FILE=conf/config.prod.yaml \
