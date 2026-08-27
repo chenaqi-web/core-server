@@ -153,11 +153,11 @@ func (s *UserService) UpdateStatus(ctx context.Context, userID uint64, status st
 func (s *UserService) GetProfile(ctx context.Context, userID uint64) (*entity.User, error) {
 	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
 		s.log.Error("GetProfile error", zap.Error(err))
 		return nil, err
-	}
-	if user == nil {
-		return nil, ErrUserNotFound
 	}
 	if user.Status != entity.StatusApproved {
 		return nil, userStatusError(user.Status)
