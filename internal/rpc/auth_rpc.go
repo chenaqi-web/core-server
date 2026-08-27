@@ -35,7 +35,7 @@ func (a *AuthRPC) Login(ctx context.Context, request *authpb.LoginRequest) (*aut
 }
 
 func (a *AuthRPC) Register(ctx context.Context, request *authpb.RegisterRequest) (*authpb.RegisterResponse, error) {
-	user, err := a.userService.Register(ctx, request.GetUsername(), request.GetEmail(), request.GetPassword(), request.GetConfirmPassword())
+	user, err := a.userService.Register(ctx, request.GetUsername(), request.GetEmail(), request.GetPassword())
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}

@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"core-server/internal/domain"
 	"time"
 
 	"core-server/internal/model/entity"
@@ -13,7 +14,7 @@ type ArticleRepo struct {
 	*DBClient
 }
 
-func NewArticleRepo(client *DBClient) *ArticleRepo {
+func NewArticleRepo(client *DBClient) domain.ArticleRepo {
 	return &ArticleRepo{DBClient: client}
 }
 

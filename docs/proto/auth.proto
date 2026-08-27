@@ -20,7 +20,6 @@ message RegisterRequest {
   string username = 1;
   string email = 2;
   string password = 3;
-  string confirm_password = 4;
 }
 message RegisterResponse {
   bool success = 1;

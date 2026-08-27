@@ -39,6 +39,117 @@ func NewUserService(
 	}
 }
 
+func (s *UserService) Login(ctx context.Context, username, password string) (*entity.User, error) {
+	// 1.判断用户是否存在
+	user, err := s.repo.GetByName(ctx, username)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			// 用户不存在
+			s.log.Info("Login error:", zap.Error(ErrUserNotFound))
+			return nil, ErrUserNotFound
+		}
+		// 数据库错误
+		s.log.Error("Login error:", zap.Error(err))
+		return nil, err
+	}
+
+	// 2.判断密码是否正确
+	if user.Password != utils.Bcrypt(password) {
+		return nil, ErrInvalidCredentials
+	}
+
+	// 状态是否是active
+	if user.Status != entity.StatusApproved {
+		return nil, userStatusError(user.Status)
+	}
+	return user, nil
+}
+
+func (s *UserService) EmailLogin(ctx context.Context, email string) (*entity.User, error) {
+	user, err := s.repo.GetByEmail(ctx, email)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			// 用户不存在
+			s.log.Info("Login error:", zap.Error(ErrUserNotFound))
+			return nil, ErrUserNotFound
+		}
+		// 数据库错误
+		s.log.Error("Login error:", zap.Error(err))
+		return nil, err
+	}
+
+	if user.Status != entity.StatusApproved {
+		return nil, userStatusError(user.Status)
+	}
+	return user, nil
+}
+
+func (s *UserService) Register(ctx context.Context, username, email, password string) (*entity.User, error) {
+	existing, err := s.repo.GetByEmail(ctx, email)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return nil, err
+	}
+	if existing != nil {
+		return nil, ErrEmailAlreadyInUse
+	}
+
+	user := &entity.User{
+		Name:     username,
+		Email:    email,
+		Password: utils.Bcrypt(password),
+		Role:     entity.UserRoleUser,
+		Status:   entity.StatusApproved,
+	}
+	if err := s.repo.Create(ctx, user); err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (s *UserService) ForgotPassword(ctx context.Context, email, password, confirm string) error {
+	if password != confirm {
+		return errors.New("passwords do not match")
+	}
+
+	user, err := s.repo.GetByEmail(ctx, email)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			// 用户不存在
+			return ErrUserNotFound
+		}
+		// 其他数据库错误
+		s.log.Error("Login error:", zap.Error(err))
+		return err
+	}
+
+	if user.Status != entity.StatusApproved {
+		return userStatusError(user.Status)
+	}
+	return s.repo.UpdatePassword(ctx, user.ID, utils.Bcrypt(password))
+}
+
+// =====================================================================================================================
+
+func (s *UserService) List(ctx context.Context, keyword string, page, pageSize uint32) ([]*entity.User, uint64, error) {
+	if page == 0 {
+		page = 1
+	}
+	if pageSize == 0 || pageSize > 100 {
+		pageSize = 20
+	}
+	return s.repo.List(ctx, keyword, pageSize, (page-1)*pageSize)
+}
+
+func (s *UserService) UpdateStatus(ctx context.Context, userID uint64, status string) error {
+	if userID == 0 || !entity.IsValidUserStatus(status) {
+		return ErrInvalidUserProfile
+	}
+	if err := s.repo.UpdateStatus(ctx, userID, status); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *UserService) GetProfile(ctx context.Context, userID uint64) (*entity.User, error) {
 	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
@@ -107,119 +218,6 @@ func (s *UserService) UpdateAvatar(ctx context.Context, userID uint64, avatar st
 	}
 	user.Avatar = avatar
 	return user, nil
-}
-
-func (s *UserService) Login(ctx context.Context, username, password string) (*entity.User, error) {
-	// 1.判断用户是否存在
-	user, err := s.repo.GetByName(ctx, username)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			// 用户不存在
-			s.log.Info("Login error:", zap.Error(ErrUserNotFound))
-			return nil, ErrUserNotFound
-		}
-		// 数据库错误
-		s.log.Error("Login error:", zap.Error(err))
-		return nil, err
-	}
-
-	// 2.判断密码是否正确
-	if user.Password != utils.Bcrypt(password) {
-		return nil, ErrInvalidCredentials
-	}
-
-	// 状态是否是active
-	if user.Status != entity.StatusApproved {
-		return nil, userStatusError(user.Status)
-	}
-	return user, nil
-}
-
-func (s *UserService) EmailLogin(ctx context.Context, email string) (*entity.User, error) {
-	user, err := s.repo.GetByEmail(ctx, email)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			// 用户不存在
-			s.log.Info("Login error:", zap.Error(ErrUserNotFound))
-			return nil, ErrUserNotFound
-		}
-		// 数据库错误
-		s.log.Error("Login error:", zap.Error(err))
-		return nil, err
-	}
-
-	if user.Status != entity.StatusApproved {
-		return nil, userStatusError(user.Status)
-	}
-	return user, nil
-}
-
-func (s *UserService) Register(ctx context.Context, username, email, password, confirm string) (*entity.User, error) {
-	if password != confirm {
-		return nil, errors.New("passwords do not match")
-	}
-
-	existing, err := s.repo.GetByEmail(ctx, email)
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return nil, err
-	}
-	if existing != nil {
-		return nil, ErrEmailAlreadyInUse
-	}
-
-	user := &entity.User{
-		Name:     username,
-		Email:    email,
-		Password: utils.Bcrypt(password),
-		Role:     entity.UserRoleUser,
-		Status:   entity.StatusApproved,
-	}
-	if err := s.repo.Create(ctx, user); err != nil {
-		return nil, err
-	}
-	return user, nil
-}
-
-func (s *UserService) ForgotPassword(ctx context.Context, email, password, confirm string) error {
-	if password != confirm {
-		return errors.New("passwords do not match")
-	}
-
-	user, err := s.repo.GetByEmail(ctx, email)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			// 用户不存在
-			return ErrUserNotFound
-		}
-		// 其他数据库错误
-		s.log.Error("Login error:", zap.Error(err))
-		return err
-	}
-
-	if user.Status != entity.StatusApproved {
-		return userStatusError(user.Status)
-	}
-	return s.repo.UpdatePassword(ctx, user.ID, utils.Bcrypt(password))
-}
-
-func (s *UserService) List(ctx context.Context, keyword string, page, pageSize uint32) ([]*entity.User, uint64, error) {
-	if page == 0 {
-		page = 1
-	}
-	if pageSize == 0 || pageSize > 100 {
-		pageSize = 20
-	}
-	return s.repo.List(ctx, keyword, pageSize, (page-1)*pageSize)
-}
-
-func (s *UserService) UpdateStatus(ctx context.Context, userID uint64, status string) error {
-	if userID == 0 || !entity.IsValidUserStatus(status) {
-		return ErrInvalidUserProfile
-	}
-	if err := s.repo.UpdateStatus(ctx, userID, status); err != nil {
-		return err
-	}
-	return nil
 }
 
 func userStatusError(status string) error {
