@@ -45,11 +45,11 @@ func (s *UserService) Login(ctx context.Context, username, password string) (*en
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// 用户不存在
-			s.log.Info("Login error:", zap.Error(ErrUserNotFound))
+			s.log.Info("UserService/Login info:", zap.Error(ErrUserNotFound))
 			return nil, ErrUserNotFound
 		}
 		// 数据库错误
-		s.log.Error("Login error:", zap.Error(err))
+		s.log.Error("UserService/Login error:", zap.Error(err))
 		return nil, err
 	}
 
@@ -58,9 +58,9 @@ func (s *UserService) Login(ctx context.Context, username, password string) (*en
 		return nil, ErrInvalidCredentials
 	}
 
-	// 状态是否是active
+	// 3.判断用户是否被拉黑
 	if user.Status != entity.StatusApproved {
-		return nil, userStatusError(user.Status)
+		return nil, ErrUserBlocked
 	}
 	return user, nil
 }
@@ -79,7 +79,7 @@ func (s *UserService) EmailLogin(ctx context.Context, email string) (*entity.Use
 	}
 
 	if user.Status != entity.StatusApproved {
-		return nil, userStatusError(user.Status)
+		return nil, ErrUserBlocked
 	}
 	return user, nil
 }
@@ -87,6 +87,7 @@ func (s *UserService) EmailLogin(ctx context.Context, email string) (*entity.Use
 func (s *UserService) Register(ctx context.Context, username, email, password string) (*entity.User, error) {
 	existing, err := s.repo.GetByEmail(ctx, email)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		s.log.Error("Login error:", zap.Error(err))
 		return nil, err
 	}
 	if existing != nil {
@@ -107,14 +108,17 @@ func (s *UserService) Register(ctx context.Context, username, email, password st
 }
 
 func (s *UserService) ForgotPassword(ctx context.Context, email, password, confirm string) error {
+	// 1.校验两次密码是否相同
 	if password != confirm {
 		return errors.New("passwords do not match")
 	}
 
+	// 2.判断该邮箱是否存在
 	user, err := s.repo.GetByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// 用户不存在
+			s.log.Info("Login error:", zap.Error(ErrUserNotFound))
 			return ErrUserNotFound
 		}
 		// 其他数据库错误
@@ -122,10 +126,14 @@ func (s *UserService) ForgotPassword(ctx context.Context, email, password, confi
 		return err
 	}
 
-	if user.Status != entity.StatusApproved {
-		return userStatusError(user.Status)
+	// 3.更新密码
+	err = s.repo.UpdatePassword(ctx, user.ID, utils.Bcrypt(password))
+	if err != nil {
+		s.log.Error("Login error:", zap.Error(err))
+		return err
 	}
-	return s.repo.UpdatePassword(ctx, user.ID, utils.Bcrypt(password))
+
+	return nil
 }
 
 // =====================================================================================================================
@@ -160,7 +168,7 @@ func (s *UserService) GetProfile(ctx context.Context, userID uint64) (*entity.Us
 		return nil, err
 	}
 	if user.Status != entity.StatusApproved {
-		return nil, userStatusError(user.Status)
+		return nil, ErrUserBlocked
 	}
 	return user, nil
 }
@@ -218,11 +226,4 @@ func (s *UserService) UpdateAvatar(ctx context.Context, userID uint64, avatar st
 	}
 	user.Avatar = avatar
 	return user, nil
-}
-
-func userStatusError(status string) error {
-	if status == entity.StatusBlocked {
-		return ErrUserBlocked
-	}
-	return ErrUserDisabled
 }
