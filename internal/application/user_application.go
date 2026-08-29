@@ -4,19 +4,18 @@ import (
 	"context"
 	"core-server/internal/domain"
 	"core-server/internal/infras/clog"
+	"core-server/internal/model/dto"
 	"core-server/internal/model/entity"
 	"core-server/internal/utils"
 	"database/sql"
 	"errors"
 	"strings"
-	"unicode/utf8"
 
 	"go.uber.org/zap"
 )
 
 var (
 	ErrInvalidCredentials = errors.New("invalid username or password")
-	ErrUserDisabled       = errors.New("user is disabled")
 	ErrUserBlocked        = errors.New("USER_BLOCKED")
 	ErrEmailAlreadyInUse  = errors.New("email is already registered")
 	ErrUserNotFound       = errors.New("user not found")
@@ -39,9 +38,9 @@ func NewUserService(
 	}
 }
 
-func (s *UserService) Login(ctx context.Context, username, password string) (*entity.User, error) {
+func (s *UserService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.LoginResponse, error) {
 	// 1.判断用户是否存在
-	user, err := s.repo.GetByName(ctx, username)
+	user, err := s.repo.GetByName(ctx, req.Username)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// 用户不存在
@@ -54,7 +53,7 @@ func (s *UserService) Login(ctx context.Context, username, password string) (*en
 	}
 
 	// 2.判断密码是否正确
-	if user.Password != utils.Bcrypt(password) {
+	if user.Password != utils.Bcrypt(req.Password) {
 		return nil, ErrInvalidCredentials
 	}
 
@@ -62,36 +61,42 @@ func (s *UserService) Login(ctx context.Context, username, password string) (*en
 	if user.Status != entity.StatusApproved {
 		return nil, ErrUserBlocked
 	}
-	return user, nil
+	return dto.ToLoginResponse(user), nil
 }
 
-func (s *UserService) EmailLogin(ctx context.Context, email string) (*entity.User, error) {
+func (s *UserService) EmailLogin(ctx context.Context, req *dto.EmailLoginRequest) (*dto.LoginResponse, error) {
+	email := req.Email
 	user, err := s.repo.GetByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// 用户不存在
-			s.log.Info("Login error:", zap.Error(ErrUserNotFound))
+			s.log.Info("UserService/EmailLogin error:", zap.Error(ErrUserNotFound))
 			return nil, ErrUserNotFound
 		}
 		// 数据库错误
-		s.log.Error("Login error:", zap.Error(err))
+		s.log.Error("UserService/EmailLogin error:", zap.Error(err))
 		return nil, err
 	}
 
 	if user.Status != entity.StatusApproved {
 		return nil, ErrUserBlocked
 	}
-	return user, nil
+	return dto.ToLoginResponse(user), nil
 }
 
-func (s *UserService) Register(ctx context.Context, username, email, password string) (*entity.User, error) {
+func (s *UserService) Register(ctx context.Context, req *dto.RegisterRequest) error {
+	username, email, password := req.Username, req.Email, req.Password
 	existing, err := s.repo.GetByEmail(ctx, email)
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		s.log.Error("Login error:", zap.Error(err))
-		return nil, err
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			s.log.Info("UserService/Register user not found", zap.String("username", username))
+			return ErrUserNotFound
+		}
+		s.log.Error("UserService/Register error:", zap.Error(err))
+		return err
 	}
 	if existing != nil {
-		return nil, ErrEmailAlreadyInUse
+		return ErrEmailAlreadyInUse
 	}
 
 	user := &entity.User{
@@ -102,12 +107,14 @@ func (s *UserService) Register(ctx context.Context, username, email, password st
 		Status:   entity.StatusApproved,
 	}
 	if err := s.repo.Create(ctx, user); err != nil {
-		return nil, err
+		s.log.Error("UserService/Register error:", zap.Error(err))
+		return err
 	}
-	return user, nil
+	return nil
 }
 
-func (s *UserService) ForgotPassword(ctx context.Context, email, password, confirm string) error {
+func (s *UserService) ForgotPassword(ctx context.Context, req *dto.ForgotPasswordRequest) error {
+	email, password, confirm := req.Email, req.Password, req.Confirm
 	// 1.校验两次密码是否相同
 	if password != confirm {
 		return errors.New("passwords do not match")
@@ -118,18 +125,18 @@ func (s *UserService) ForgotPassword(ctx context.Context, email, password, confi
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// 用户不存在
-			s.log.Info("Login error:", zap.Error(ErrUserNotFound))
+			s.log.Info("UserService/ForgotPassword info:", zap.Error(ErrUserNotFound))
 			return ErrUserNotFound
 		}
 		// 其他数据库错误
-		s.log.Error("Login error:", zap.Error(err))
+		s.log.Error("UserService/ForgotPassword error:", zap.Error(err))
 		return err
 	}
 
 	// 3.更新密码
 	err = s.repo.UpdatePassword(ctx, user.ID, utils.Bcrypt(password))
 	if err != nil {
-		s.log.Error("Login error:", zap.Error(err))
+		s.log.Error("UserService/ForgotPassword error:", zap.Error(err))
 		return err
 	}
 
@@ -138,17 +145,16 @@ func (s *UserService) ForgotPassword(ctx context.Context, email, password, confi
 
 // =====================================================================================================================
 
-func (s *UserService) List(ctx context.Context, keyword string, page, pageSize uint32) ([]*entity.User, uint64, error) {
-	if page == 0 {
-		page = 1
+func (s *UserService) List(ctx context.Context, req *dto.ListUsersRequest) (*dto.ListUsersResponse, error) {
+	users, total, err := s.repo.List(ctx, req.Keyword, req.Page, (req.Page-1)*req.PageSize)
+	if err != nil {
+		return nil, err
 	}
-	if pageSize == 0 || pageSize > 100 {
-		pageSize = 20
-	}
-	return s.repo.List(ctx, keyword, pageSize, (page-1)*pageSize)
+	return dto.ToListUsersResponse(users, total), nil
 }
 
-func (s *UserService) UpdateStatus(ctx context.Context, userID uint64, status string) error {
+func (s *UserService) UpdateStatus(ctx context.Context, req *dto.UpdateUserStatusRequest) error {
+	userID, status := req.UserID, req.Status
 	if userID == 0 || !entity.IsValidUserStatus(status) {
 		return ErrInvalidUserProfile
 	}
@@ -158,7 +164,8 @@ func (s *UserService) UpdateStatus(ctx context.Context, userID uint64, status st
 	return nil
 }
 
-func (s *UserService) GetProfile(ctx context.Context, userID uint64) (*entity.User, error) {
+func (s *UserService) GetProfile(ctx context.Context, req *dto.GetProfileRequest) (*dto.UserMsgResponse, error) {
+	userID := req.UserID
 	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -170,33 +177,18 @@ func (s *UserService) GetProfile(ctx context.Context, userID uint64) (*entity.Us
 	if user.Status != entity.StatusApproved {
 		return nil, ErrUserBlocked
 	}
-	return user, nil
+	return dto.ToUserMsgResponse(user), nil
 }
 
-func (s *UserService) UpdateProfile(ctx context.Context, userID uint64, username, phone, sex string, age uint32) (*entity.User, error) {
-	username = strings.TrimSpace(username)
-	phone = strings.TrimSpace(phone)
-	sex = strings.TrimSpace(sex)
-	usernameLength := utf8.RuneCountInString(username)
-	if userID == 0 || usernameLength < 2 || usernameLength > 50 || len(phone) > 20 || age > 150 {
-		return nil, ErrInvalidUserProfile
-	}
-	if sex != "" && sex != "male" && sex != "female" {
-		return nil, ErrInvalidUserProfile
-	}
-
-	user, err := s.GetProfile(ctx, userID)
+func (s *UserService) UpdateProfile(ctx context.Context, req *dto.UpdateProfileRequest) (*dto.UserMsgResponse, error) {
+	userID, username, phone, sex, age := req.UserID, req.Username, req.Phone, req.Sex, req.Age
+	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+		s.log.Error("UpdateProfile error", zap.Error(err))
 		return nil, err
-	}
-	if username != user.Name {
-		existing, findErr := s.repo.GetByName(ctx, username)
-		if findErr != nil && !errors.Is(findErr, sql.ErrNoRows) {
-			return nil, findErr
-		}
-		if existing != nil && existing.ID != userID {
-			return nil, ErrUsernameInUse
-		}
 	}
 
 	user.Name = username
@@ -207,17 +199,22 @@ func (s *UserService) UpdateProfile(ctx context.Context, userID uint64, username
 		s.log.Error("UpdateProfile error", zap.Error(err))
 		return nil, err
 	}
-	return user, nil
+	return dto.ToUserMsgResponse(user), nil
 }
 
-func (s *UserService) UpdateAvatar(ctx context.Context, userID uint64, avatar string) (*entity.User, error) {
+func (s *UserService) UpdateAvatar(ctx context.Context, req *dto.UpdateAvatarRequest) (*dto.UserMsgResponse, error) {
+	userID, avatar := req.UserID, req.Avatar
 	avatar = strings.TrimSpace(avatar)
 	if userID == 0 || avatar == "" || len(avatar) > 500 {
 		return nil, ErrInvalidUserProfile
 	}
 
-	user, err := s.GetProfile(ctx, userID)
+	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+		s.log.Error("UpdateAvatar error", zap.Error(err))
 		return nil, err
 	}
 	if err := s.repo.UpdateAvatar(ctx, userID, avatar); err != nil {
@@ -225,5 +222,5 @@ func (s *UserService) UpdateAvatar(ctx context.Context, userID uint64, avatar st
 		return nil, err
 	}
 	user.Avatar = avatar
-	return user, nil
+	return dto.ToUserMsgResponse(user), nil
 }

@@ -2,14 +2,9 @@ package rpc
 
 import (
 	"context"
-	"errors"
-
 	"core-server/internal/application"
 	"core-server/internal/model/dto"
 	"core-server/internal/rpc/userpb"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type UserRPC struct {
@@ -21,72 +16,75 @@ func NewUserRPC(userService *application.UserService) *UserRPC {
 	return &UserRPC{UserService: userService}
 }
 
-func (u *UserRPC) Login(_ context.Context, _ *userpb.LoginReq) (*userpb.LoginResp, error) {
-	return &userpb.LoginResp{}, nil
-}
-
 func (u *UserRPC) GetProfile(ctx context.Context, request *userpb.GetProfileRequest) (*userpb.GetProfileResponse, error) {
-	user, err := u.UserService.GetProfile(ctx, request.GetUserId())
+	res, err := u.UserService.GetProfile(ctx, &dto.GetProfileRequest{UserID: request.GetUserId()})
 	if err != nil {
-		return nil, userError(err)
+		return nil, err
 	}
-	return &userpb.GetProfileResponse{User: dto.ToUserInfo(user)}, nil
+	return &userpb.GetProfileResponse{
+		User: ConvertToUserInfo(res.UserInfo),
+	}, nil
 }
 
 func (u *UserRPC) UpdateProfile(ctx context.Context, request *userpb.UpdateProfileRequest) (*userpb.UpdateProfileResponse, error) {
-	user, err := u.UserService.UpdateProfile(
+	res, err := u.UserService.UpdateProfile(
 		ctx,
-		request.GetUserId(),
-		request.GetUsername(),
-		request.GetPhone(),
-		request.GetSex(),
-		request.GetAge(),
+		&dto.UpdateProfileRequest{UserID: request.GetUserId(), Username: request.GetUsername(), Phone: request.GetPhone(), Sex: request.GetSex(), Age: request.GetAge()},
 	)
 	if err != nil {
-		return nil, userError(err)
+		return nil, err
 	}
-	return &userpb.UpdateProfileResponse{User: dto.ToUserInfo(user)}, nil
+	return &userpb.UpdateProfileResponse{User: ConvertToUserInfo(res.UserInfo)}, nil
 }
 
 func (u *UserRPC) UpdateAvatar(ctx context.Context, request *userpb.UpdateAvatarRequest) (*userpb.UpdateAvatarResponse, error) {
-	user, err := u.UserService.UpdateAvatar(ctx, request.GetUserId(), request.GetAvatar())
+	res, err := u.UserService.UpdateAvatar(ctx, &dto.UpdateAvatarRequest{UserID: request.GetUserId(), Avatar: request.GetAvatar()})
 	if err != nil {
-		return nil, userError(err)
+		return nil, err
 	}
-	return &userpb.UpdateAvatarResponse{User: dto.ToUserInfo(user)}, nil
+	return &userpb.UpdateAvatarResponse{User: ConvertToUserInfo(res.UserInfo)}, nil
 }
 
 func (u *UserRPC) ListUsers(ctx context.Context, request *userpb.ListUsersRequest) (*userpb.ListUsersResponse, error) {
-	users, total, err := u.UserService.List(ctx, request.GetKeyword(), request.GetPage(), request.GetPageSize())
+	res, err := u.UserService.List(ctx, &dto.ListUsersRequest{Keyword: request.GetKeyword(), Page: request.GetPage(), PageSize: request.GetPageSize()})
 	if err != nil {
-		return nil, userError(err)
+		return nil, err
 	}
-	items := make([]*userpb.UserInfo, 0, len(users))
-	for _, user := range users {
-		items = append(items, dto.ToUserInfo(user))
+	items := make([]*userpb.UserInfo, 0, len(res.Users))
+	for _, user := range res.Users {
+		items = append(items, ConvertToUserInfo(user))
 	}
-	return &userpb.ListUsersResponse{Users: items, Total: total}, nil
+	return &userpb.ListUsersResponse{
+		Users: items,
+		Total: res.Total,
+	}, nil
 }
 
 func (u *UserRPC) UpdateUserStatus(ctx context.Context, request *userpb.UpdateUserStatusRequest) (*userpb.UpdateUserStatusResponse, error) {
-	err := u.UserService.UpdateStatus(ctx, request.GetUserId(), request.GetStatus())
+	err := u.UserService.UpdateStatus(ctx, &dto.UpdateUserStatusRequest{UserID: request.GetUserId(), Status: request.GetStatus()})
 	if err != nil {
-		return nil, userError(err)
+		return nil, err
 	}
 	return &userpb.UpdateUserStatusResponse{Success: true}, nil
 }
 
-func userError(err error) error {
-	switch {
-	case errors.Is(err, application.ErrInvalidUserProfile):
-		return status.Error(codes.InvalidArgument, err.Error())
-	case errors.Is(err, application.ErrUserNotFound):
-		return status.Error(codes.NotFound, err.Error())
-	case errors.Is(err, application.ErrUsernameInUse):
-		return status.Error(codes.AlreadyExists, err.Error())
-	case errors.Is(err, application.ErrUserDisabled):
-		return status.Error(codes.PermissionDenied, err.Error())
-	default:
-		return status.Error(codes.Internal, "user operation failed")
+// =====================================================================================================================
+
+func ConvertToUserInfo(res *dto.UserInfo) *userpb.UserInfo {
+	if res == nil {
+		return nil
+	}
+	return &userpb.UserInfo{
+		Id:               res.ID,
+		Username:         res.Username,
+		Email:            res.Email,
+		Phone:            res.Phone,
+		Avatar:           res.Avatar,
+		Sex:              res.Sex,
+		Age:              res.Age,
+		Role:             res.Role,
+		Status:           res.Status,
+		LikeCount:        res.LikeCount,
+		ReceiveLikeCount: res.ReceiveLikeCount,
 	}
 }

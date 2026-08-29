@@ -17,35 +17,60 @@ func NewAuthRPC(userService *application.UserService) *AuthRPC {
 }
 
 func (a *AuthRPC) Login(ctx context.Context, request *authpb.LoginRequest) (*authpb.LoginResponse, error) {
-	username := request.GetUsername()
-	password := request.GetPassword()
-
-	user, err := a.userService.Login(ctx, username, password)
+	res, err := a.userService.Login(ctx, &dto.LoginRequest{Username: request.GetUsername(), Password: request.GetPassword()})
 	if err != nil {
 		return nil, err
 	}
-	return dto.ToLoginResponse(user), nil
-}
 
-func (a *AuthRPC) Register(ctx context.Context, request *authpb.RegisterRequest) (*authpb.RegisterResponse, error) {
-	user, err := a.userService.Register(ctx, request.GetUsername(), request.GetEmail(), request.GetPassword())
-	if err != nil {
-		return nil, err
-	}
-	return &authpb.RegisterResponse{Success: true, User: dto.ToLoginResponse(user).GetUser()}, nil
+	return &authpb.LoginResponse{
+		Id:       res.Id,
+		Username: res.Name,
+		Email:    res.Email,
+		Phone:    res.Phone,
+		Avatar:   res.Avatar,
+		Sex:      res.Sex,
+		Role:     res.Role,
+		Status:   res.Status,
+		Age:      res.Age,
+	}, nil
 }
 
 func (a *AuthRPC) EmailLogin(ctx context.Context, request *authpb.EmailLoginRequest) (*authpb.LoginResponse, error) {
-	email := request.GetEmail()
-	user, err := a.userService.EmailLogin(ctx, email)
+	res, err := a.userService.EmailLogin(ctx, &dto.EmailLoginRequest{Email: request.GetEmail()})
 	if err != nil {
 		return nil, err
 	}
-	return dto.ToLoginResponse(user), nil
+	return &authpb.LoginResponse{
+		Id:       res.Id,
+		Username: res.Name,
+		Email:    res.Email,
+		Phone:    res.Phone,
+		Avatar:   res.Avatar,
+		Sex:      res.Sex,
+		Role:     res.Role,
+		Status:   res.Status,
+		Age:      res.Age,
+	}, nil
+}
+
+func (a *AuthRPC) Register(ctx context.Context, request *authpb.RegisterRequest) (*authpb.RegisterResponse, error) {
+	err := a.userService.Register(ctx, &dto.RegisterRequest{
+		Username: request.GetUsername(),
+		Email:    request.GetEmail(),
+		Password: request.GetPassword(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &authpb.RegisterResponse{Success: true}, nil
 }
 
 func (a *AuthRPC) ForgotPassword(ctx context.Context, request *authpb.ForgotPasswordRequest) (*authpb.ForgotPasswordResponse, error) {
-	err := a.userService.ForgotPassword(ctx, request.GetEmail(), request.GetNewPassword(), request.GetConfirmPassword())
+	err := a.userService.ForgotPassword(ctx, &dto.ForgotPasswordRequest{
+		Email:    request.GetEmail(),
+		Password: request.GetNewPassword(),
+		Confirm:  request.GetConfirmPassword(),
+	})
 	if err != nil {
 		return nil, err
 	}
