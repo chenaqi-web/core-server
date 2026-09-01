@@ -9,7 +9,6 @@ import (
 	"core-server/internal/utils"
 	"database/sql"
 	"errors"
-	"strings"
 
 	"go.uber.org/zap"
 )
@@ -20,7 +19,6 @@ var (
 	ErrEmailAlreadyInUse  = errors.New("email is already registered")
 	ErrUserNotFound       = errors.New("user not found")
 	ErrInvalidUserProfile = errors.New("invalid user profile")
-	ErrUsernameInUse      = errors.New("username is already in use")
 )
 
 type UserService struct {
@@ -42,8 +40,8 @@ func (s *UserService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 	// 1.判断用户是否存在
 	user, err := s.repo.GetByName(ctx, req.Username)
 	if err != nil {
+		// 用户不存在
 		if errors.Is(err, sql.ErrNoRows) {
-			// 用户不存在
 			s.log.Info("UserService/Login info:", zap.Error(ErrUserNotFound))
 			return nil, ErrUserNotFound
 		}
@@ -69,11 +67,9 @@ func (s *UserService) EmailLogin(ctx context.Context, req *dto.EmailLoginRequest
 	user, err := s.repo.GetByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			// 用户不存在
 			s.log.Info("UserService/EmailLogin error:", zap.Error(ErrUserNotFound))
 			return nil, ErrUserNotFound
 		}
-		// 数据库错误
 		s.log.Error("UserService/EmailLogin error:", zap.Error(err))
 		return nil, err
 	}
@@ -148,41 +144,27 @@ func (s *UserService) ForgotPassword(ctx context.Context, req *dto.ForgotPasswor
 func (s *UserService) List(ctx context.Context, req *dto.ListUsersRequest) (*dto.ListUsersResponse, error) {
 	users, total, err := s.repo.List(ctx, req.Keyword, req.Page, (req.Page-1)*req.PageSize)
 	if err != nil {
+		s.log.Error("UserService/List error:", zap.Error(err))
 		return nil, err
 	}
 	return dto.ToListUsersResponse(users, total), nil
 }
 
-func (s *UserService) UpdateStatus(ctx context.Context, req *dto.UpdateUserStatusRequest) error {
-	userID, status := req.UserID, req.Status
-	if userID == 0 || !entity.IsValidUserStatus(status) {
-		return ErrInvalidUserProfile
-	}
-	if err := s.repo.UpdateStatus(ctx, userID, status); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (s *UserService) GetProfile(ctx context.Context, req *dto.GetProfileRequest) (*dto.UserMsgResponse, error) {
-	userID := req.UserID
-	user, err := s.repo.GetByID(ctx, userID)
+	user, err := s.repo.GetByID(ctx, req.UserID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+			s.log.Info("UserService/GetProfile info:", zap.Error(ErrUserNotFound))
 			return nil, ErrUserNotFound
 		}
 		s.log.Error("GetProfile error", zap.Error(err))
 		return nil, err
 	}
-	if user.Status != entity.StatusApproved {
-		return nil, ErrUserBlocked
-	}
 	return dto.ToUserMsgResponse(user), nil
 }
 
 func (s *UserService) UpdateProfile(ctx context.Context, req *dto.UpdateProfileRequest) (*dto.UserMsgResponse, error) {
-	userID, username, phone, sex, age := req.UserID, req.Username, req.Phone, req.Sex, req.Age
-	user, err := s.repo.GetByID(ctx, userID)
+	user, err := s.repo.GetByID(ctx, req.UserID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrUserNotFound
@@ -191,10 +173,10 @@ func (s *UserService) UpdateProfile(ctx context.Context, req *dto.UpdateProfileR
 		return nil, err
 	}
 
-	user.Name = username
-	user.Phone = phone
-	user.Sex = sex
-	user.Age = uint64(age)
+	user.Name = req.Username
+	user.Phone = req.Phone
+	user.Sex = req.Sex
+	user.Age = uint64(req.Age)
 	if err := s.repo.UpdateProfile(ctx, user); err != nil {
 		s.log.Error("UpdateProfile error", zap.Error(err))
 		return nil, err
@@ -202,14 +184,8 @@ func (s *UserService) UpdateProfile(ctx context.Context, req *dto.UpdateProfileR
 	return dto.ToUserMsgResponse(user), nil
 }
 
-func (s *UserService) UpdateAvatar(ctx context.Context, req *dto.UpdateAvatarRequest) (*dto.UserMsgResponse, error) {
-	userID, avatar := req.UserID, req.Avatar
-	avatar = strings.TrimSpace(avatar)
-	if userID == 0 || avatar == "" || len(avatar) > 500 {
-		return nil, ErrInvalidUserProfile
-	}
-
-	user, err := s.repo.GetByID(ctx, userID)
+func (s *UserService) UpdateAvatar(ctx context.Context, req *dto.UpdateAvatarRequest) (*dto.UserAvatarResponse, error) {
+	user, err := s.repo.GetByID(ctx, req.UserID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrUserNotFound
@@ -217,10 +193,19 @@ func (s *UserService) UpdateAvatar(ctx context.Context, req *dto.UpdateAvatarReq
 		s.log.Error("UpdateAvatar error", zap.Error(err))
 		return nil, err
 	}
-	if err := s.repo.UpdateAvatar(ctx, userID, avatar); err != nil {
+	if err := s.repo.UpdateAvatar(ctx, req.UserID, req.Avatar); err != nil {
 		s.log.Error("UpdateAvatar error", zap.Error(err))
 		return nil, err
 	}
-	user.Avatar = avatar
-	return dto.ToUserMsgResponse(user), nil
+	user.Avatar = req.Avatar
+	return dto.ToUserAvatarResponse(user.Avatar), nil
+}
+
+func (s *UserService) UpdateStatus(ctx context.Context, req *dto.UpdateUserStatusRequest) error {
+	userID, status := req.UserID, req.Status
+	if err := s.repo.UpdateStatus(ctx, userID, status); err != nil {
+		s.log.Error("UserService/UpdateStatus error:", zap.Error(err))
+		return err
+	}
+	return nil
 }

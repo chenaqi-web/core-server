@@ -407,7 +407,7 @@ func (x *UpdateAvatarRequest) GetAvatar() string {
 
 type UpdateAvatarResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	User          *UserInfo              `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	Url           string                 `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -442,11 +442,11 @@ func (*UpdateAvatarResponse) Descriptor() ([]byte, []int) {
 	return file_user_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *UpdateAvatarResponse) GetUser() *UserInfo {
+func (x *UpdateAvatarResponse) GetUrl() string {
 	if x != nil {
-		return x.User
+		return x.Url
 	}
-	return nil
+	return ""
 }
 
 type ListUsersRequest struct {
@@ -691,9 +691,9 @@ const file_user_proto_rawDesc = "" +
 	"\x04user\x18\x01 \x01(\v2\x0e.user.UserInfoR\x04user\"F\n" +
 	"\x13UpdateAvatarRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x04R\x06userId\x12\x16\n" +
-	"\x06avatar\x18\x02 \x01(\tR\x06avatar\":\n" +
-	"\x14UpdateAvatarResponse\x12\"\n" +
-	"\x04user\x18\x01 \x01(\v2\x0e.user.UserInfoR\x04user\"]\n" +
+	"\x06avatar\x18\x02 \x01(\tR\x06avatar\"(\n" +
+	"\x14UpdateAvatarResponse\x12\x10\n" +
+	"\x03url\x18\x01 \x01(\tR\x03url\"]\n" +
 	"\x10ListUsersRequest\x12\x18\n" +
 	"\akeyword\x18\x01 \x01(\tR\akeyword\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\rR\x04page\x12\x1b\n" +
@@ -706,12 +706,12 @@ const file_user_proto_rawDesc = "" +
 	"\x06status\x18\x02 \x01(\tR\x06status\"4\n" +
 	"\x18UpdateUserStatusResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess2\xf0\x02\n" +
-	"\vUserService\x12?\n" +
+	"\vUserService\x12<\n" +
+	"\tListUsers\x12\x16.user.ListUsersRequest\x1a\x17.user.ListUsersResponse\x12?\n" +
 	"\n" +
 	"GetProfile\x12\x17.user.GetProfileRequest\x1a\x18.user.GetProfileResponse\x12H\n" +
 	"\rUpdateProfile\x12\x1a.user.UpdateProfileRequest\x1a\x1b.user.UpdateProfileResponse\x12E\n" +
-	"\fUpdateAvatar\x12\x19.user.UpdateAvatarRequest\x1a\x1a.user.UpdateAvatarResponse\x12<\n" +
-	"\tListUsers\x12\x16.user.ListUsersRequest\x1a\x17.user.ListUsersResponse\x12Q\n" +
+	"\fUpdateAvatar\x12\x19.user.UpdateAvatarRequest\x1a\x1a.user.UpdateAvatarResponse\x12Q\n" +
 	"\x10UpdateUserStatus\x12\x1d.user.UpdateUserStatusRequest\x1a\x1e.user.UpdateUserStatusResponseB(Z&core-server/internal/rpc/userpb;userpbb\x06proto3"
 
 var (
@@ -743,23 +743,22 @@ var file_user_proto_goTypes = []any{
 var file_user_proto_depIdxs = []int32{
 	0,  // 0: user.GetProfileResponse.user:type_name -> user.UserInfo
 	0,  // 1: user.UpdateProfileResponse.user:type_name -> user.UserInfo
-	0,  // 2: user.UpdateAvatarResponse.user:type_name -> user.UserInfo
-	0,  // 3: user.ListUsersResponse.users:type_name -> user.UserInfo
+	0,  // 2: user.ListUsersResponse.users:type_name -> user.UserInfo
+	7,  // 3: user.UserService.ListUsers:input_type -> user.ListUsersRequest
 	1,  // 4: user.UserService.GetProfile:input_type -> user.GetProfileRequest
 	3,  // 5: user.UserService.UpdateProfile:input_type -> user.UpdateProfileRequest
 	5,  // 6: user.UserService.UpdateAvatar:input_type -> user.UpdateAvatarRequest
-	7,  // 7: user.UserService.ListUsers:input_type -> user.ListUsersRequest
-	9,  // 8: user.UserService.UpdateUserStatus:input_type -> user.UpdateUserStatusRequest
+	9,  // 7: user.UserService.UpdateUserStatus:input_type -> user.UpdateUserStatusRequest
+	8,  // 8: user.UserService.ListUsers:output_type -> user.ListUsersResponse
 	2,  // 9: user.UserService.GetProfile:output_type -> user.GetProfileResponse
 	4,  // 10: user.UserService.UpdateProfile:output_type -> user.UpdateProfileResponse
 	6,  // 11: user.UserService.UpdateAvatar:output_type -> user.UpdateAvatarResponse
-	8,  // 12: user.UserService.ListUsers:output_type -> user.ListUsersResponse
-	10, // 13: user.UserService.UpdateUserStatus:output_type -> user.UpdateUserStatusResponse
-	9,  // [9:14] is the sub-list for method output_type
-	4,  // [4:9] is the sub-list for method input_type
-	4,  // [4:4] is the sub-list for extension type_name
-	4,  // [4:4] is the sub-list for extension extendee
-	0,  // [0:4] is the sub-list for field type_name
+	10, // 12: user.UserService.UpdateUserStatus:output_type -> user.UpdateUserStatusResponse
+	8,  // [8:13] is the sub-list for method output_type
+	3,  // [3:8] is the sub-list for method input_type
+	3,  // [3:3] is the sub-list for extension type_name
+	3,  // [3:3] is the sub-list for extension extendee
+	0,  // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_user_proto_init() }

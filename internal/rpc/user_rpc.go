@@ -42,7 +42,7 @@ func (u *UserRPC) UpdateAvatar(ctx context.Context, request *userpb.UpdateAvatar
 	if err != nil {
 		return nil, err
 	}
-	return &userpb.UpdateAvatarResponse{User: ConvertToUserInfo(res.UserInfo)}, nil
+	return &userpb.UpdateAvatarResponse{Url: res.Url}, nil
 }
 
 func (u *UserRPC) ListUsers(ctx context.Context, request *userpb.ListUsersRequest) (*userpb.ListUsersResponse, error) {

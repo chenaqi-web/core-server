@@ -111,6 +111,7 @@ func (s *LikeService) BatchHasThumbUp(ctx context.Context, userID uint64, object
 // 点赞操作
 
 func (s *LikeService) ThumbUp(ctx context.Context, userID uint64, objectType string, objectID uint64) error {
+	// 如果kafka没有开启，就直接操作数据库
 	if !s.cfg.Kafka.Enabled {
 		return s.ThumbUpDirect(ctx, userID, objectType, objectID)
 	}

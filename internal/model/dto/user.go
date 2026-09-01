@@ -73,6 +73,9 @@ type UserMsgResponse struct {
 	*UserInfo
 }
 
+type UserAvatarResponse struct {
+	Url string
+}
 type ListUsersRequest struct {
 	Keyword        string
 	Page, PageSize uint32
@@ -121,6 +124,12 @@ func ToLoginResponse(user *entity.User) *LoginResponse {
 func ToUserMsgResponse(user *entity.User) *UserMsgResponse {
 	return &UserMsgResponse{
 		ToUserInfo(user),
+	}
+}
+
+func ToUserAvatarResponse(url string) *UserAvatarResponse {
+	return &UserAvatarResponse{
+		Url: url,
 	}
 }
 

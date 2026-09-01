@@ -45,7 +45,7 @@ message UpdateAvatarRequest {
 }
 
 message UpdateAvatarResponse {
-  UserInfo user = 1;
+  string url = 1;
 }
 
 message ListUsersRequest {
@@ -69,9 +69,9 @@ message UpdateUserStatusResponse {
 }
 
 service UserService {
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
   rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
   rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
   rpc UpdateAvatar(UpdateAvatarRequest) returns (UpdateAvatarResponse);
-  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
   rpc UpdateUserStatus(UpdateUserStatusRequest) returns (UpdateUserStatusResponse);
 }
