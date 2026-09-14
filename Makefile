@@ -12,3 +12,6 @@ generate-proto-rpc:
 		--go-grpc_out=. \
 		--go-grpc_opt=module=$(MODULE) \
 		$(PROTO_FILES)
+
+ent:
+	go run -mod=mod entgo.io/ent/cmd/ent generate ./internal/infras/repov2/ent/schema
