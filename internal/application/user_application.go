@@ -18,7 +18,6 @@ var (
 	ErrUserBlocked        = errors.New("USER_BLOCKED")
 	ErrEmailAlreadyInUse  = errors.New("email is already registered")
 	ErrUserNotFound       = errors.New("user not found")
-	ErrInvalidUserProfile = errors.New("invalid user profile")
 )
 
 type UserService struct {
@@ -209,3 +208,12 @@ func (s *UserService) UpdateStatus(ctx context.Context, req *dto.UpdateUserStatu
 	}
 	return nil
 }
+
+//func (s *UserService) SearchUser(ctx context.Context, req *dto.SearchUsersRequest) (*dto.SearchUsersResponse, error) {
+//	users, total, err := s.repo.Search(ctx, req.Keyword, req.Page, (req.Page-1)*req.PageSize)
+//	if err != nil {
+//		s.log.Error("UserService/Search error:", zap.Error(err))
+//		return nil, err
+//	}
+//	return dto.ToSearchUsersResponse(users, total), nil
+//}
