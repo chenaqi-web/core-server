@@ -2,14 +2,13 @@ package repov2
 
 import (
 	"context"
+	entpkg "core-server/internal/infras/repov2/ent"
+	"core-server/internal/infras/repov2/ent/user"
+	"core-server/internal/model/entity"
 	"database/sql"
 	"errors"
 	"math"
 	"strings"
-
-	entpkg "core-server/internal/infras/repov2/ent"
-	"core-server/internal/infras/repov2/ent/user"
-	"core-server/internal/model/entity"
 )
 
 type UserRepo struct {
@@ -65,6 +64,24 @@ func (r *UserRepo) Create(ctx context.Context, value *entity.User) error {
 	return nil
 }
 
+func (r *UserRepo) List(ctx context.Context, keyword string, limit, offset uint32) ([]*entity.User, uint64, error) {
+	query := r.db.User.Query().Where(user.DeletedAtIsNil())
+	keyword = strings.TrimSpace(keyword)
+	if keyword != "" {
+		query.Where(user.Or(user.NameContains(keyword), user.EmailContains(keyword)))
+	}
+
+	total, err := query.Clone().Count(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	nodes, err := query.Order(entpkg.Desc(user.FieldID)).Limit(int(limit)).Offset(int(offset)).All(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	return toEntityUsers(nodes), uint64(total), nil
+}
+
 func (r *UserRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User, error) {
 	if len(ids) == 0 {
 		return nil, nil
@@ -84,24 +101,6 @@ func (r *UserRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User,
 		return nil, err
 	}
 	return toEntityUsers(nodes), nil
-}
-
-func (r *UserRepo) List(ctx context.Context, keyword string, limit, offset uint32) ([]*entity.User, uint64, error) {
-	query := r.db.User.Query().Where(user.DeletedAtIsNil())
-	keyword = strings.TrimSpace(keyword)
-	if keyword != "" {
-		query.Where(user.Or(user.NameContains(keyword), user.EmailContains(keyword)))
-	}
-
-	total, err := query.Clone().Count(ctx)
-	if err != nil {
-		return nil, 0, err
-	}
-	nodes, err := query.Order(entpkg.Desc(user.FieldID)).Limit(int(limit)).Offset(int(offset)).All(ctx)
-	if err != nil {
-		return nil, 0, err
-	}
-	return toEntityUsers(nodes), uint64(total), nil
 }
 
 func (r *UserRepo) GetLikeCount(ctx context.Context, userID uint64) (int64, error) {
