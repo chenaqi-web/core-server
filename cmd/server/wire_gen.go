@@ -13,6 +13,7 @@ import (
 	"core-server/internal/infras/clog"
 	"core-server/internal/infras/mq/kafka"
 	"core-server/internal/infras/repo"
+	"core-server/internal/infras/repov2"
 	"core-server/internal/jobs/job-dbsync"
 	"core-server/internal/rpc"
 )
@@ -40,7 +41,11 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 	kafkaManager := kafka.NewKafkaManager(cfg, topicManager)
 	likeRepo := repo.NewLikeRepo(dbClient)
 	countRepo := repo.NewCountRepo(dbClient)
-	userRepo := repo.NewUserRepo(dbClient)
+	entClient, err := repov2.NewEntClient(cfg)
+	if err != nil {
+		return nil, err
+	}
+	userRepo := repov2.NewUserRepo(entClient)
 	iLikeCache := cache.NewILikeCache(cacheClient)
 	messageQueueConsumer := jobdbsync.NewMessageQueueConsumer(cfg, log, syncProducer, kafkaManager, cacheClient, likeRepo, countRepo, userRepo, iLikeCache)
 	userService := application.NewUserService(userRepo, log)

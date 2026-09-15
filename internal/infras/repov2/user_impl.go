@@ -25,7 +25,7 @@ func (r *UserRepo) GetByID(ctx context.Context, id uint64) (*entity.User, error)
 		Where(user.IDEQ(int64(id)), user.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
-		return nil, normalizeUserError(err)
+		return nil, err
 	}
 	return toEntityUser(node), nil
 }
@@ -35,7 +35,7 @@ func (r *UserRepo) GetByName(ctx context.Context, name string) (*entity.User, er
 		Where(user.NameEQ(name), user.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
-		return nil, normalizeUserError(err)
+		return nil, err
 	}
 	return toEntityUser(node), nil
 }
@@ -45,7 +45,7 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*entity.User, 
 		Where(user.EmailEQ(email), user.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
-		return nil, normalizeUserError(err)
+		return nil, err
 	}
 	return toEntityUser(node), nil
 }
@@ -109,7 +109,7 @@ func (r *UserRepo) GetLikeCount(ctx context.Context, userID uint64) (int64, erro
 		Where(user.IDEQ(int64(userID)), user.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
-		return 0, normalizeUserError(err)
+		return 0, err
 	}
 	return int64(node.LikeCount), nil
 }
@@ -119,7 +119,7 @@ func (r *UserRepo) GetReceiveLikeCount(ctx context.Context, userID uint64) (int6
 		Where(user.IDEQ(int64(userID)), user.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
-		return 0, normalizeUserError(err)
+		return 0, err
 	}
 	return int64(node.ReceiveLikeCount), nil
 }
@@ -183,17 +183,10 @@ func (r *UserRepo) UpdateStatus(ctx context.Context, userID uint64, status strin
 		Where(user.DeletedAtIsNil()).
 		SetStatus(status).
 		Exec(ctx)
-	return normalizeUserError(err)
+	return err
 }
 
 // =====================================================================================================================
-
-func normalizeUserError(err error) error {
-	if entpkg.IsNotFound(err) {
-		return sql.ErrNoRows
-	}
-	return err
-}
 
 func toEntityUser(node *entpkg.User) *entity.User {
 	if node == nil {
