@@ -6,6 +6,7 @@ import (
 	"core-server/internal/infras/clog"
 	"core-server/internal/infras/mq/kafka"
 	"core-server/internal/infras/repo"
+	"core-server/internal/infras/repov2"
 
 	"github.com/google/wire"
 )
@@ -18,11 +19,14 @@ var RepoProviderSet = wire.NewSet(
 	repo.NewCategoryRepo,
 	repo.NewArticleRepo,
 	repo.NewCommentRepo,
+
+	repov2.NewEntClient,
+	repov2.NewUserRepo,
 	// todo 新操作
 
 	wire.Bind(new(domain.LikeRepoDomain), new(*repo.LikeRepo)),
 	wire.Bind(new(domain.CountRepoDomain), new(*repo.CountRepo)),
-	wire.Bind(new(domain.UserRepoDomain), new(*repo.UserRepo)),
+	wire.Bind(new(domain.UserRepoDomain), new(*repov2.UserRepo)),
 	wire.Bind(new(domain.CategoryRepoDomain), new(*repo.CategoryRepo)),
 	wire.Bind(new(domain.ArticleRepoDomain), new(*repo.ArticleRepo)),
 	wire.Bind(new(domain.CommentRepoDomain), new(*repo.CommentRepo)),

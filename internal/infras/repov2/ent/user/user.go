@@ -44,7 +44,7 @@ const (
 	// FieldAuthVersion holds the string denoting the auth_version field in the database.
 	FieldAuthVersion = "auth_version"
 	// Table holds the table name of the user in the database.
-	Table = "users"
+	Table = "user"
 )
 
 // Columns holds all SQL columns for user fields.

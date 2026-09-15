@@ -4,12 +4,21 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
+	entschema "entgo.io/ent/schema"
 	"entgo.io/ent/schema/field"
 )
 
 // User holds the schema definition for the User entity.
 type User struct {
 	ent.Schema
+}
+
+// Annotations keeps Ent mapped to the existing table used by the SQLX repository.
+func (User) Annotations() []entschema.Annotation {
+	return []entschema.Annotation{
+		entsql.Annotation{Table: "user"},
+	}
 }
 
 // Fields of the User.
