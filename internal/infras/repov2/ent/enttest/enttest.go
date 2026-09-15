@@ -5,11 +5,11 @@ package enttest
 import (
 	"context"
 
-	"core-server/internal/infras/repo-ent/ent"
+	"core-server/internal/infras/repov2/ent"
 	// required by schema hooks.
-	_ "core-server/internal/infras/repo-ent/ent/runtime"
+	_ "core-server/internal/infras/repov2/ent/runtime"
 
-	"core-server/internal/infras/repo-ent/ent/migrate"
+	"core-server/internal/infras/repov2/ent/migrate"
 
 	"entgo.io/ent/dialect/sql/schema"
 )

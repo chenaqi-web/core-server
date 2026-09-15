@@ -3,8 +3,8 @@
 package ent
 
 import (
-	"core-server/internal/infras/repo-ent/ent/schema"
-	"core-server/internal/infras/repo-ent/ent/user"
+	"core-server/internal/infras/repov2/ent/schema"
+	"core-server/internal/infras/repov2/ent/user"
 	"time"
 )
 

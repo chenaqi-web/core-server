@@ -4,7 +4,7 @@ package hook
 
 import (
 	"context"
-	"core-server/internal/infras/repo-ent/ent"
+	"core-server/internal/infras/repov2/ent"
 	"fmt"
 )
 

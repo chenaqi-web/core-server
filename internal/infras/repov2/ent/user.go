@@ -3,7 +3,7 @@
 package ent
 
 import (
-	"core-server/internal/infras/repo-ent/ent/user"
+	"core-server/internal/infras/repov2/ent/user"
 	"fmt"
 	"strings"
 	"time"

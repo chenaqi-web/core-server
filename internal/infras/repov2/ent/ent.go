@@ -4,7 +4,7 @@ package ent
 
 import (
 	"context"
-	"core-server/internal/infras/repo-ent/ent/user"
+	"core-server/internal/infras/repov2/ent/user"
 	"errors"
 	"fmt"
 	"reflect"

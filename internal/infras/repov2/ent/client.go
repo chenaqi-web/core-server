@@ -9,9 +9,9 @@ import (
 	"log"
 	"reflect"
 
-	"core-server/internal/infras/repo-ent/ent/migrate"
+	"core-server/internal/infras/repov2/ent/migrate"
 
-	"core-server/internal/infras/repo-ent/ent/user"
+	"core-server/internal/infras/repov2/ent/user"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"

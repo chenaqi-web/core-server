@@ -4,8 +4,8 @@ package ent
 
 import (
 	"context"
-	"core-server/internal/infras/repo-ent/ent/predicate"
-	"core-server/internal/infras/repo-ent/ent/user"
+	"core-server/internal/infras/repov2/ent/predicate"
+	"core-server/internal/infras/repov2/ent/user"
 	"fmt"
 	"math"
 

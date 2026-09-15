@@ -1,3 +1,7 @@
 package repov2
 
-func main() {}
+import "entgo.io/ent"
+
+type EntClient struct {
+	*ent.Client
+}

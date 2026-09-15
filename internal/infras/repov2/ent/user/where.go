@@ -3,7 +3,7 @@
 package user
 
 import (
-	"core-server/internal/infras/repo-ent/ent/predicate"
+	"core-server/internal/infras/repov2/ent/predicate"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
