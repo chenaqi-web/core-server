@@ -77,11 +77,20 @@ type UserAvatarResponse struct {
 	Url string
 }
 type ListUsersRequest struct {
-	Keyword        string
 	Page, PageSize uint32
 }
 
 type ListUsersResponse struct {
+	Users []*UserInfo
+	Total uint64
+}
+
+type SearchUsersRequest struct {
+	Keyword        string
+	Page, PageSize uint32
+}
+
+type SearchUsersResponse struct {
 	Users []*UserInfo
 	Total uint64
 }
@@ -151,5 +160,13 @@ func ToListUsersResponse(users []*entity.User, total uint64) *ListUsersResponse 
 	return &ListUsersResponse{
 		Users: userInfos,
 		Total: total,
+	}
+}
+
+func ToSearchUsersResponse(users []*entity.User, total uint64) *SearchUsersResponse {
+	listResponse := ToListUsersResponse(users, total)
+	return &SearchUsersResponse{
+		Users: listResponse.Users,
+		Total: listResponse.Total,
 	}
 }

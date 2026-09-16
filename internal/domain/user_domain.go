@@ -13,7 +13,8 @@ type UserRepo interface {
 	GetByName(ctx context.Context, name string) (*entity.User, error)
 	GetByEmail(ctx context.Context, email string) (*entity.User, error)
 	Create(ctx context.Context, user *entity.User) error
-	List(ctx context.Context, keyword string, limit, offset uint32) ([]*entity.User, uint64, error)
+	List(ctx context.Context, limit, offset uint32) ([]*entity.User, uint64, error)
+	Search(ctx context.Context, keyword string, limit, offset uint32) ([]*entity.User, uint64, error)
 	ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User, error)
 
 	// 有关用户互动方面的操作

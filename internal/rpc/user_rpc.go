@@ -46,7 +46,7 @@ func (u *UserRPC) UpdateAvatar(ctx context.Context, request *userpb.UpdateAvatar
 }
 
 func (u *UserRPC) ListUsers(ctx context.Context, request *userpb.ListUsersRequest) (*userpb.ListUsersResponse, error) {
-	res, err := u.UserService.List(ctx, &dto.ListUsersRequest{Keyword: request.GetKeyword(), Page: request.GetPage(), PageSize: request.GetPageSize()})
+	res, err := u.UserService.List(ctx, &dto.ListUsersRequest{Page: request.GetPage(), PageSize: request.GetPageSize()})
 	if err != nil {
 		return nil, err
 	}
@@ -55,6 +55,21 @@ func (u *UserRPC) ListUsers(ctx context.Context, request *userpb.ListUsersReques
 		items = append(items, ConvertToUserInfo(user))
 	}
 	return &userpb.ListUsersResponse{
+		Users: items,
+		Total: res.Total,
+	}, nil
+}
+
+func (u *UserRPC) SearchUsers(ctx context.Context, request *userpb.SearchUsersRequest) (*userpb.SearchUsersResponse, error) {
+	res, err := u.UserService.SearchUser(ctx, &dto.SearchUsersRequest{Keyword: request.GetKeyword(), Page: request.GetPage(), PageSize: request.GetPageSize()})
+	if err != nil {
+		return nil, err
+	}
+	items := make([]*userpb.UserInfo, 0, len(res.Users))
+	for _, user := range res.Users {
+		items = append(items, ConvertToUserInfo(user))
+	}
+	return &userpb.SearchUsersResponse{
 		Users: items,
 		Total: res.Total,
 	}, nil

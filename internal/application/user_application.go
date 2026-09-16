@@ -141,7 +141,7 @@ func (s *UserService) ForgotPassword(ctx context.Context, req *dto.ForgotPasswor
 // =====================================================================================================================
 
 func (s *UserService) List(ctx context.Context, req *dto.ListUsersRequest) (*dto.ListUsersResponse, error) {
-	users, total, err := s.repo.List(ctx, req.Keyword, req.Page, (req.Page-1)*req.PageSize)
+	users, total, err := s.repo.List(ctx, req.PageSize, (req.Page-1)*req.PageSize)
 	if err != nil {
 		s.log.Error("UserService/List error:", zap.Error(err))
 		return nil, err
@@ -161,6 +161,8 @@ func (s *UserService) GetProfile(ctx context.Context, req *dto.GetProfileRequest
 	}
 	return dto.ToUserMsgResponse(user), nil
 }
+
+// =====================================================================================================================
 
 func (s *UserService) UpdateProfile(ctx context.Context, req *dto.UpdateProfileRequest) (*dto.UserMsgResponse, error) {
 	user, err := s.repo.GetByID(ctx, req.UserID)
@@ -211,11 +213,11 @@ func (s *UserService) UpdateStatus(ctx context.Context, req *dto.UpdateUserStatu
 
 // =====================================================================================================================
 
-//func (s *UserService) SearchUser(ctx context.Context, req *dto.SearchUsersRequest) (*dto.SearchUsersResponse, error) {
-//	users, total, err := s.repo.Search(ctx, req.Keyword, req.Page, (req.Page-1)*req.PageSize)
-//	if err != nil {
-//		s.log.Error("UserService/Search error:", zap.Error(err))
-//		return nil, err
-//	}
-//	return dto.ToSearchUsersResponse(users, total), nil
-//}
+func (s *UserService) SearchUser(ctx context.Context, req *dto.SearchUsersRequest) (*dto.SearchUsersResponse, error) {
+	users, total, err := s.repo.Search(ctx, req.Keyword, req.PageSize, (req.Page-1)*req.PageSize)
+	if err != nil {
+		s.log.Error("UserService/Search error:", zap.Error(err))
+		return nil, err
+	}
+	return dto.ToSearchUsersResponse(users, total), nil
+}

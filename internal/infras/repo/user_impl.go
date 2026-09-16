@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"strings"
 
 	"github.com/jmoiron/sqlx"
 
@@ -105,25 +104,32 @@ WHERE id IN (?) AND deleted_at IS NULL`
 	return users, nil
 }
 
-func (r *UserRepo) List(ctx context.Context, keyword string, limit, offset uint32) ([]*entity.User, uint64, error) {
-	keyword = strings.TrimSpace(keyword)
-	where := "WHERE deleted_at IS NULL"
-	args := make([]any, 0, 3)
-	if keyword != "" {
-		where += " AND (name LIKE ? OR email LIKE ?)"
-		like := "%" + keyword + "%"
-		args = append(args, like, like)
+func (r *UserRepo) List(ctx context.Context, limit, offset uint32) ([]*entity.User, uint64, error) {
+	var total uint64
+	if err := r.db(ctx).GetContext(ctx, &total, "SELECT COUNT(*) FROM user WHERE deleted_at IS NULL"); err != nil {
+		return nil, 0, err
 	}
 
+	query := "SELECT " + userListColumns + " FROM user WHERE deleted_at IS NULL ORDER BY id DESC LIMIT ? OFFSET ?"
+	var users []*entity.User
+	if err := r.db(ctx).SelectContext(ctx, &users, query, limit, offset); err != nil {
+		return nil, 0, err
+	}
+	return users, total, nil
+}
+
+func (r *UserRepo) Search(ctx context.Context, keyword string, limit, offset uint32) ([]*entity.User, uint64, error) {
+	const where = "WHERE deleted_at IS NULL AND (name LIKE ? OR email LIKE ?)"
+	like := "%" + keyword + "%"
+
 	var total uint64
-	if err := r.db(ctx).GetContext(ctx, &total, "SELECT COUNT(*) FROM user "+where, args...); err != nil {
+	if err := r.db(ctx).GetContext(ctx, &total, "SELECT COUNT(*) FROM user "+where, like, like); err != nil {
 		return nil, 0, err
 	}
 
 	query := "SELECT " + userListColumns + " FROM user " + where + " ORDER BY id DESC LIMIT ? OFFSET ?"
-	args = append(args, limit, offset)
 	var users []*entity.User
-	if err := r.db(ctx).SelectContext(ctx, &users, query, args...); err != nil {
+	if err := r.db(ctx).SelectContext(ctx, &users, query, like, like, limit, offset); err != nil {
 		return nil, 0, err
 	}
 	return users, total, nil

@@ -2,13 +2,12 @@ package repov2
 
 import (
 	"context"
-	entpkg "core-server/internal/infras/repov2/ent"
+	"core-server/internal/infras/repov2/ent"
 	"core-server/internal/infras/repov2/ent/user"
 	"core-server/internal/model/entity"
 	"database/sql"
 	"errors"
 	"math"
-	"strings"
 )
 
 type UserRepo struct {
@@ -64,18 +63,30 @@ func (r *UserRepo) Create(ctx context.Context, value *entity.User) error {
 	return nil
 }
 
-func (r *UserRepo) List(ctx context.Context, keyword string, limit, offset uint32) ([]*entity.User, uint64, error) {
+func (r *UserRepo) List(ctx context.Context, limit, offset uint32) ([]*entity.User, uint64, error) {
 	query := r.db.User.Query().Where(user.DeletedAtIsNil())
-	keyword = strings.TrimSpace(keyword)
-	if keyword != "" {
-		query.Where(user.Or(user.NameContains(keyword), user.EmailContains(keyword)))
+	total, err := query.Clone().Count(ctx)
+	if err != nil {
+		return nil, 0, err
 	}
+	nodes, err := query.Order(ent.Desc(user.FieldID)).Limit(int(limit)).Offset(int(offset)).All(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	return toEntityUsers(nodes), uint64(total), nil
+}
+
+func (r *UserRepo) Search(ctx context.Context, keyword string, limit, offset uint32) ([]*entity.User, uint64, error) {
+	query := r.db.User.Query().Where(
+		user.DeletedAtIsNil(),
+		user.Or(user.NameContains(keyword), user.EmailContains(keyword)),
+	)
 
 	total, err := query.Clone().Count(ctx)
 	if err != nil {
 		return nil, 0, err
 	}
-	nodes, err := query.Order(entpkg.Desc(user.FieldID)).Limit(int(limit)).Offset(int(offset)).All(ctx)
+	nodes, err := query.Order(ent.Desc(user.FieldID)).Limit(int(limit)).Offset(int(offset)).All(ctx)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -171,7 +182,7 @@ func (r *UserRepo) UpdateAvatar(ctx context.Context, userID uint64, avatar strin
 
 func (r *UserRepo) UpdatePassword(ctx context.Context, userID uint64, password string) error {
 	err := r.db.User.UpdateOneID(int64(userID)).SetPassword(password).Exec(ctx)
-	if entpkg.IsNotFound(err) {
+	if ent.IsNotFound(err) {
 		return errors.New("user not found")
 	}
 	return err
@@ -187,7 +198,7 @@ func (r *UserRepo) UpdateStatus(ctx context.Context, userID uint64, status strin
 
 // =====================================================================================================================
 
-func toEntityUser(node *entpkg.User) *entity.User {
+func toEntityUser(node *ent.User) *entity.User {
 	if node == nil {
 		return nil
 	}
@@ -213,7 +224,7 @@ func toEntityUser(node *entpkg.User) *entity.User {
 	return value
 }
 
-func toEntityUsers(nodes []*entpkg.User) []*entity.User {
+func toEntityUsers(nodes []*ent.User) []*entity.User {
 	users := make([]*entity.User, 0, len(nodes))
 	for _, node := range nodes {
 		users = append(users, toEntityUser(node))

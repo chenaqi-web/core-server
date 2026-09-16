@@ -49,12 +49,22 @@ message UpdateAvatarResponse {
 }
 
 message ListUsersRequest {
+  uint32 page = 1;
+  uint32 page_size = 2;
+}
+
+message ListUsersResponse {
+  repeated UserInfo users = 1;
+  uint64 total = 2;
+}
+
+message SearchUsersRequest {
   string keyword = 1;
   uint32 page = 2;
   uint32 page_size = 3;
 }
 
-message ListUsersResponse {
+message SearchUsersResponse {
   repeated UserInfo users = 1;
   uint64 total = 2;
 }
@@ -70,6 +80,7 @@ message UpdateUserStatusResponse {
 
 service UserService {
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+  rpc SearchUsers(SearchUsersRequest) returns (SearchUsersResponse);
   rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
   rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
   rpc UpdateAvatar(UpdateAvatarRequest) returns (UpdateAvatarResponse);
