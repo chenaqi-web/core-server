@@ -209,6 +209,8 @@ func (s *UserService) UpdateStatus(ctx context.Context, req *dto.UpdateUserStatu
 	return nil
 }
 
+// =====================================================================================================================
+
 //func (s *UserService) SearchUser(ctx context.Context, req *dto.SearchUsersRequest) (*dto.SearchUsersResponse, error) {
 //	users, total, err := s.repo.Search(ctx, req.Keyword, req.Page, (req.Page-1)*req.PageSize)
 //	if err != nil {
