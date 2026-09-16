@@ -80,11 +80,10 @@ func (s *UserService) EmailLogin(ctx context.Context, req *dto.EmailLoginRequest
 }
 
 func (s *UserService) Register(ctx context.Context, req *dto.RegisterRequest) error {
-	username, email, password := req.Username, req.Email, req.Password
-	existing, err := s.repo.GetByEmail(ctx, email)
+	existing, err := s.repo.GetByEmail(ctx, req.Email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			s.log.Info("UserService/Register user not found", zap.String("username", username))
+			s.log.Info("UserService/Register user not found", zap.String("username", req.Username))
 			return ErrUserNotFound
 		}
 		s.log.Error("UserService/Register error:", zap.Error(err))
@@ -95,9 +94,9 @@ func (s *UserService) Register(ctx context.Context, req *dto.RegisterRequest) er
 	}
 
 	user := &entity.User{
-		Name:     username,
-		Email:    email,
-		Password: utils.Bcrypt(password),
+		Name:     req.Username,
+		Email:    req.Email,
+		Password: utils.Bcrypt(req.Password),
 		Role:     entity.UserRoleUser,
 		Status:   entity.StatusApproved,
 	}
@@ -109,14 +108,13 @@ func (s *UserService) Register(ctx context.Context, req *dto.RegisterRequest) er
 }
 
 func (s *UserService) ForgotPassword(ctx context.Context, req *dto.ForgotPasswordRequest) error {
-	email, password, confirm := req.Email, req.Password, req.Confirm
 	// 1.校验两次密码是否相同
-	if password != confirm {
+	if req.Password != req.Confirm {
 		return errors.New("passwords do not match")
 	}
 
 	// 2.判断该邮箱是否存在
-	user, err := s.repo.GetByEmail(ctx, email)
+	user, err := s.repo.GetByEmail(ctx, req.Email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// 用户不存在
@@ -129,7 +127,7 @@ func (s *UserService) ForgotPassword(ctx context.Context, req *dto.ForgotPasswor
 	}
 
 	// 3.更新密码
-	err = s.repo.UpdatePassword(ctx, user.ID, utils.Bcrypt(password))
+	err = s.repo.UpdatePassword(ctx, user.ID, utils.Bcrypt(req.Password))
 	if err != nil {
 		s.log.Error("UserService/ForgotPassword error:", zap.Error(err))
 		return err

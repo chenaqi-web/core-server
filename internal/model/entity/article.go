@@ -21,9 +21,9 @@ type Article struct {
 	CategoryID uint64 `db:"category_id"`
 	IsTop      bool   `db:"is_top"`
 
-	ViewCount    uint64 `db:"view_count"`    // 改这里
-	LikeCount    uint64 `db:"like_count"`    // 改这里
-	CommentCount uint64 `db:"comment_count"` // 改这里
+	ViewCount    uint64 `db:"view_count"`
+	LikeCount    uint64 `db:"like_count"`
+	CommentCount uint64 `db:"comment_count"`
 }
 
 func (Article) TableName() string { return "blog_article" }

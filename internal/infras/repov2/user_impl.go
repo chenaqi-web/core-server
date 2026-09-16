@@ -15,7 +15,9 @@ type UserRepo struct {
 }
 
 func NewUserRepo(client *EntClient) *UserRepo {
-	return &UserRepo{EntClient: client}
+	return &UserRepo{
+		EntClient: client,
+	}
 }
 
 func (r *UserRepo) GetByID(ctx context.Context, id uint64) (*entity.User, error) {
