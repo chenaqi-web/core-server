@@ -12,7 +12,6 @@ type UserRepo interface {
 	GetByName(ctx context.Context, name string) (*entity.User, error)
 	GetByEmail(ctx context.Context, email string) (*entity.User, error)
 	GetStat(ctx context.Context, userID uint64) (*entity.UserStat, error)
-	GetStats(ctx context.Context, userIDs []uint64) (map[uint64]*entity.UserStat, error)
 
 	Create(ctx context.Context, user *entity.User) error
 	CreateStat(ctx context.Context, user *entity.UserStat) error

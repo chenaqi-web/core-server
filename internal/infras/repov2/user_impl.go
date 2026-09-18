@@ -139,22 +139,6 @@ func (r *UserRepo) GetStat(ctx context.Context, userID uint64) (*entity.UserStat
 	return toEntityUserStat(stat), nil
 }
 
-func (r *UserRepo) GetStats(ctx context.Context, userIDs []uint64) (map[uint64]*entity.UserStat, error) {
-	stats := make(map[uint64]*entity.UserStat, len(userIDs))
-	if len(userIDs) == 0 {
-		return stats, nil
-	}
-	entIDs := userIDs
-	nodes, err := r.db.UserStat.Query().Where(userstat.UserIDIn(entIDs...)).All(ctx)
-	if err != nil {
-		return nil, err
-	}
-	for _, node := range nodes {
-		stats[uint64(node.UserID)] = toEntityUserStat(node)
-	}
-	return stats, nil
-}
-
 func (r *UserRepo) GetLikeCount(ctx context.Context, userID uint64) (int64, error) {
 	return 0, nil
 }
