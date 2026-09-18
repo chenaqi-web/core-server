@@ -9,6 +9,9 @@ CREATE TABLE `user_stat` (
     `receive_view_count` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '收到的浏览数',
     `favor_count` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '收藏数',
     `receive_favor_count` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '收到的收藏数',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `deleted_at` DATETIME DEFAULT NULL COMMENT '软删除时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_user_stat_user_id` (`user_id`),
     CONSTRAINT `fk_user_stat_user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)

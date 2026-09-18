@@ -15,6 +15,7 @@ type UserRepo interface {
 	GetStats(ctx context.Context, userIDs []uint64) (map[uint64]*entity.UserStat, error)
 
 	Create(ctx context.Context, user *entity.User) error
+	CreateStat(ctx context.Context, user *entity.UserStat) error
 	Search(ctx context.Context, keyword string, limit, offset uint32) ([]*entity.User, uint64, error)
 	List(ctx context.Context, limit, offset uint32) ([]*entity.User, uint64, error)
 	ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User, error)

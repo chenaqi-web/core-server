@@ -71,6 +71,21 @@ func (r *UserRepo) Create(ctx context.Context, value *entity.User) error {
 	return nil
 }
 
+func (r *UserRepo) CreateStat(ctx context.Context, value *entity.UserStat) error {
+	_, err := r.db.UserStat.Create().
+		SetUserID(value.UserID).
+		SetFollowersCount(value.FollowersCount).
+		SetFollowingCount(value.FollowingCount).
+		SetLikeCount(value.LikeCount).
+		SetReceiveLikeCount(value.ReceiveLikeCount).
+		SetViewCount(value.ViewCount).
+		SetReceiveViewCount(value.ReceiveViewCount).
+		SetFavorCount(value.FavorCount).
+		SetReceiveFavorCount(value.ReceiveFavorCount).
+		Save(ctx)
+	return err
+}
+
 func (r *UserRepo) List(ctx context.Context, limit, offset uint32) ([]*entity.User, uint64, error) {
 	query := r.db.User.Query().Where(user.DeletedAtIsNil())
 	total, err := query.Clone().Count(ctx)

@@ -22,20 +22,18 @@ const (
 )
 
 type UserInfo struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	Id               uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Username         string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
-	Email            string                 `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
-	Phone            string                 `protobuf:"bytes,4,opt,name=phone,proto3" json:"phone,omitempty"`
-	Avatar           string                 `protobuf:"bytes,5,opt,name=avatar,proto3" json:"avatar,omitempty"`
-	Sex              string                 `protobuf:"bytes,6,opt,name=sex,proto3" json:"sex,omitempty"`
-	Age              uint32                 `protobuf:"varint,7,opt,name=age,proto3" json:"age,omitempty"`
-	Role             string                 `protobuf:"bytes,8,opt,name=role,proto3" json:"role,omitempty"`
-	Status           string                 `protobuf:"bytes,9,opt,name=status,proto3" json:"status,omitempty"`
-	LikeCount        uint64                 `protobuf:"varint,10,opt,name=like_count,json=likeCount,proto3" json:"like_count,omitempty"`
-	ReceiveLikeCount uint64                 `protobuf:"varint,11,opt,name=receive_like_count,json=receiveLikeCount,proto3" json:"receive_like_count,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
+	Email         string                 `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
+	Phone         string                 `protobuf:"bytes,4,opt,name=phone,proto3" json:"phone,omitempty"`
+	Avatar        string                 `protobuf:"bytes,5,opt,name=avatar,proto3" json:"avatar,omitempty"`
+	Sex           string                 `protobuf:"bytes,6,opt,name=sex,proto3" json:"sex,omitempty"`
+	Age           uint32                 `protobuf:"varint,7,opt,name=age,proto3" json:"age,omitempty"`
+	Role          string                 `protobuf:"bytes,8,opt,name=role,proto3" json:"role,omitempty"`
+	Status        string                 `protobuf:"bytes,9,opt,name=status,proto3" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *UserInfo) Reset() {
@@ -131,20 +129,6 @@ func (x *UserInfo) GetStatus() string {
 	return ""
 }
 
-func (x *UserInfo) GetLikeCount() uint64 {
-	if x != nil {
-		return x.LikeCount
-	}
-	return 0
-}
-
-func (x *UserInfo) GetReceiveLikeCount() uint64 {
-	if x != nil {
-		return x.ReceiveLikeCount
-	}
-	return 0
-}
-
 type GetProfileRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        uint64                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
@@ -190,10 +174,26 @@ func (x *GetProfileRequest) GetUserId() uint64 {
 }
 
 type GetProfileResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	User          *UserInfo              `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Id                uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Username          string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
+	Email             string                 `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
+	Phone             string                 `protobuf:"bytes,4,opt,name=phone,proto3" json:"phone,omitempty"`
+	Avatar            string                 `protobuf:"bytes,5,opt,name=avatar,proto3" json:"avatar,omitempty"`
+	Sex               string                 `protobuf:"bytes,6,opt,name=sex,proto3" json:"sex,omitempty"`
+	Age               uint32                 `protobuf:"varint,7,opt,name=age,proto3" json:"age,omitempty"`
+	Role              string                 `protobuf:"bytes,8,opt,name=role,proto3" json:"role,omitempty"`
+	Status            string                 `protobuf:"bytes,9,opt,name=status,proto3" json:"status,omitempty"`
+	FollowersCount    uint64                 `protobuf:"varint,10,opt,name=followers_count,json=followersCount,proto3" json:"followers_count,omitempty"`
+	FollowingCount    uint64                 `protobuf:"varint,11,opt,name=following_count,json=followingCount,proto3" json:"following_count,omitempty"`
+	LikeCount         uint64                 `protobuf:"varint,12,opt,name=like_count,json=likeCount,proto3" json:"like_count,omitempty"`
+	ReceiveLikeCount  uint64                 `protobuf:"varint,13,opt,name=receive_like_count,json=receiveLikeCount,proto3" json:"receive_like_count,omitempty"`
+	ViewCount         uint64                 `protobuf:"varint,14,opt,name=view_count,json=viewCount,proto3" json:"view_count,omitempty"`
+	ReceiveViewCount  uint64                 `protobuf:"varint,15,opt,name=receive_view_count,json=receiveViewCount,proto3" json:"receive_view_count,omitempty"`
+	FavorCount        uint64                 `protobuf:"varint,16,opt,name=favor_count,json=favorCount,proto3" json:"favor_count,omitempty"`
+	ReceiveFavorCount uint64                 `protobuf:"varint,17,opt,name=receive_favor_count,json=receiveFavorCount,proto3" json:"receive_favor_count,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *GetProfileResponse) Reset() {
@@ -226,11 +226,123 @@ func (*GetProfileResponse) Descriptor() ([]byte, []int) {
 	return file_user_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *GetProfileResponse) GetUser() *UserInfo {
+func (x *GetProfileResponse) GetId() uint64 {
 	if x != nil {
-		return x.User
+		return x.Id
 	}
-	return nil
+	return 0
+}
+
+func (x *GetProfileResponse) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *GetProfileResponse) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *GetProfileResponse) GetPhone() string {
+	if x != nil {
+		return x.Phone
+	}
+	return ""
+}
+
+func (x *GetProfileResponse) GetAvatar() string {
+	if x != nil {
+		return x.Avatar
+	}
+	return ""
+}
+
+func (x *GetProfileResponse) GetSex() string {
+	if x != nil {
+		return x.Sex
+	}
+	return ""
+}
+
+func (x *GetProfileResponse) GetAge() uint32 {
+	if x != nil {
+		return x.Age
+	}
+	return 0
+}
+
+func (x *GetProfileResponse) GetRole() string {
+	if x != nil {
+		return x.Role
+	}
+	return ""
+}
+
+func (x *GetProfileResponse) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *GetProfileResponse) GetFollowersCount() uint64 {
+	if x != nil {
+		return x.FollowersCount
+	}
+	return 0
+}
+
+func (x *GetProfileResponse) GetFollowingCount() uint64 {
+	if x != nil {
+		return x.FollowingCount
+	}
+	return 0
+}
+
+func (x *GetProfileResponse) GetLikeCount() uint64 {
+	if x != nil {
+		return x.LikeCount
+	}
+	return 0
+}
+
+func (x *GetProfileResponse) GetReceiveLikeCount() uint64 {
+	if x != nil {
+		return x.ReceiveLikeCount
+	}
+	return 0
+}
+
+func (x *GetProfileResponse) GetViewCount() uint64 {
+	if x != nil {
+		return x.ViewCount
+	}
+	return 0
+}
+
+func (x *GetProfileResponse) GetReceiveViewCount() uint64 {
+	if x != nil {
+		return x.ReceiveViewCount
+	}
+	return 0
+}
+
+func (x *GetProfileResponse) GetFavorCount() uint64 {
+	if x != nil {
+		return x.FavorCount
+	}
+	return 0
+}
+
+func (x *GetProfileResponse) GetReceiveFavorCount() uint64 {
+	if x != nil {
+		return x.ReceiveFavorCount
+	}
+	return 0
 }
 
 type UpdateProfileRequest struct {
@@ -311,7 +423,7 @@ func (x *UpdateProfileRequest) GetAge() uint32 {
 
 type UpdateProfileResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	User          *UserInfo              `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -346,11 +458,11 @@ func (*UpdateProfileResponse) Descriptor() ([]byte, []int) {
 	return file_user_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *UpdateProfileResponse) GetUser() *UserInfo {
+func (x *UpdateProfileResponse) GetSuccess() bool {
 	if x != nil {
-		return x.User
+		return x.Success
 	}
-	return nil
+	return false
 }
 
 type UpdateAvatarRequest struct {
@@ -766,7 +878,7 @@ var File_user_proto protoreflect.FileDescriptor
 const file_user_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"user.proto\x12\x04user\"\x97\x02\n" +
+	"user.proto\x12\x04user\"\xca\x01\n" +
 	"\bUserInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x14\n" +
@@ -776,23 +888,39 @@ const file_user_proto_rawDesc = "" +
 	"\x03sex\x18\x06 \x01(\tR\x03sex\x12\x10\n" +
 	"\x03age\x18\a \x01(\rR\x03age\x12\x12\n" +
 	"\x04role\x18\b \x01(\tR\x04role\x12\x16\n" +
-	"\x06status\x18\t \x01(\tR\x06status\x12\x1d\n" +
-	"\n" +
-	"like_count\x18\n" +
-	" \x01(\x04R\tlikeCount\x12,\n" +
-	"\x12receive_like_count\x18\v \x01(\x04R\x10receiveLikeCount\",\n" +
+	"\x06status\x18\t \x01(\tR\x06status\",\n" +
 	"\x11GetProfileRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x04R\x06userId\"8\n" +
-	"\x12GetProfileResponse\x12\"\n" +
-	"\x04user\x18\x01 \x01(\v2\x0e.user.UserInfoR\x04user\"\x85\x01\n" +
+	"\auser_id\x18\x01 \x01(\x04R\x06userId\"\x91\x04\n" +
+	"\x12GetProfileResponse\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x1a\n" +
+	"\busername\x18\x02 \x01(\tR\busername\x12\x14\n" +
+	"\x05email\x18\x03 \x01(\tR\x05email\x12\x14\n" +
+	"\x05phone\x18\x04 \x01(\tR\x05phone\x12\x16\n" +
+	"\x06avatar\x18\x05 \x01(\tR\x06avatar\x12\x10\n" +
+	"\x03sex\x18\x06 \x01(\tR\x03sex\x12\x10\n" +
+	"\x03age\x18\a \x01(\rR\x03age\x12\x12\n" +
+	"\x04role\x18\b \x01(\tR\x04role\x12\x16\n" +
+	"\x06status\x18\t \x01(\tR\x06status\x12'\n" +
+	"\x0ffollowers_count\x18\n" +
+	" \x01(\x04R\x0efollowersCount\x12'\n" +
+	"\x0ffollowing_count\x18\v \x01(\x04R\x0efollowingCount\x12\x1d\n" +
+	"\n" +
+	"like_count\x18\f \x01(\x04R\tlikeCount\x12,\n" +
+	"\x12receive_like_count\x18\r \x01(\x04R\x10receiveLikeCount\x12\x1d\n" +
+	"\n" +
+	"view_count\x18\x0e \x01(\x04R\tviewCount\x12,\n" +
+	"\x12receive_view_count\x18\x0f \x01(\x04R\x10receiveViewCount\x12\x1f\n" +
+	"\vfavor_count\x18\x10 \x01(\x04R\n" +
+	"favorCount\x12.\n" +
+	"\x13receive_favor_count\x18\x11 \x01(\x04R\x11receiveFavorCount\"\x85\x01\n" +
 	"\x14UpdateProfileRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x04R\x06userId\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x14\n" +
 	"\x05phone\x18\x03 \x01(\tR\x05phone\x12\x10\n" +
 	"\x03sex\x18\x04 \x01(\tR\x03sex\x12\x10\n" +
-	"\x03age\x18\x05 \x01(\rR\x03age\";\n" +
-	"\x15UpdateProfileResponse\x12\"\n" +
-	"\x04user\x18\x01 \x01(\v2\x0e.user.UserInfoR\x04user\"F\n" +
+	"\x03age\x18\x05 \x01(\rR\x03age\"1\n" +
+	"\x15UpdateProfileResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"F\n" +
 	"\x13UpdateAvatarRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x04R\x06userId\x12\x16\n" +
 	"\x06avatar\x18\x02 \x01(\tR\x06avatar\"(\n" +
@@ -854,27 +982,25 @@ var file_user_proto_goTypes = []any{
 	(*UpdateUserStatusResponse)(nil), // 12: user.UpdateUserStatusResponse
 }
 var file_user_proto_depIdxs = []int32{
-	0,  // 0: user.GetProfileResponse.user:type_name -> user.UserInfo
-	0,  // 1: user.UpdateProfileResponse.user:type_name -> user.UserInfo
-	0,  // 2: user.ListUsersResponse.users:type_name -> user.UserInfo
-	0,  // 3: user.SearchUsersResponse.users:type_name -> user.UserInfo
-	7,  // 4: user.UserService.ListUsers:input_type -> user.ListUsersRequest
-	9,  // 5: user.UserService.SearchUsers:input_type -> user.SearchUsersRequest
-	1,  // 6: user.UserService.GetProfile:input_type -> user.GetProfileRequest
-	3,  // 7: user.UserService.UpdateProfile:input_type -> user.UpdateProfileRequest
-	5,  // 8: user.UserService.UpdateAvatar:input_type -> user.UpdateAvatarRequest
-	11, // 9: user.UserService.UpdateUserStatus:input_type -> user.UpdateUserStatusRequest
-	8,  // 10: user.UserService.ListUsers:output_type -> user.ListUsersResponse
-	10, // 11: user.UserService.SearchUsers:output_type -> user.SearchUsersResponse
-	2,  // 12: user.UserService.GetProfile:output_type -> user.GetProfileResponse
-	4,  // 13: user.UserService.UpdateProfile:output_type -> user.UpdateProfileResponse
-	6,  // 14: user.UserService.UpdateAvatar:output_type -> user.UpdateAvatarResponse
-	12, // 15: user.UserService.UpdateUserStatus:output_type -> user.UpdateUserStatusResponse
-	10, // [10:16] is the sub-list for method output_type
-	4,  // [4:10] is the sub-list for method input_type
-	4,  // [4:4] is the sub-list for extension type_name
-	4,  // [4:4] is the sub-list for extension extendee
-	0,  // [0:4] is the sub-list for field type_name
+	0,  // 0: user.ListUsersResponse.users:type_name -> user.UserInfo
+	0,  // 1: user.SearchUsersResponse.users:type_name -> user.UserInfo
+	7,  // 2: user.UserService.ListUsers:input_type -> user.ListUsersRequest
+	9,  // 3: user.UserService.SearchUsers:input_type -> user.SearchUsersRequest
+	1,  // 4: user.UserService.GetProfile:input_type -> user.GetProfileRequest
+	3,  // 5: user.UserService.UpdateProfile:input_type -> user.UpdateProfileRequest
+	5,  // 6: user.UserService.UpdateAvatar:input_type -> user.UpdateAvatarRequest
+	11, // 7: user.UserService.UpdateUserStatus:input_type -> user.UpdateUserStatusRequest
+	8,  // 8: user.UserService.ListUsers:output_type -> user.ListUsersResponse
+	10, // 9: user.UserService.SearchUsers:output_type -> user.SearchUsersResponse
+	2,  // 10: user.UserService.GetProfile:output_type -> user.GetProfileResponse
+	4,  // 11: user.UserService.UpdateProfile:output_type -> user.UpdateProfileResponse
+	6,  // 12: user.UserService.UpdateAvatar:output_type -> user.UpdateAvatarResponse
+	12, // 13: user.UserService.UpdateUserStatus:output_type -> user.UpdateUserStatusResponse
+	8,  // [8:14] is the sub-list for method output_type
+	2,  // [2:8] is the sub-list for method input_type
+	2,  // [2:2] is the sub-list for extension type_name
+	2,  // [2:2] is the sub-list for extension extendee
+	0,  // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_user_proto_init() }

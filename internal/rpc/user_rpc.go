@@ -22,19 +22,35 @@ func (u *UserRPC) GetProfile(ctx context.Context, request *userpb.GetProfileRequ
 		return nil, err
 	}
 	return &userpb.GetProfileResponse{
-		User: ConvertToUserInfo(res.UserInfo),
+		Id:                res.ID,
+		Username:          res.Username,
+		Email:             res.Email,
+		Phone:             res.Phone,
+		Avatar:            res.Avatar,
+		Sex:               res.Sex,
+		Age:               res.Age,
+		Role:              res.Role,
+		Status:            res.Status,
+		FollowersCount:    res.FollowersCount,
+		FollowingCount:    res.FollowingCount,
+		LikeCount:         res.LikeCount,
+		ReceiveLikeCount:  res.ReceiveLikeCount,
+		FavorCount:        res.FavorCount,
+		ReceiveFavorCount: res.ReceiveFavorCount,
+		ViewCount:         res.ViewCount,
+		ReceiveViewCount:  res.ReceiveViewCount,
 	}, nil
 }
 
 func (u *UserRPC) UpdateProfile(ctx context.Context, request *userpb.UpdateProfileRequest) (*userpb.UpdateProfileResponse, error) {
-	res, err := u.UserService.UpdateProfile(
+	err := u.UserService.UpdateProfile(
 		ctx,
 		&dto.UpdateProfileRequest{UserID: request.GetUserId(), Username: request.GetUsername(), Phone: request.GetPhone(), Sex: request.GetSex(), Age: request.GetAge()},
 	)
 	if err != nil {
 		return nil, err
 	}
-	return &userpb.UpdateProfileResponse{User: ConvertToUserInfo(res.UserInfo)}, nil
+	return &userpb.UpdateProfileResponse{Success: true}, nil
 }
 
 func (u *UserRPC) UpdateAvatar(ctx context.Context, request *userpb.UpdateAvatarRequest) (*userpb.UpdateAvatarResponse, error) {
@@ -90,16 +106,14 @@ func ConvertToUserInfo(res *dto.UserInfo) *userpb.UserInfo {
 		return nil
 	}
 	return &userpb.UserInfo{
-		Id:               res.ID,
-		Username:         res.Username,
-		Email:            res.Email,
-		Phone:            res.Phone,
-		Avatar:           res.Avatar,
-		Sex:              res.Sex,
-		Age:              res.Age,
-		Role:             res.Role,
-		Status:           res.Status,
-		LikeCount:        res.LikeCount,
-		ReceiveLikeCount: res.ReceiveLikeCount,
+		Id:       res.ID,
+		Username: res.Username,
+		Email:    res.Email,
+		Phone:    res.Phone,
+		Avatar:   res.Avatar,
+		Sex:      res.Sex,
+		Age:      res.Age,
+		Role:     res.Role,
+		Status:   res.Status,
 	}
 }

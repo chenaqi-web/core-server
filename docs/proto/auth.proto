@@ -23,13 +23,8 @@ message EmailLoginRequest {
 message LoginResponse {
   uint64 id = 1;
   string username = 2;
-  string email = 3;
-  string phone = 4;
-  string avatar = 5;
-  string sex = 6;
-  uint32 age = 7;
-  string role = 8;
-  string status = 9;
+  string avatar = 3;
+  string role = 4;
 }
 
 message ForgotPasswordRequest {

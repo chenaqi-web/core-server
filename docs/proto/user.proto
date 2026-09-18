@@ -14,8 +14,6 @@ message UserInfo {
   uint32 age = 7;
   string role = 8;
   string status = 9;
-  uint64 like_count = 10;
-  uint64 receive_like_count = 11;
 }
 
 
@@ -24,7 +22,24 @@ message GetProfileRequest {
 }
 
 message GetProfileResponse {
-  UserInfo user = 1;
+  uint64 id = 1;
+  string username = 2;
+  string email = 3;
+  string phone = 4;
+  string avatar = 5;
+  string sex = 6;
+  uint32 age = 7;
+  string role = 8;
+  string status = 9;
+
+  uint64 followers_count = 10;
+  uint64 following_count = 11;
+  uint64 like_count = 12;
+  uint64 receive_like_count = 13;
+  uint64 view_count = 14;
+  uint64 receive_view_count = 15;
+  uint64 favor_count = 16;
+  uint64 receive_favor_count = 17;
 }
 
 message UpdateProfileRequest {
@@ -36,7 +51,7 @@ message UpdateProfileRequest {
 }
 
 message UpdateProfileResponse {
-  UserInfo user = 1;
+  bool success = 1;
 }
 
 message UpdateAvatarRequest {

@@ -35,6 +35,8 @@ func NewUserService(
 	}
 }
 
+// 用户登入方面
+
 func (s *UserService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.LoginResponse, error) {
 	// 1.判断用户是否存在
 	user, err := s.repo.GetByName(ctx, req.Username)
@@ -93,10 +95,24 @@ func (s *UserService) Register(ctx context.Context, req *dto.RegisterRequest) er
 		Role:     entity.UserRoleUser,
 		Status:   entity.StatusApproved,
 	}
-	if err := s.repo.Create(ctx, user); err != nil {
-		s.log.Error("UserService/Register error:", zap.Error(err))
+
+	// 事务处理user和stat表
+	err = s.repo.WithTransaction(ctx, func(ctx context.Context) error {
+		if err := s.repo.Create(ctx, user); err != nil {
+			s.log.Error("UserService/Register error:", zap.Error(err))
+			return err
+		}
+		// stat直接就默认值0
+		if err := s.repo.CreateStat(ctx, &entity.UserStat{UserID: user.ID}); err != nil {
+			s.log.Error("UserService/Register error:", zap.Error(err))
+			return err
+		}
+		return nil
+	})
+	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -109,7 +125,6 @@ func (s *UserService) ForgotPassword(ctx context.Context, req *dto.ForgotPasswor
 	// 2.判断该邮箱是否存在
 	user, err := s.repo.GetByEmail(ctx, req.Email)
 	if err != nil {
-		// 其他数据库错误
 		s.log.Error("UserService/ForgotPassword error:", zap.Error(err))
 		return err
 	}
@@ -129,38 +144,37 @@ func (s *UserService) ForgotPassword(ctx context.Context, req *dto.ForgotPasswor
 
 // =====================================================================================================================
 
-func (s *UserService) List(ctx context.Context, req *dto.ListUsersRequest) (*dto.ListUsersResponse, error) {
-	users, total, err := s.repo.List(ctx, req.PageSize, (req.Page-1)*req.PageSize)
-	if err != nil {
-		s.log.Error("UserService/List error:", zap.Error(err))
-		return nil, err
-	}
-	return dto.ToListUsersResponse(users, total), nil
-}
+// 用户信息方面
 
-func (s *UserService) GetProfile(ctx context.Context, req *dto.GetProfileRequest) (*dto.UserMsgResponse, error) {
-	user, err := s.repo.GetByID(ctx, req.UserID)
+func (s *UserService) GetProfile(ctx context.Context, req *dto.GetProfileRequest) (*dto.GetProfileResponse, error) {
+	// 1.拿到用户的基础信息
+	userMsg, err := s.repo.GetByID(ctx, req.UserID)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			s.log.Info("UserService/GetProfile info:", zap.Error(ErrUserNotFound))
-			return nil, ErrUserNotFound
-		}
 		s.log.Error("GetProfile error", zap.Error(err))
 		return nil, err
 	}
-	return dto.ToUserMsgResponse(user), nil
+	if userMsg == nil {
+		return nil, ErrUserNotFound
+	}
+
+	// 2.拿到用户的计数信息
+	userStat, err := s.repo.GetStat(ctx, req.UserID)
+	if err != nil {
+		s.log.Error("GetProfile error", zap.Error(err))
+		return nil, err
+	}
+
+	return dto.ToGetProfileResponse(userMsg, userStat), nil
 }
 
-// =====================================================================================================================
-
-func (s *UserService) UpdateProfile(ctx context.Context, req *dto.UpdateProfileRequest) (*dto.UserMsgResponse, error) {
+func (s *UserService) UpdateProfile(ctx context.Context, req *dto.UpdateProfileRequest) error {
 	user, err := s.repo.GetByID(ctx, req.UserID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, ErrUserNotFound
+			return ErrUserNotFound
 		}
 		s.log.Error("UpdateProfile error", zap.Error(err))
-		return nil, err
+		return err
 	}
 
 	user.Name = req.Username
@@ -169,11 +183,12 @@ func (s *UserService) UpdateProfile(ctx context.Context, req *dto.UpdateProfileR
 	user.Age = uint64(req.Age)
 	if err := s.repo.UpdateProfile(ctx, user); err != nil {
 		s.log.Error("UpdateProfile error", zap.Error(err))
-		return nil, err
+		return err
 	}
-	return dto.ToUserMsgResponse(user), nil
+	return nil
 }
 
+// todo 后续修改
 func (s *UserService) UpdateAvatar(ctx context.Context, req *dto.UpdateAvatarRequest) (*dto.UserAvatarResponse, error) {
 	user, err := s.repo.GetByID(ctx, req.UserID)
 	if err != nil {
@@ -191,6 +206,10 @@ func (s *UserService) UpdateAvatar(ctx context.Context, req *dto.UpdateAvatarReq
 	return dto.ToUserAvatarResponse(user.Avatar), nil
 }
 
+// =====================================================================================================================
+
+// 管理用户方面
+
 func (s *UserService) UpdateStatus(ctx context.Context, req *dto.UpdateUserStatusRequest) error {
 	userID, status := req.UserID, req.Status
 	if err := s.repo.UpdateStatus(ctx, userID, status); err != nil {
@@ -200,7 +219,14 @@ func (s *UserService) UpdateStatus(ctx context.Context, req *dto.UpdateUserStatu
 	return nil
 }
 
-// =====================================================================================================================
+func (s *UserService) List(ctx context.Context, req *dto.ListUsersRequest) (*dto.ListUsersResponse, error) {
+	users, total, err := s.repo.List(ctx, req.PageSize, (req.Page-1)*req.PageSize)
+	if err != nil {
+		s.log.Error("UserService/List error:", zap.Error(err))
+		return nil, err
+	}
+	return dto.ToListUsersResponse(users, total), nil
+}
 
 func (s *UserService) SearchUser(ctx context.Context, req *dto.SearchUsersRequest) (*dto.SearchUsersResponse, error) {
 	users, total, err := s.repo.Search(ctx, req.Keyword, req.PageSize, (req.Page-1)*req.PageSize)

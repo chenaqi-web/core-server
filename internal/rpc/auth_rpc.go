@@ -25,13 +25,8 @@ func (a *AuthRPC) Login(ctx context.Context, request *authpb.LoginRequest) (*aut
 	return &authpb.LoginResponse{
 		Id:       res.Id,
 		Username: res.Name,
-		Email:    res.Email,
-		Phone:    res.Phone,
 		Avatar:   res.Avatar,
-		Sex:      res.Sex,
 		Role:     res.Role,
-		Status:   res.Status,
-		Age:      res.Age,
 	}, nil
 }
 
@@ -43,13 +38,8 @@ func (a *AuthRPC) EmailLogin(ctx context.Context, request *authpb.EmailLoginRequ
 	return &authpb.LoginResponse{
 		Id:       res.Id,
 		Username: res.Name,
-		Email:    res.Email,
-		Phone:    res.Phone,
 		Avatar:   res.Avatar,
-		Sex:      res.Sex,
 		Role:     res.Role,
-		Status:   res.Status,
-		Age:      res.Age,
 	}, nil
 }
 

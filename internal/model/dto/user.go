@@ -4,20 +4,6 @@ import (
 	"core-server/internal/model/entity"
 )
 
-type UserInfo struct {
-	ID               uint64
-	Username         string
-	Email            string
-	Phone            string
-	Avatar           string
-	Sex              string
-	Age              uint32
-	Role             string
-	Status           string
-	LikeCount        uint64
-	ReceiveLikeCount uint64
-}
-
 type LoginRequest struct {
 	Username string
 	Password string
@@ -50,32 +36,66 @@ type ForgotPasswordRequest struct {
 }
 
 // =====================================================================================================================
+type GetProfileRequest struct {
+	UserID uint64
+}
+type GetProfileResponse struct {
+	ID       uint64
+	Username string
+	Email    string
+	Phone    string
+	Avatar   string
+	Sex      string
+	Age      uint32
+	Role     string
+	Status   string
 
-type GetProfileRequest struct{ UserID uint64 }
+	FollowersCount    uint64
+	FollowingCount    uint64
+	LikeCount         uint64
+	ReceiveLikeCount  uint64
+	ViewCount         uint64
+	ReceiveViewCount  uint64
+	FavorCount        uint64
+	ReceiveFavorCount uint64
+}
+
 type UpdateProfileRequest struct {
 	UserID               uint64
 	Username, Phone, Sex string
 	Age                  uint32
 }
+
 type UpdateAvatarRequest struct {
 	UserID uint64
 	Avatar string
 }
+
+type UserAvatarResponse struct {
+	Url string
+}
+
+// =====================================================================================================================
 
 type UpdateUserStatusRequest struct {
 	UserID uint64
 	Status string
 }
 
-type UserMsgResponse struct {
-	*UserInfo
-}
-
-type UserAvatarResponse struct {
-	Url string
-}
 type ListUsersRequest struct {
 	Page, PageSize uint32
+}
+
+type UserInfo struct {
+	ID       uint64
+	Username string
+	Email    string
+	Phone    string
+	Avatar   string
+	Sex      string
+	Age      uint32
+	Role     string
+	Status   string
 }
 
 type ListUsersResponse struct {
@@ -93,22 +113,27 @@ type SearchUsersResponse struct {
 	Total uint64
 }
 
-func ToUserInfo(user *entity.User) *UserInfo {
-	if user == nil {
-		return nil
-	}
-	return &UserInfo{
-		ID:               user.ID,
-		Username:         user.Name,
-		Email:            user.Email,
-		Phone:            user.Phone,
-		Avatar:           user.Avatar,
-		Sex:              user.Sex,
-		Age:              uint32(user.Age),
-		Role:             user.Role,
-		Status:           user.Status,
-		LikeCount:        user.LikeCount,
-		ReceiveLikeCount: user.ReceiveLikeCount,
+// =====================================================================================================================
+
+func ToGetProfileResponse(user *entity.User, stat *entity.UserStat) *GetProfileResponse {
+	return &GetProfileResponse{
+		ID:                user.ID,
+		Username:          user.Name,
+		Email:             user.Email,
+		Phone:             user.Phone,
+		Avatar:            user.Avatar,
+		Sex:               user.Sex,
+		Age:               uint32(user.Age),
+		Role:              user.Role,
+		Status:            user.Status,
+		FollowersCount:    stat.FollowersCount,
+		FollowingCount:    stat.FollowingCount,
+		LikeCount:         stat.LikeCount,
+		ReceiveLikeCount:  stat.ReceiveLikeCount,
+		ViewCount:         stat.ViewCount,
+		ReceiveViewCount:  stat.ReceiveViewCount,
+		FavorCount:        stat.FavorCount,
+		ReceiveFavorCount: stat.ReceiveFavorCount,
 	}
 }
 
@@ -126,26 +151,33 @@ func ToLoginResponse(user *entity.User) *LoginResponse {
 	}
 }
 
-func ToUserMsgResponse(user *entity.User) *UserMsgResponse {
-	return &UserMsgResponse{
-		ToUserInfo(user),
-	}
-}
-
 func ToUserAvatarResponse(url string) *UserAvatarResponse {
 	return &UserAvatarResponse{
 		Url: url,
 	}
 }
 
+func ToUserInfo(user *entity.User) *UserInfo {
+	if user == nil {
+		return nil
+	}
+	return &UserInfo{
+		ID:       user.ID,
+		Username: user.Name,
+		Email:    user.Email,
+		Phone:    user.Phone,
+		Avatar:   user.Avatar,
+		Sex:      user.Sex,
+		Age:      uint32(user.Age),
+		Role:     user.Role,
+		Status:   user.Status,
+	}
+}
+
 func ToListUsersResponse(users []*entity.User, total uint64) *ListUsersResponse {
 	if users == nil {
-		return &ListUsersResponse{
-			Users: []*UserInfo{},
-			Total: total,
-		}
+		return nil
 	}
-
 	userInfos := make([]*UserInfo, 0, len(users))
 	for _, user := range users {
 		if userInfo := ToUserInfo(user); userInfo != nil {
