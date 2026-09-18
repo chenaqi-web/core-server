@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -43,8 +44,17 @@ const (
 	FieldStatus = "status"
 	// FieldAuthVersion holds the string denoting the auth_version field in the database.
 	FieldAuthVersion = "auth_version"
+	// EdgeStat holds the string denoting the stat edge name in mutations.
+	EdgeStat = "stat"
 	// Table holds the table name of the user in the database.
 	Table = "user"
+	// StatTable is the table that holds the stat relation/edge.
+	StatTable = "user_stat"
+	// StatInverseTable is the table name for the UserStat entity.
+	// It exists in this package in order to avoid circular dependency with the "userstat" package.
+	StatInverseTable = "user_stat"
+	// StatColumn is the table column denoting the stat relation/edge.
+	StatColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -201,4 +211,18 @@ func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 // ByAuthVersion orders the results by the auth_version field.
 func ByAuthVersion(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAuthVersion, opts...).ToFunc()
+}
+
+// ByStatField orders the results by stat field.
+func ByStatField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newStatStep(), sql.OrderByField(field, opts...))
+	}
+}
+func newStatStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(StatInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2O, false, StatTable, StatColumn),
+	)
 }

@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"core-server/internal/infras/repov2/ent/user"
+	"core-server/internal/infras/repov2/ent/userstat"
 	"errors"
 	"fmt"
 	"reflect"
@@ -73,7 +74,8 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			user.Table: user.ValidColumn,
+			user.Table:     user.ValidColumn,
+			userstat.Table: userstat.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

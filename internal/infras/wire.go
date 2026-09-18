@@ -20,6 +20,7 @@ var RepoProviderSet = wire.NewSet(
 	repo.NewArticleRepo,
 	repo.NewCommentRepo,
 
+	// v2 ent 版本
 	repov2.NewEntClient,
 	repov2.NewUserRepo,
 	// todo 新操作

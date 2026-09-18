@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"core-server/internal/infras/repov2/ent/user"
+	"core-server/internal/infras/repov2/ent/userstat"
 	"errors"
 	"fmt"
 	"time"
@@ -215,9 +216,28 @@ func (_c *UserCreate) SetNillableAuthVersion(v *uint64) *UserCreate {
 }
 
 // SetID sets the "id" field.
-func (_c *UserCreate) SetID(v int64) *UserCreate {
+func (_c *UserCreate) SetID(v uint64) *UserCreate {
 	_c.mutation.SetID(v)
 	return _c
+}
+
+// SetStatID sets the "stat" edge to the UserStat entity by ID.
+func (_c *UserCreate) SetStatID(id int) *UserCreate {
+	_c.mutation.SetStatID(id)
+	return _c
+}
+
+// SetNillableStatID sets the "stat" edge to the UserStat entity by ID if the given value is not nil.
+func (_c *UserCreate) SetNillableStatID(id *int) *UserCreate {
+	if id != nil {
+		_c = _c.SetStatID(*id)
+	}
+	return _c
+}
+
+// SetStat sets the "stat" edge to the UserStat entity.
+func (_c *UserCreate) SetStat(v *UserStat) *UserCreate {
+	return _c.SetStatID(v.ID)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -400,7 +420,7 @@ func (_c *UserCreate) sqlSave(ctx context.Context) (*User, error) {
 	}
 	if _spec.ID.Value != _node.ID {
 		id := _spec.ID.Value.(int64)
-		_node.ID = int64(id)
+		_node.ID = uint64(id)
 	}
 	_c.mutation.id = &_node.ID
 	_c.mutation.done = true
@@ -410,7 +430,7 @@ func (_c *UserCreate) sqlSave(ctx context.Context) (*User, error) {
 func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	var (
 		_node = &User{config: _c.config}
-		_spec = sqlgraph.NewCreateSpec(user.Table, sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64))
+		_spec = sqlgraph.NewCreateSpec(user.Table, sqlgraph.NewFieldSpec(user.FieldID, field.TypeUint64))
 	)
 	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
@@ -476,6 +496,22 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldAuthVersion, field.TypeUint64, value)
 		_node.AuthVersion = value
 	}
+	if nodes := _c.mutation.StatIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   user.StatTable,
+			Columns: []string{user.StatColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userstat.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
@@ -526,7 +562,7 @@ func (_c *UserCreateBulk) Save(ctx context.Context) ([]*User, error) {
 				mutation.id = &nodes[i].ID
 				if specs[i].ID.Value != nil && nodes[i].ID == 0 {
 					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int64(id)
+					nodes[i].ID = uint64(id)
 				}
 				mutation.done = true
 				return nodes[i], nil

@@ -6,6 +6,7 @@ import (
 	"context"
 	"core-server/internal/infras/repov2/ent/predicate"
 	"core-server/internal/infras/repov2/ent/user"
+	"core-server/internal/infras/repov2/ent/userstat"
 	"errors"
 	"fmt"
 	"sync"
@@ -24,7 +25,8 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeUser = "User"
+	TypeUser     = "User"
+	TypeUserStat = "UserStat"
 )
 
 // UserMutation represents an operation that mutates the User nodes in the graph.
@@ -32,7 +34,7 @@ type UserMutation struct {
 	config
 	op                    Op
 	typ                   string
-	id                    *int64
+	id                    *uint64
 	created_at            *time.Time
 	updated_at            *time.Time
 	deleted_at            *time.Time
@@ -53,6 +55,8 @@ type UserMutation struct {
 	auth_version          *uint64
 	addauth_version       *int64
 	clearedFields         map[string]struct{}
+	stat                  *int
+	clearedstat           bool
 	done                  bool
 	oldValue              func(context.Context) (*User, error)
 	predicates            []predicate.User
@@ -78,7 +82,7 @@ func newUserMutation(c config, op Op, opts ...userOption) *UserMutation {
 }
 
 // withUserID sets the ID field of the mutation.
-func withUserID(id int64) userOption {
+func withUserID(id uint64) userOption {
 	return func(m *UserMutation) {
 		var (
 			err   error
@@ -130,13 +134,13 @@ func (m UserMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of User entities.
-func (m *UserMutation) SetID(id int64) {
+func (m *UserMutation) SetID(id uint64) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *UserMutation) ID() (id int64, exists bool) {
+func (m *UserMutation) ID() (id uint64, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -147,12 +151,12 @@ func (m *UserMutation) ID() (id int64, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *UserMutation) IDs(ctx context.Context) ([]int64, error) {
+func (m *UserMutation) IDs(ctx context.Context) ([]uint64, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []int64{id}, nil
+			return []uint64{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -795,6 +799,45 @@ func (m *UserMutation) ResetAuthVersion() {
 	m.addauth_version = nil
 }
 
+// SetStatID sets the "stat" edge to the UserStat entity by id.
+func (m *UserMutation) SetStatID(id int) {
+	m.stat = &id
+}
+
+// ClearStat clears the "stat" edge to the UserStat entity.
+func (m *UserMutation) ClearStat() {
+	m.clearedstat = true
+}
+
+// StatCleared reports if the "stat" edge to the UserStat entity was cleared.
+func (m *UserMutation) StatCleared() bool {
+	return m.clearedstat
+}
+
+// StatID returns the "stat" edge ID in the mutation.
+func (m *UserMutation) StatID() (id int, exists bool) {
+	if m.stat != nil {
+		return *m.stat, true
+	}
+	return
+}
+
+// StatIDs returns the "stat" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// StatID instead. It exists only for internal usage by the builders.
+func (m *UserMutation) StatIDs() (ids []int) {
+	if id := m.stat; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetStat resets all changes to the "stat" edge.
+func (m *UserMutation) ResetStat() {
+	m.stat = nil
+	m.clearedstat = false
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -1226,19 +1269,28 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.stat != nil {
+		edges = append(edges, user.EdgeStat)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *UserMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case user.EdgeStat:
+		if id := m.stat; id != nil {
+			return []ent.Value{*id}
+		}
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
 	return edges
 }
 
@@ -1250,24 +1302,1120 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.clearedstat {
+		edges = append(edges, user.EdgeStat)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *UserMutation) EdgeCleared(name string) bool {
+	switch name {
+	case user.EdgeStat:
+		return m.clearedstat
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *UserMutation) ClearEdge(name string) error {
+	switch name {
+	case user.EdgeStat:
+		m.ClearStat()
+		return nil
+	}
 	return fmt.Errorf("unknown User unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *UserMutation) ResetEdge(name string) error {
+	switch name {
+	case user.EdgeStat:
+		m.ResetStat()
+		return nil
+	}
 	return fmt.Errorf("unknown User edge %s", name)
+}
+
+// UserStatMutation represents an operation that mutates the UserStat nodes in the graph.
+type UserStatMutation struct {
+	config
+	op                     Op
+	typ                    string
+	id                     *int
+	followers_count        *uint64
+	addfollowers_count     *int64
+	following_count        *uint64
+	addfollowing_count     *int64
+	like_count             *uint64
+	addlike_count          *int64
+	receive_like_count     *uint64
+	addreceive_like_count  *int64
+	view_count             *uint64
+	addview_count          *int64
+	receive_view_count     *uint64
+	addreceive_view_count  *int64
+	favor_count            *uint64
+	addfavor_count         *int64
+	receive_favor_count    *uint64
+	addreceive_favor_count *int64
+	clearedFields          map[string]struct{}
+	user                   *uint64
+	cleareduser            bool
+	done                   bool
+	oldValue               func(context.Context) (*UserStat, error)
+	predicates             []predicate.UserStat
+}
+
+var _ ent.Mutation = (*UserStatMutation)(nil)
+
+// userstatOption allows management of the mutation configuration using functional options.
+type userstatOption func(*UserStatMutation)
+
+// newUserStatMutation creates new mutation for the UserStat entity.
+func newUserStatMutation(c config, op Op, opts ...userstatOption) *UserStatMutation {
+	m := &UserStatMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeUserStat,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withUserStatID sets the ID field of the mutation.
+func withUserStatID(id int) userstatOption {
+	return func(m *UserStatMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *UserStat
+		)
+		m.oldValue = func(ctx context.Context) (*UserStat, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().UserStat.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withUserStat sets the old UserStat of the mutation.
+func withUserStat(node *UserStat) userstatOption {
+	return func(m *UserStatMutation) {
+		m.oldValue = func(context.Context) (*UserStat, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m UserStatMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m UserStatMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *UserStatMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *UserStatMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().UserStat.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetUserID sets the "user_id" field.
+func (m *UserStatMutation) SetUserID(u uint64) {
+	m.user = &u
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *UserStatMutation) UserID() (r uint64, exists bool) {
+	v := m.user
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the UserStat entity.
+// If the UserStat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserStatMutation) OldUserID(ctx context.Context) (v uint64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *UserStatMutation) ResetUserID() {
+	m.user = nil
+}
+
+// SetFollowersCount sets the "followers_count" field.
+func (m *UserStatMutation) SetFollowersCount(u uint64) {
+	m.followers_count = &u
+	m.addfollowers_count = nil
+}
+
+// FollowersCount returns the value of the "followers_count" field in the mutation.
+func (m *UserStatMutation) FollowersCount() (r uint64, exists bool) {
+	v := m.followers_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFollowersCount returns the old "followers_count" field's value of the UserStat entity.
+// If the UserStat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserStatMutation) OldFollowersCount(ctx context.Context) (v uint64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFollowersCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFollowersCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFollowersCount: %w", err)
+	}
+	return oldValue.FollowersCount, nil
+}
+
+// AddFollowersCount adds u to the "followers_count" field.
+func (m *UserStatMutation) AddFollowersCount(u int64) {
+	if m.addfollowers_count != nil {
+		*m.addfollowers_count += u
+	} else {
+		m.addfollowers_count = &u
+	}
+}
+
+// AddedFollowersCount returns the value that was added to the "followers_count" field in this mutation.
+func (m *UserStatMutation) AddedFollowersCount() (r int64, exists bool) {
+	v := m.addfollowers_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetFollowersCount resets all changes to the "followers_count" field.
+func (m *UserStatMutation) ResetFollowersCount() {
+	m.followers_count = nil
+	m.addfollowers_count = nil
+}
+
+// SetFollowingCount sets the "following_count" field.
+func (m *UserStatMutation) SetFollowingCount(u uint64) {
+	m.following_count = &u
+	m.addfollowing_count = nil
+}
+
+// FollowingCount returns the value of the "following_count" field in the mutation.
+func (m *UserStatMutation) FollowingCount() (r uint64, exists bool) {
+	v := m.following_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFollowingCount returns the old "following_count" field's value of the UserStat entity.
+// If the UserStat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserStatMutation) OldFollowingCount(ctx context.Context) (v uint64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFollowingCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFollowingCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFollowingCount: %w", err)
+	}
+	return oldValue.FollowingCount, nil
+}
+
+// AddFollowingCount adds u to the "following_count" field.
+func (m *UserStatMutation) AddFollowingCount(u int64) {
+	if m.addfollowing_count != nil {
+		*m.addfollowing_count += u
+	} else {
+		m.addfollowing_count = &u
+	}
+}
+
+// AddedFollowingCount returns the value that was added to the "following_count" field in this mutation.
+func (m *UserStatMutation) AddedFollowingCount() (r int64, exists bool) {
+	v := m.addfollowing_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetFollowingCount resets all changes to the "following_count" field.
+func (m *UserStatMutation) ResetFollowingCount() {
+	m.following_count = nil
+	m.addfollowing_count = nil
+}
+
+// SetLikeCount sets the "like_count" field.
+func (m *UserStatMutation) SetLikeCount(u uint64) {
+	m.like_count = &u
+	m.addlike_count = nil
+}
+
+// LikeCount returns the value of the "like_count" field in the mutation.
+func (m *UserStatMutation) LikeCount() (r uint64, exists bool) {
+	v := m.like_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLikeCount returns the old "like_count" field's value of the UserStat entity.
+// If the UserStat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserStatMutation) OldLikeCount(ctx context.Context) (v uint64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLikeCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLikeCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLikeCount: %w", err)
+	}
+	return oldValue.LikeCount, nil
+}
+
+// AddLikeCount adds u to the "like_count" field.
+func (m *UserStatMutation) AddLikeCount(u int64) {
+	if m.addlike_count != nil {
+		*m.addlike_count += u
+	} else {
+		m.addlike_count = &u
+	}
+}
+
+// AddedLikeCount returns the value that was added to the "like_count" field in this mutation.
+func (m *UserStatMutation) AddedLikeCount() (r int64, exists bool) {
+	v := m.addlike_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetLikeCount resets all changes to the "like_count" field.
+func (m *UserStatMutation) ResetLikeCount() {
+	m.like_count = nil
+	m.addlike_count = nil
+}
+
+// SetReceiveLikeCount sets the "receive_like_count" field.
+func (m *UserStatMutation) SetReceiveLikeCount(u uint64) {
+	m.receive_like_count = &u
+	m.addreceive_like_count = nil
+}
+
+// ReceiveLikeCount returns the value of the "receive_like_count" field in the mutation.
+func (m *UserStatMutation) ReceiveLikeCount() (r uint64, exists bool) {
+	v := m.receive_like_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReceiveLikeCount returns the old "receive_like_count" field's value of the UserStat entity.
+// If the UserStat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserStatMutation) OldReceiveLikeCount(ctx context.Context) (v uint64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReceiveLikeCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReceiveLikeCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReceiveLikeCount: %w", err)
+	}
+	return oldValue.ReceiveLikeCount, nil
+}
+
+// AddReceiveLikeCount adds u to the "receive_like_count" field.
+func (m *UserStatMutation) AddReceiveLikeCount(u int64) {
+	if m.addreceive_like_count != nil {
+		*m.addreceive_like_count += u
+	} else {
+		m.addreceive_like_count = &u
+	}
+}
+
+// AddedReceiveLikeCount returns the value that was added to the "receive_like_count" field in this mutation.
+func (m *UserStatMutation) AddedReceiveLikeCount() (r int64, exists bool) {
+	v := m.addreceive_like_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetReceiveLikeCount resets all changes to the "receive_like_count" field.
+func (m *UserStatMutation) ResetReceiveLikeCount() {
+	m.receive_like_count = nil
+	m.addreceive_like_count = nil
+}
+
+// SetViewCount sets the "view_count" field.
+func (m *UserStatMutation) SetViewCount(u uint64) {
+	m.view_count = &u
+	m.addview_count = nil
+}
+
+// ViewCount returns the value of the "view_count" field in the mutation.
+func (m *UserStatMutation) ViewCount() (r uint64, exists bool) {
+	v := m.view_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldViewCount returns the old "view_count" field's value of the UserStat entity.
+// If the UserStat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserStatMutation) OldViewCount(ctx context.Context) (v uint64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldViewCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldViewCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldViewCount: %w", err)
+	}
+	return oldValue.ViewCount, nil
+}
+
+// AddViewCount adds u to the "view_count" field.
+func (m *UserStatMutation) AddViewCount(u int64) {
+	if m.addview_count != nil {
+		*m.addview_count += u
+	} else {
+		m.addview_count = &u
+	}
+}
+
+// AddedViewCount returns the value that was added to the "view_count" field in this mutation.
+func (m *UserStatMutation) AddedViewCount() (r int64, exists bool) {
+	v := m.addview_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetViewCount resets all changes to the "view_count" field.
+func (m *UserStatMutation) ResetViewCount() {
+	m.view_count = nil
+	m.addview_count = nil
+}
+
+// SetReceiveViewCount sets the "receive_view_count" field.
+func (m *UserStatMutation) SetReceiveViewCount(u uint64) {
+	m.receive_view_count = &u
+	m.addreceive_view_count = nil
+}
+
+// ReceiveViewCount returns the value of the "receive_view_count" field in the mutation.
+func (m *UserStatMutation) ReceiveViewCount() (r uint64, exists bool) {
+	v := m.receive_view_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReceiveViewCount returns the old "receive_view_count" field's value of the UserStat entity.
+// If the UserStat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserStatMutation) OldReceiveViewCount(ctx context.Context) (v uint64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReceiveViewCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReceiveViewCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReceiveViewCount: %w", err)
+	}
+	return oldValue.ReceiveViewCount, nil
+}
+
+// AddReceiveViewCount adds u to the "receive_view_count" field.
+func (m *UserStatMutation) AddReceiveViewCount(u int64) {
+	if m.addreceive_view_count != nil {
+		*m.addreceive_view_count += u
+	} else {
+		m.addreceive_view_count = &u
+	}
+}
+
+// AddedReceiveViewCount returns the value that was added to the "receive_view_count" field in this mutation.
+func (m *UserStatMutation) AddedReceiveViewCount() (r int64, exists bool) {
+	v := m.addreceive_view_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetReceiveViewCount resets all changes to the "receive_view_count" field.
+func (m *UserStatMutation) ResetReceiveViewCount() {
+	m.receive_view_count = nil
+	m.addreceive_view_count = nil
+}
+
+// SetFavorCount sets the "favor_count" field.
+func (m *UserStatMutation) SetFavorCount(u uint64) {
+	m.favor_count = &u
+	m.addfavor_count = nil
+}
+
+// FavorCount returns the value of the "favor_count" field in the mutation.
+func (m *UserStatMutation) FavorCount() (r uint64, exists bool) {
+	v := m.favor_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFavorCount returns the old "favor_count" field's value of the UserStat entity.
+// If the UserStat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserStatMutation) OldFavorCount(ctx context.Context) (v uint64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFavorCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFavorCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFavorCount: %w", err)
+	}
+	return oldValue.FavorCount, nil
+}
+
+// AddFavorCount adds u to the "favor_count" field.
+func (m *UserStatMutation) AddFavorCount(u int64) {
+	if m.addfavor_count != nil {
+		*m.addfavor_count += u
+	} else {
+		m.addfavor_count = &u
+	}
+}
+
+// AddedFavorCount returns the value that was added to the "favor_count" field in this mutation.
+func (m *UserStatMutation) AddedFavorCount() (r int64, exists bool) {
+	v := m.addfavor_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetFavorCount resets all changes to the "favor_count" field.
+func (m *UserStatMutation) ResetFavorCount() {
+	m.favor_count = nil
+	m.addfavor_count = nil
+}
+
+// SetReceiveFavorCount sets the "receive_favor_count" field.
+func (m *UserStatMutation) SetReceiveFavorCount(u uint64) {
+	m.receive_favor_count = &u
+	m.addreceive_favor_count = nil
+}
+
+// ReceiveFavorCount returns the value of the "receive_favor_count" field in the mutation.
+func (m *UserStatMutation) ReceiveFavorCount() (r uint64, exists bool) {
+	v := m.receive_favor_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReceiveFavorCount returns the old "receive_favor_count" field's value of the UserStat entity.
+// If the UserStat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserStatMutation) OldReceiveFavorCount(ctx context.Context) (v uint64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReceiveFavorCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReceiveFavorCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReceiveFavorCount: %w", err)
+	}
+	return oldValue.ReceiveFavorCount, nil
+}
+
+// AddReceiveFavorCount adds u to the "receive_favor_count" field.
+func (m *UserStatMutation) AddReceiveFavorCount(u int64) {
+	if m.addreceive_favor_count != nil {
+		*m.addreceive_favor_count += u
+	} else {
+		m.addreceive_favor_count = &u
+	}
+}
+
+// AddedReceiveFavorCount returns the value that was added to the "receive_favor_count" field in this mutation.
+func (m *UserStatMutation) AddedReceiveFavorCount() (r int64, exists bool) {
+	v := m.addreceive_favor_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetReceiveFavorCount resets all changes to the "receive_favor_count" field.
+func (m *UserStatMutation) ResetReceiveFavorCount() {
+	m.receive_favor_count = nil
+	m.addreceive_favor_count = nil
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (m *UserStatMutation) ClearUser() {
+	m.cleareduser = true
+	m.clearedFields[userstat.FieldUserID] = struct{}{}
+}
+
+// UserCleared reports if the "user" edge to the User entity was cleared.
+func (m *UserStatMutation) UserCleared() bool {
+	return m.cleareduser
+}
+
+// UserIDs returns the "user" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UserID instead. It exists only for internal usage by the builders.
+func (m *UserStatMutation) UserIDs() (ids []uint64) {
+	if id := m.user; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUser resets all changes to the "user" edge.
+func (m *UserStatMutation) ResetUser() {
+	m.user = nil
+	m.cleareduser = false
+}
+
+// Where appends a list predicates to the UserStatMutation builder.
+func (m *UserStatMutation) Where(ps ...predicate.UserStat) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the UserStatMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *UserStatMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.UserStat, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *UserStatMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *UserStatMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (UserStat).
+func (m *UserStatMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *UserStatMutation) Fields() []string {
+	fields := make([]string, 0, 9)
+	if m.user != nil {
+		fields = append(fields, userstat.FieldUserID)
+	}
+	if m.followers_count != nil {
+		fields = append(fields, userstat.FieldFollowersCount)
+	}
+	if m.following_count != nil {
+		fields = append(fields, userstat.FieldFollowingCount)
+	}
+	if m.like_count != nil {
+		fields = append(fields, userstat.FieldLikeCount)
+	}
+	if m.receive_like_count != nil {
+		fields = append(fields, userstat.FieldReceiveLikeCount)
+	}
+	if m.view_count != nil {
+		fields = append(fields, userstat.FieldViewCount)
+	}
+	if m.receive_view_count != nil {
+		fields = append(fields, userstat.FieldReceiveViewCount)
+	}
+	if m.favor_count != nil {
+		fields = append(fields, userstat.FieldFavorCount)
+	}
+	if m.receive_favor_count != nil {
+		fields = append(fields, userstat.FieldReceiveFavorCount)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *UserStatMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case userstat.FieldUserID:
+		return m.UserID()
+	case userstat.FieldFollowersCount:
+		return m.FollowersCount()
+	case userstat.FieldFollowingCount:
+		return m.FollowingCount()
+	case userstat.FieldLikeCount:
+		return m.LikeCount()
+	case userstat.FieldReceiveLikeCount:
+		return m.ReceiveLikeCount()
+	case userstat.FieldViewCount:
+		return m.ViewCount()
+	case userstat.FieldReceiveViewCount:
+		return m.ReceiveViewCount()
+	case userstat.FieldFavorCount:
+		return m.FavorCount()
+	case userstat.FieldReceiveFavorCount:
+		return m.ReceiveFavorCount()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *UserStatMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case userstat.FieldUserID:
+		return m.OldUserID(ctx)
+	case userstat.FieldFollowersCount:
+		return m.OldFollowersCount(ctx)
+	case userstat.FieldFollowingCount:
+		return m.OldFollowingCount(ctx)
+	case userstat.FieldLikeCount:
+		return m.OldLikeCount(ctx)
+	case userstat.FieldReceiveLikeCount:
+		return m.OldReceiveLikeCount(ctx)
+	case userstat.FieldViewCount:
+		return m.OldViewCount(ctx)
+	case userstat.FieldReceiveViewCount:
+		return m.OldReceiveViewCount(ctx)
+	case userstat.FieldFavorCount:
+		return m.OldFavorCount(ctx)
+	case userstat.FieldReceiveFavorCount:
+		return m.OldReceiveFavorCount(ctx)
+	}
+	return nil, fmt.Errorf("unknown UserStat field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UserStatMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case userstat.FieldUserID:
+		v, ok := value.(uint64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case userstat.FieldFollowersCount:
+		v, ok := value.(uint64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFollowersCount(v)
+		return nil
+	case userstat.FieldFollowingCount:
+		v, ok := value.(uint64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFollowingCount(v)
+		return nil
+	case userstat.FieldLikeCount:
+		v, ok := value.(uint64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLikeCount(v)
+		return nil
+	case userstat.FieldReceiveLikeCount:
+		v, ok := value.(uint64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReceiveLikeCount(v)
+		return nil
+	case userstat.FieldViewCount:
+		v, ok := value.(uint64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetViewCount(v)
+		return nil
+	case userstat.FieldReceiveViewCount:
+		v, ok := value.(uint64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReceiveViewCount(v)
+		return nil
+	case userstat.FieldFavorCount:
+		v, ok := value.(uint64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFavorCount(v)
+		return nil
+	case userstat.FieldReceiveFavorCount:
+		v, ok := value.(uint64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReceiveFavorCount(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UserStat field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *UserStatMutation) AddedFields() []string {
+	var fields []string
+	if m.addfollowers_count != nil {
+		fields = append(fields, userstat.FieldFollowersCount)
+	}
+	if m.addfollowing_count != nil {
+		fields = append(fields, userstat.FieldFollowingCount)
+	}
+	if m.addlike_count != nil {
+		fields = append(fields, userstat.FieldLikeCount)
+	}
+	if m.addreceive_like_count != nil {
+		fields = append(fields, userstat.FieldReceiveLikeCount)
+	}
+	if m.addview_count != nil {
+		fields = append(fields, userstat.FieldViewCount)
+	}
+	if m.addreceive_view_count != nil {
+		fields = append(fields, userstat.FieldReceiveViewCount)
+	}
+	if m.addfavor_count != nil {
+		fields = append(fields, userstat.FieldFavorCount)
+	}
+	if m.addreceive_favor_count != nil {
+		fields = append(fields, userstat.FieldReceiveFavorCount)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *UserStatMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case userstat.FieldFollowersCount:
+		return m.AddedFollowersCount()
+	case userstat.FieldFollowingCount:
+		return m.AddedFollowingCount()
+	case userstat.FieldLikeCount:
+		return m.AddedLikeCount()
+	case userstat.FieldReceiveLikeCount:
+		return m.AddedReceiveLikeCount()
+	case userstat.FieldViewCount:
+		return m.AddedViewCount()
+	case userstat.FieldReceiveViewCount:
+		return m.AddedReceiveViewCount()
+	case userstat.FieldFavorCount:
+		return m.AddedFavorCount()
+	case userstat.FieldReceiveFavorCount:
+		return m.AddedReceiveFavorCount()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UserStatMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case userstat.FieldFollowersCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddFollowersCount(v)
+		return nil
+	case userstat.FieldFollowingCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddFollowingCount(v)
+		return nil
+	case userstat.FieldLikeCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLikeCount(v)
+		return nil
+	case userstat.FieldReceiveLikeCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddReceiveLikeCount(v)
+		return nil
+	case userstat.FieldViewCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddViewCount(v)
+		return nil
+	case userstat.FieldReceiveViewCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddReceiveViewCount(v)
+		return nil
+	case userstat.FieldFavorCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddFavorCount(v)
+		return nil
+	case userstat.FieldReceiveFavorCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddReceiveFavorCount(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UserStat numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *UserStatMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *UserStatMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *UserStatMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown UserStat nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *UserStatMutation) ResetField(name string) error {
+	switch name {
+	case userstat.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case userstat.FieldFollowersCount:
+		m.ResetFollowersCount()
+		return nil
+	case userstat.FieldFollowingCount:
+		m.ResetFollowingCount()
+		return nil
+	case userstat.FieldLikeCount:
+		m.ResetLikeCount()
+		return nil
+	case userstat.FieldReceiveLikeCount:
+		m.ResetReceiveLikeCount()
+		return nil
+	case userstat.FieldViewCount:
+		m.ResetViewCount()
+		return nil
+	case userstat.FieldReceiveViewCount:
+		m.ResetReceiveViewCount()
+		return nil
+	case userstat.FieldFavorCount:
+		m.ResetFavorCount()
+		return nil
+	case userstat.FieldReceiveFavorCount:
+		m.ResetReceiveFavorCount()
+		return nil
+	}
+	return fmt.Errorf("unknown UserStat field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *UserStatMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.user != nil {
+		edges = append(edges, userstat.EdgeUser)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *UserStatMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case userstat.EdgeUser:
+		if id := m.user; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *UserStatMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *UserStatMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *UserStatMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.cleareduser {
+		edges = append(edges, userstat.EdgeUser)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *UserStatMutation) EdgeCleared(name string) bool {
+	switch name {
+	case userstat.EdgeUser:
+		return m.cleareduser
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *UserStatMutation) ClearEdge(name string) error {
+	switch name {
+	case userstat.EdgeUser:
+		m.ClearUser()
+		return nil
+	}
+	return fmt.Errorf("unknown UserStat unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *UserStatMutation) ResetEdge(name string) error {
+	switch name {
+	case userstat.EdgeUser:
+		m.ResetUser()
+		return nil
+	}
+	return fmt.Errorf("unknown UserStat edge %s", name)
 }

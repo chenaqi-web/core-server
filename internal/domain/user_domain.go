@@ -16,6 +16,8 @@ type UserRepo interface {
 	List(ctx context.Context, limit, offset uint32) ([]*entity.User, uint64, error)
 	Search(ctx context.Context, keyword string, limit, offset uint32) ([]*entity.User, uint64, error)
 	ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User, error)
+	GetStat(ctx context.Context, userID uint64) (*entity.UserStat, error)
+	GetStats(ctx context.Context, userIDs []uint64) (map[uint64]*entity.UserStat, error)
 
 	// 有关用户互动方面的操作
 

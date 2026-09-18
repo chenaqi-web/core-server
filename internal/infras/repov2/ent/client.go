@@ -12,10 +12,12 @@ import (
 	"core-server/internal/infras/repov2/ent/migrate"
 
 	"core-server/internal/infras/repov2/ent/user"
+	"core-server/internal/infras/repov2/ent/userstat"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // Client is the client that holds all ent builders.
@@ -25,6 +27,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// UserStat is the client for interacting with the UserStat builders.
+	UserStat *UserStatClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -37,6 +41,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.User = NewUserClient(c.config)
+	c.UserStat = NewUserStatClient(c.config)
 }
 
 type (
@@ -127,9 +132,10 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		User:   NewUserClient(cfg),
+		ctx:      ctx,
+		config:   cfg,
+		User:     NewUserClient(cfg),
+		UserStat: NewUserStatClient(cfg),
 	}, nil
 }
 
@@ -147,9 +153,10 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		User:   NewUserClient(cfg),
+		ctx:      ctx,
+		config:   cfg,
+		User:     NewUserClient(cfg),
+		UserStat: NewUserStatClient(cfg),
 	}, nil
 }
 
@@ -179,12 +186,14 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	c.User.Use(hooks...)
+	c.UserStat.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	c.User.Intercept(interceptors...)
+	c.UserStat.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -192,6 +201,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
+	case *UserStatMutation:
+		return c.UserStat.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -258,7 +269,7 @@ func (c *UserClient) UpdateOne(_m *User) *UserUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *UserClient) UpdateOneID(id int64) *UserUpdateOne {
+func (c *UserClient) UpdateOneID(id uint64) *UserUpdateOne {
 	mutation := newUserMutation(c.config, OpUpdateOne, withUserID(id))
 	return &UserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -275,7 +286,7 @@ func (c *UserClient) DeleteOne(_m *User) *UserDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *UserClient) DeleteOneID(id int64) *UserDeleteOne {
+func (c *UserClient) DeleteOneID(id uint64) *UserDeleteOne {
 	builder := c.Delete().Where(user.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -292,17 +303,33 @@ func (c *UserClient) Query() *UserQuery {
 }
 
 // Get returns a User entity by its id.
-func (c *UserClient) Get(ctx context.Context, id int64) (*User, error) {
+func (c *UserClient) Get(ctx context.Context, id uint64) (*User, error) {
 	return c.Query().Where(user.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *UserClient) GetX(ctx context.Context, id int64) *User {
+func (c *UserClient) GetX(ctx context.Context, id uint64) *User {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
 	}
 	return obj
+}
+
+// QueryStat queries the stat edge of a User.
+func (c *UserClient) QueryStat(_m *User) *UserStatQuery {
+	query := (&UserStatClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(userstat.Table, userstat.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, false, user.StatTable, user.StatColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.
@@ -330,12 +357,161 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 	}
 }
 
+// UserStatClient is a client for the UserStat schema.
+type UserStatClient struct {
+	config
+}
+
+// NewUserStatClient returns a client for the UserStat from the given config.
+func NewUserStatClient(c config) *UserStatClient {
+	return &UserStatClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `userstat.Hooks(f(g(h())))`.
+func (c *UserStatClient) Use(hooks ...Hook) {
+	c.hooks.UserStat = append(c.hooks.UserStat, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `userstat.Intercept(f(g(h())))`.
+func (c *UserStatClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UserStat = append(c.inters.UserStat, interceptors...)
+}
+
+// Create returns a builder for creating a UserStat entity.
+func (c *UserStatClient) Create() *UserStatCreate {
+	mutation := newUserStatMutation(c.config, OpCreate)
+	return &UserStatCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UserStat entities.
+func (c *UserStatClient) CreateBulk(builders ...*UserStatCreate) *UserStatCreateBulk {
+	return &UserStatCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UserStatClient) MapCreateBulk(slice any, setFunc func(*UserStatCreate, int)) *UserStatCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UserStatCreateBulk{err: fmt.Errorf("calling to UserStatClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UserStatCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UserStatCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UserStat.
+func (c *UserStatClient) Update() *UserStatUpdate {
+	mutation := newUserStatMutation(c.config, OpUpdate)
+	return &UserStatUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserStatClient) UpdateOne(_m *UserStat) *UserStatUpdateOne {
+	mutation := newUserStatMutation(c.config, OpUpdateOne, withUserStat(_m))
+	return &UserStatUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserStatClient) UpdateOneID(id int) *UserStatUpdateOne {
+	mutation := newUserStatMutation(c.config, OpUpdateOne, withUserStatID(id))
+	return &UserStatUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserStat.
+func (c *UserStatClient) Delete() *UserStatDelete {
+	mutation := newUserStatMutation(c.config, OpDelete)
+	return &UserStatDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UserStatClient) DeleteOne(_m *UserStat) *UserStatDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UserStatClient) DeleteOneID(id int) *UserStatDeleteOne {
+	builder := c.Delete().Where(userstat.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserStatDeleteOne{builder}
+}
+
+// Query returns a query builder for UserStat.
+func (c *UserStatClient) Query() *UserStatQuery {
+	return &UserStatQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUserStat},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UserStat entity by its id.
+func (c *UserStatClient) Get(ctx context.Context, id int) (*UserStat, error) {
+	return c.Query().Where(userstat.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserStatClient) GetX(ctx context.Context, id int) *UserStat {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a UserStat.
+func (c *UserStatClient) QueryUser(_m *UserStat) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(userstat.Table, userstat.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, true, userstat.UserTable, userstat.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UserStatClient) Hooks() []Hook {
+	return c.hooks.UserStat
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserStatClient) Interceptors() []Interceptor {
+	return c.inters.UserStat
+}
+
+func (c *UserStatClient) mutate(ctx context.Context, m *UserStatMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserStatCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserStatUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserStatUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserStatDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UserStat mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		User []ent.Hook
+		User, UserStat []ent.Hook
 	}
 	inters struct {
-		User []ent.Interceptor
+		User, UserStat []ent.Interceptor
 	}
 )

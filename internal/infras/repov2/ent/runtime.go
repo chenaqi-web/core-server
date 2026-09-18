@@ -5,6 +5,7 @@ package ent
 import (
 	"core-server/internal/infras/repov2/ent/schema"
 	"core-server/internal/infras/repov2/ent/user"
+	"core-server/internal/infras/repov2/ent/userstat"
 	"time"
 )
 
@@ -80,4 +81,38 @@ func init() {
 	userDescAuthVersion := userFields[15].Descriptor()
 	// user.DefaultAuthVersion holds the default value on creation for the auth_version field.
 	user.DefaultAuthVersion = userDescAuthVersion.Default.(uint64)
+	userstatFields := schema.UserStat{}.Fields()
+	_ = userstatFields
+	// userstatDescFollowersCount is the schema descriptor for followers_count field.
+	userstatDescFollowersCount := userstatFields[1].Descriptor()
+	// userstat.DefaultFollowersCount holds the default value on creation for the followers_count field.
+	userstat.DefaultFollowersCount = userstatDescFollowersCount.Default.(uint64)
+	// userstatDescFollowingCount is the schema descriptor for following_count field.
+	userstatDescFollowingCount := userstatFields[2].Descriptor()
+	// userstat.DefaultFollowingCount holds the default value on creation for the following_count field.
+	userstat.DefaultFollowingCount = userstatDescFollowingCount.Default.(uint64)
+	// userstatDescLikeCount is the schema descriptor for like_count field.
+	userstatDescLikeCount := userstatFields[3].Descriptor()
+	// userstat.DefaultLikeCount holds the default value on creation for the like_count field.
+	userstat.DefaultLikeCount = userstatDescLikeCount.Default.(uint64)
+	// userstatDescReceiveLikeCount is the schema descriptor for receive_like_count field.
+	userstatDescReceiveLikeCount := userstatFields[4].Descriptor()
+	// userstat.DefaultReceiveLikeCount holds the default value on creation for the receive_like_count field.
+	userstat.DefaultReceiveLikeCount = userstatDescReceiveLikeCount.Default.(uint64)
+	// userstatDescViewCount is the schema descriptor for view_count field.
+	userstatDescViewCount := userstatFields[5].Descriptor()
+	// userstat.DefaultViewCount holds the default value on creation for the view_count field.
+	userstat.DefaultViewCount = userstatDescViewCount.Default.(uint64)
+	// userstatDescReceiveViewCount is the schema descriptor for receive_view_count field.
+	userstatDescReceiveViewCount := userstatFields[6].Descriptor()
+	// userstat.DefaultReceiveViewCount holds the default value on creation for the receive_view_count field.
+	userstat.DefaultReceiveViewCount = userstatDescReceiveViewCount.Default.(uint64)
+	// userstatDescFavorCount is the schema descriptor for favor_count field.
+	userstatDescFavorCount := userstatFields[7].Descriptor()
+	// userstat.DefaultFavorCount holds the default value on creation for the favor_count field.
+	userstat.DefaultFavorCount = userstatDescFavorCount.Default.(uint64)
+	// userstatDescReceiveFavorCount is the schema descriptor for receive_favor_count field.
+	userstatDescReceiveFavorCount := userstatFields[8].Descriptor()
+	// userstat.DefaultReceiveFavorCount holds the default value on creation for the receive_favor_count field.
+	userstat.DefaultReceiveFavorCount = userstatDescReceiveFavorCount.Default.(uint64)
 }

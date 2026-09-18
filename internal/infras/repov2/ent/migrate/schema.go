@@ -11,7 +11,7 @@ import (
 var (
 	// UserColumns holds the columns for the "user" table.
 	UserColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "id", Type: field.TypeUint64, Increment: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
@@ -34,14 +34,46 @@ var (
 		Columns:    UserColumns,
 		PrimaryKey: []*schema.Column{UserColumns[0]},
 	}
+	// UserStatColumns holds the columns for the "user_stat" table.
+	UserStatColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "followers_count", Type: field.TypeUint64, Default: 0},
+		{Name: "following_count", Type: field.TypeUint64, Default: 0},
+		{Name: "like_count", Type: field.TypeUint64, Default: 0},
+		{Name: "receive_like_count", Type: field.TypeUint64, Default: 0},
+		{Name: "view_count", Type: field.TypeUint64, Default: 0},
+		{Name: "receive_view_count", Type: field.TypeUint64, Default: 0},
+		{Name: "favor_count", Type: field.TypeUint64, Default: 0},
+		{Name: "receive_favor_count", Type: field.TypeUint64, Default: 0},
+		{Name: "user_id", Type: field.TypeUint64, Unique: true},
+	}
+	// UserStatTable holds the schema information for the "user_stat" table.
+	UserStatTable = &schema.Table{
+		Name:       "user_stat",
+		Columns:    UserStatColumns,
+		PrimaryKey: []*schema.Column{UserStatColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_stat_user_stat",
+				Columns:    []*schema.Column{UserStatColumns[9]},
+				RefColumns: []*schema.Column{UserColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		UserTable,
+		UserStatTable,
 	}
 )
 
 func init() {
 	UserTable.Annotation = &entsql.Annotation{
 		Table: "user",
+	}
+	UserStatTable.ForeignKeys[0].RefTable = UserTable
+	UserStatTable.Annotation = &entsql.Annotation{
+		Table: "user_stat",
 	}
 }

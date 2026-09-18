@@ -6,6 +6,7 @@ import (
 	"context"
 	"core-server/internal/infras/repov2/ent/predicate"
 	"core-server/internal/infras/repov2/ent/user"
+	"core-server/internal/infras/repov2/ent/userstat"
 	"errors"
 	"fmt"
 	"time"
@@ -250,9 +251,34 @@ func (_u *UserUpdate) AddAuthVersion(v int64) *UserUpdate {
 	return _u
 }
 
+// SetStatID sets the "stat" edge to the UserStat entity by ID.
+func (_u *UserUpdate) SetStatID(id int) *UserUpdate {
+	_u.mutation.SetStatID(id)
+	return _u
+}
+
+// SetNillableStatID sets the "stat" edge to the UserStat entity by ID if the given value is not nil.
+func (_u *UserUpdate) SetNillableStatID(id *int) *UserUpdate {
+	if id != nil {
+		_u = _u.SetStatID(*id)
+	}
+	return _u
+}
+
+// SetStat sets the "stat" edge to the UserStat entity.
+func (_u *UserUpdate) SetStat(v *UserStat) *UserUpdate {
+	return _u.SetStatID(v.ID)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdate) Mutation() *UserMutation {
 	return _u.mutation
+}
+
+// ClearStat clears the "stat" edge to the UserStat entity.
+func (_u *UserUpdate) ClearStat() *UserUpdate {
+	_u.mutation.ClearStat()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -335,7 +361,7 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(user.Table, user.Columns, sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64))
+	_spec := sqlgraph.NewUpdateSpec(user.Table, user.Columns, sqlgraph.NewFieldSpec(user.FieldID, field.TypeUint64))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -399,6 +425,35 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.AddedAuthVersion(); ok {
 		_spec.AddField(user.FieldAuthVersion, field.TypeUint64, value)
+	}
+	if _u.mutation.StatCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   user.StatTable,
+			Columns: []string{user.StatColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userstat.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.StatIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   user.StatTable,
+			Columns: []string{user.StatColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userstat.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -642,9 +697,34 @@ func (_u *UserUpdateOne) AddAuthVersion(v int64) *UserUpdateOne {
 	return _u
 }
 
+// SetStatID sets the "stat" edge to the UserStat entity by ID.
+func (_u *UserUpdateOne) SetStatID(id int) *UserUpdateOne {
+	_u.mutation.SetStatID(id)
+	return _u
+}
+
+// SetNillableStatID sets the "stat" edge to the UserStat entity by ID if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableStatID(id *int) *UserUpdateOne {
+	if id != nil {
+		_u = _u.SetStatID(*id)
+	}
+	return _u
+}
+
+// SetStat sets the "stat" edge to the UserStat entity.
+func (_u *UserUpdateOne) SetStat(v *UserStat) *UserUpdateOne {
+	return _u.SetStatID(v.ID)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdateOne) Mutation() *UserMutation {
 	return _u.mutation
+}
+
+// ClearStat clears the "stat" edge to the UserStat entity.
+func (_u *UserUpdateOne) ClearStat() *UserUpdateOne {
+	_u.mutation.ClearStat()
+	return _u
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -740,7 +820,7 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	if err := _u.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(user.Table, user.Columns, sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64))
+	_spec := sqlgraph.NewUpdateSpec(user.Table, user.Columns, sqlgraph.NewFieldSpec(user.FieldID, field.TypeUint64))
 	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "User.id" for update`)}
@@ -821,6 +901,35 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if value, ok := _u.mutation.AddedAuthVersion(); ok {
 		_spec.AddField(user.FieldAuthVersion, field.TypeUint64, value)
+	}
+	if _u.mutation.StatCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   user.StatTable,
+			Columns: []string{user.StatColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userstat.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.StatIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   user.StatTable,
+			Columns: []string{user.StatColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userstat.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &User{config: _u.config}
 	_spec.Assign = _node.assignValues

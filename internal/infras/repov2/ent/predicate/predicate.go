@@ -8,3 +8,6 @@ import (
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
+
+// UserStat is the predicate function for userstat builders.
+type UserStat func(*sql.Selector)
