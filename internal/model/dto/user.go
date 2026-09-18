@@ -26,29 +26,27 @@ type EmailLoginRequest struct {
 	Email string
 }
 type LoginResponse struct {
-	Id               uint64
-	Name             string
-	Password         string
-	Phone            string
-	Avatar           string
-	Email            string
-	Role             string
-	Sex              string
-	Age              uint32
-	LikeCount        uint64
-	ReceiveLikeCount uint64
-	Status           string
+	Id       uint64
+	Name     string
+	Password string
+	Phone    string
+	Avatar   string
+	Email    string
+	Role     string
+	Sex      string
+	Age      uint32
+	Status   string
 }
 
 type RegisterRequest struct {
-	Username,
-	Email,
+	Username string
+	Email    string
 	Password string
 }
 type ForgotPasswordRequest struct {
-	Email,
-	Password,
-	Confirm string
+	Email    string
+	Password string
+	Confirm  string
 }
 
 // =====================================================================================================================
@@ -116,17 +114,15 @@ func ToUserInfo(user *entity.User) *UserInfo {
 
 func ToLoginResponse(user *entity.User) *LoginResponse {
 	return &LoginResponse{
-		Id:               user.ID,
-		Name:             user.Name,
-		Email:            user.Email,
-		Phone:            user.Phone,
-		Avatar:           user.Avatar,
-		Sex:              user.Sex,
-		Age:              uint32(user.Age),
-		Role:             user.Role,
-		LikeCount:        user.LikeCount,
-		ReceiveLikeCount: user.ReceiveLikeCount,
-		Status:           user.Status,
+		Id:     user.ID,
+		Name:   user.Name,
+		Email:  user.Email,
+		Phone:  user.Phone,
+		Avatar: user.Avatar,
+		Sex:    user.Sex,
+		Age:    uint32(user.Age),
+		Role:   user.Role,
+		Status: user.Status,
 	}
 }
 

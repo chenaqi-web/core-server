@@ -39,14 +39,12 @@ func (s *UserService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 	// 1.判断用户是否存在
 	user, err := s.repo.GetByName(ctx, req.Username)
 	if err != nil {
-		// 用户不存在
-		if errors.Is(err, sql.ErrNoRows) {
-			s.log.Info("UserService/Login info:", zap.Error(ErrUserNotFound))
-			return nil, ErrUserNotFound
-		}
 		// 数据库错误
 		s.log.Error("UserService/Login error:", zap.Error(err))
 		return nil, err
+	}
+	if user == nil {
+		return nil, ErrUserNotFound
 	}
 
 	// 2.判断密码是否正确
@@ -65,12 +63,11 @@ func (s *UserService) EmailLogin(ctx context.Context, req *dto.EmailLoginRequest
 	email := req.Email
 	user, err := s.repo.GetByEmail(ctx, email)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			s.log.Info("UserService/EmailLogin error:", zap.Error(ErrUserNotFound))
-			return nil, ErrUserNotFound
-		}
 		s.log.Error("UserService/EmailLogin error:", zap.Error(err))
 		return nil, err
+	}
+	if user == nil {
+		return nil, ErrUserNotFound
 	}
 
 	if user.Status != entity.StatusApproved {
@@ -82,10 +79,6 @@ func (s *UserService) EmailLogin(ctx context.Context, req *dto.EmailLoginRequest
 func (s *UserService) Register(ctx context.Context, req *dto.RegisterRequest) error {
 	existing, err := s.repo.GetByEmail(ctx, req.Email)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			s.log.Info("UserService/Register user not found", zap.String("username", req.Username))
-			return ErrUserNotFound
-		}
 		s.log.Error("UserService/Register error:", zap.Error(err))
 		return err
 	}
@@ -116,14 +109,12 @@ func (s *UserService) ForgotPassword(ctx context.Context, req *dto.ForgotPasswor
 	// 2.判断该邮箱是否存在
 	user, err := s.repo.GetByEmail(ctx, req.Email)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			// 用户不存在
-			s.log.Info("UserService/ForgotPassword info:", zap.Error(ErrUserNotFound))
-			return ErrUserNotFound
-		}
 		// 其他数据库错误
 		s.log.Error("UserService/ForgotPassword error:", zap.Error(err))
 		return err
+	}
+	if user == nil {
+		return ErrUserNotFound
 	}
 
 	// 3.更新密码

@@ -36,14 +36,8 @@ const (
 	FieldSex = "sex"
 	// FieldAge holds the string denoting the age field in the database.
 	FieldAge = "age"
-	// FieldLikeCount holds the string denoting the like_count field in the database.
-	FieldLikeCount = "like_count"
-	// FieldReceiveLikeCount holds the string denoting the receive_like_count field in the database.
-	FieldReceiveLikeCount = "receive_like_count"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
-	// FieldAuthVersion holds the string denoting the auth_version field in the database.
-	FieldAuthVersion = "auth_version"
 	// EdgeStat holds the string denoting the stat edge name in mutations.
 	EdgeStat = "stat"
 	// Table holds the table name of the user in the database.
@@ -71,10 +65,7 @@ var Columns = []string{
 	FieldRole,
 	FieldSex,
 	FieldAge,
-	FieldLikeCount,
-	FieldReceiveLikeCount,
 	FieldStatus,
-	FieldAuthVersion,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -118,16 +109,10 @@ var (
 	SexValidator func(string) error
 	// DefaultAge holds the default value on creation for the "age" field.
 	DefaultAge uint64
-	// DefaultLikeCount holds the default value on creation for the "like_count" field.
-	DefaultLikeCount uint64
-	// DefaultReceiveLikeCount holds the default value on creation for the "receive_like_count" field.
-	DefaultReceiveLikeCount uint64
 	// DefaultStatus holds the default value on creation for the "status" field.
 	DefaultStatus string
 	// StatusValidator is a validator for the "status" field. It is called by the builders before save.
 	StatusValidator func(string) error
-	// DefaultAuthVersion holds the default value on creation for the "auth_version" field.
-	DefaultAuthVersion uint64
 )
 
 // OrderOption defines the ordering options for the User queries.
@@ -193,24 +178,9 @@ func ByAge(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAge, opts...).ToFunc()
 }
 
-// ByLikeCount orders the results by the like_count field.
-func ByLikeCount(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldLikeCount, opts...).ToFunc()
-}
-
-// ByReceiveLikeCount orders the results by the receive_like_count field.
-func ByReceiveLikeCount(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldReceiveLikeCount, opts...).ToFunc()
-}
-
 // ByStatus orders the results by the status field.
 func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
-}
-
-// ByAuthVersion orders the results by the auth_version field.
-func ByAuthVersion(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldAuthVersion, opts...).ToFunc()
 }
 
 // ByStatField orders the results by stat field.

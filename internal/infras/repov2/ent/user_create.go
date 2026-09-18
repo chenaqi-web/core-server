@@ -159,34 +159,6 @@ func (_c *UserCreate) SetNillableAge(v *uint64) *UserCreate {
 	return _c
 }
 
-// SetLikeCount sets the "like_count" field.
-func (_c *UserCreate) SetLikeCount(v uint64) *UserCreate {
-	_c.mutation.SetLikeCount(v)
-	return _c
-}
-
-// SetNillableLikeCount sets the "like_count" field if the given value is not nil.
-func (_c *UserCreate) SetNillableLikeCount(v *uint64) *UserCreate {
-	if v != nil {
-		_c.SetLikeCount(*v)
-	}
-	return _c
-}
-
-// SetReceiveLikeCount sets the "receive_like_count" field.
-func (_c *UserCreate) SetReceiveLikeCount(v uint64) *UserCreate {
-	_c.mutation.SetReceiveLikeCount(v)
-	return _c
-}
-
-// SetNillableReceiveLikeCount sets the "receive_like_count" field if the given value is not nil.
-func (_c *UserCreate) SetNillableReceiveLikeCount(v *uint64) *UserCreate {
-	if v != nil {
-		_c.SetReceiveLikeCount(*v)
-	}
-	return _c
-}
-
 // SetStatus sets the "status" field.
 func (_c *UserCreate) SetStatus(v string) *UserCreate {
 	_c.mutation.SetStatus(v)
@@ -197,20 +169,6 @@ func (_c *UserCreate) SetStatus(v string) *UserCreate {
 func (_c *UserCreate) SetNillableStatus(v *string) *UserCreate {
 	if v != nil {
 		_c.SetStatus(*v)
-	}
-	return _c
-}
-
-// SetAuthVersion sets the "auth_version" field.
-func (_c *UserCreate) SetAuthVersion(v uint64) *UserCreate {
-	_c.mutation.SetAuthVersion(v)
-	return _c
-}
-
-// SetNillableAuthVersion sets the "auth_version" field if the given value is not nil.
-func (_c *UserCreate) SetNillableAuthVersion(v *uint64) *UserCreate {
-	if v != nil {
-		_c.SetAuthVersion(*v)
 	}
 	return _c
 }
@@ -307,21 +265,9 @@ func (_c *UserCreate) defaults() {
 		v := user.DefaultAge
 		_c.mutation.SetAge(v)
 	}
-	if _, ok := _c.mutation.LikeCount(); !ok {
-		v := user.DefaultLikeCount
-		_c.mutation.SetLikeCount(v)
-	}
-	if _, ok := _c.mutation.ReceiveLikeCount(); !ok {
-		v := user.DefaultReceiveLikeCount
-		_c.mutation.SetReceiveLikeCount(v)
-	}
 	if _, ok := _c.mutation.Status(); !ok {
 		v := user.DefaultStatus
 		_c.mutation.SetStatus(v)
-	}
-	if _, ok := _c.mutation.AuthVersion(); !ok {
-		v := user.DefaultAuthVersion
-		_c.mutation.SetAuthVersion(v)
 	}
 }
 
@@ -387,12 +333,6 @@ func (_c *UserCreate) check() error {
 	if _, ok := _c.mutation.Age(); !ok {
 		return &ValidationError{Name: "age", err: errors.New(`ent: missing required field "User.age"`)}
 	}
-	if _, ok := _c.mutation.LikeCount(); !ok {
-		return &ValidationError{Name: "like_count", err: errors.New(`ent: missing required field "User.like_count"`)}
-	}
-	if _, ok := _c.mutation.ReceiveLikeCount(); !ok {
-		return &ValidationError{Name: "receive_like_count", err: errors.New(`ent: missing required field "User.receive_like_count"`)}
-	}
 	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "User.status"`)}
 	}
@@ -400,9 +340,6 @@ func (_c *UserCreate) check() error {
 		if err := user.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "User.status": %w`, err)}
 		}
-	}
-	if _, ok := _c.mutation.AuthVersion(); !ok {
-		return &ValidationError{Name: "auth_version", err: errors.New(`ent: missing required field "User.auth_version"`)}
 	}
 	return nil
 }
@@ -480,21 +417,9 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldAge, field.TypeUint64, value)
 		_node.Age = value
 	}
-	if value, ok := _c.mutation.LikeCount(); ok {
-		_spec.SetField(user.FieldLikeCount, field.TypeUint64, value)
-		_node.LikeCount = value
-	}
-	if value, ok := _c.mutation.ReceiveLikeCount(); ok {
-		_spec.SetField(user.FieldReceiveLikeCount, field.TypeUint64, value)
-		_node.ReceiveLikeCount = value
-	}
 	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeString, value)
 		_node.Status = value
-	}
-	if value, ok := _c.mutation.AuthVersion(); ok {
-		_spec.SetField(user.FieldAuthVersion, field.TypeUint64, value)
-		_node.AuthVersion = value
 	}
 	if nodes := _c.mutation.StatIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

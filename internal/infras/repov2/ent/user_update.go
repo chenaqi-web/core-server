@@ -174,48 +174,6 @@ func (_u *UserUpdate) AddAge(v int64) *UserUpdate {
 	return _u
 }
 
-// SetLikeCount sets the "like_count" field.
-func (_u *UserUpdate) SetLikeCount(v uint64) *UserUpdate {
-	_u.mutation.ResetLikeCount()
-	_u.mutation.SetLikeCount(v)
-	return _u
-}
-
-// SetNillableLikeCount sets the "like_count" field if the given value is not nil.
-func (_u *UserUpdate) SetNillableLikeCount(v *uint64) *UserUpdate {
-	if v != nil {
-		_u.SetLikeCount(*v)
-	}
-	return _u
-}
-
-// AddLikeCount adds value to the "like_count" field.
-func (_u *UserUpdate) AddLikeCount(v int64) *UserUpdate {
-	_u.mutation.AddLikeCount(v)
-	return _u
-}
-
-// SetReceiveLikeCount sets the "receive_like_count" field.
-func (_u *UserUpdate) SetReceiveLikeCount(v uint64) *UserUpdate {
-	_u.mutation.ResetReceiveLikeCount()
-	_u.mutation.SetReceiveLikeCount(v)
-	return _u
-}
-
-// SetNillableReceiveLikeCount sets the "receive_like_count" field if the given value is not nil.
-func (_u *UserUpdate) SetNillableReceiveLikeCount(v *uint64) *UserUpdate {
-	if v != nil {
-		_u.SetReceiveLikeCount(*v)
-	}
-	return _u
-}
-
-// AddReceiveLikeCount adds value to the "receive_like_count" field.
-func (_u *UserUpdate) AddReceiveLikeCount(v int64) *UserUpdate {
-	_u.mutation.AddReceiveLikeCount(v)
-	return _u
-}
-
 // SetStatus sets the "status" field.
 func (_u *UserUpdate) SetStatus(v string) *UserUpdate {
 	_u.mutation.SetStatus(v)
@@ -227,27 +185,6 @@ func (_u *UserUpdate) SetNillableStatus(v *string) *UserUpdate {
 	if v != nil {
 		_u.SetStatus(*v)
 	}
-	return _u
-}
-
-// SetAuthVersion sets the "auth_version" field.
-func (_u *UserUpdate) SetAuthVersion(v uint64) *UserUpdate {
-	_u.mutation.ResetAuthVersion()
-	_u.mutation.SetAuthVersion(v)
-	return _u
-}
-
-// SetNillableAuthVersion sets the "auth_version" field if the given value is not nil.
-func (_u *UserUpdate) SetNillableAuthVersion(v *uint64) *UserUpdate {
-	if v != nil {
-		_u.SetAuthVersion(*v)
-	}
-	return _u
-}
-
-// AddAuthVersion adds value to the "auth_version" field.
-func (_u *UserUpdate) AddAuthVersion(v int64) *UserUpdate {
-	_u.mutation.AddAuthVersion(v)
 	return _u
 }
 
@@ -405,26 +342,8 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.AddedAge(); ok {
 		_spec.AddField(user.FieldAge, field.TypeUint64, value)
 	}
-	if value, ok := _u.mutation.LikeCount(); ok {
-		_spec.SetField(user.FieldLikeCount, field.TypeUint64, value)
-	}
-	if value, ok := _u.mutation.AddedLikeCount(); ok {
-		_spec.AddField(user.FieldLikeCount, field.TypeUint64, value)
-	}
-	if value, ok := _u.mutation.ReceiveLikeCount(); ok {
-		_spec.SetField(user.FieldReceiveLikeCount, field.TypeUint64, value)
-	}
-	if value, ok := _u.mutation.AddedReceiveLikeCount(); ok {
-		_spec.AddField(user.FieldReceiveLikeCount, field.TypeUint64, value)
-	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeString, value)
-	}
-	if value, ok := _u.mutation.AuthVersion(); ok {
-		_spec.SetField(user.FieldAuthVersion, field.TypeUint64, value)
-	}
-	if value, ok := _u.mutation.AddedAuthVersion(); ok {
-		_spec.AddField(user.FieldAuthVersion, field.TypeUint64, value)
 	}
 	if _u.mutation.StatCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -620,48 +539,6 @@ func (_u *UserUpdateOne) AddAge(v int64) *UserUpdateOne {
 	return _u
 }
 
-// SetLikeCount sets the "like_count" field.
-func (_u *UserUpdateOne) SetLikeCount(v uint64) *UserUpdateOne {
-	_u.mutation.ResetLikeCount()
-	_u.mutation.SetLikeCount(v)
-	return _u
-}
-
-// SetNillableLikeCount sets the "like_count" field if the given value is not nil.
-func (_u *UserUpdateOne) SetNillableLikeCount(v *uint64) *UserUpdateOne {
-	if v != nil {
-		_u.SetLikeCount(*v)
-	}
-	return _u
-}
-
-// AddLikeCount adds value to the "like_count" field.
-func (_u *UserUpdateOne) AddLikeCount(v int64) *UserUpdateOne {
-	_u.mutation.AddLikeCount(v)
-	return _u
-}
-
-// SetReceiveLikeCount sets the "receive_like_count" field.
-func (_u *UserUpdateOne) SetReceiveLikeCount(v uint64) *UserUpdateOne {
-	_u.mutation.ResetReceiveLikeCount()
-	_u.mutation.SetReceiveLikeCount(v)
-	return _u
-}
-
-// SetNillableReceiveLikeCount sets the "receive_like_count" field if the given value is not nil.
-func (_u *UserUpdateOne) SetNillableReceiveLikeCount(v *uint64) *UserUpdateOne {
-	if v != nil {
-		_u.SetReceiveLikeCount(*v)
-	}
-	return _u
-}
-
-// AddReceiveLikeCount adds value to the "receive_like_count" field.
-func (_u *UserUpdateOne) AddReceiveLikeCount(v int64) *UserUpdateOne {
-	_u.mutation.AddReceiveLikeCount(v)
-	return _u
-}
-
 // SetStatus sets the "status" field.
 func (_u *UserUpdateOne) SetStatus(v string) *UserUpdateOne {
 	_u.mutation.SetStatus(v)
@@ -673,27 +550,6 @@ func (_u *UserUpdateOne) SetNillableStatus(v *string) *UserUpdateOne {
 	if v != nil {
 		_u.SetStatus(*v)
 	}
-	return _u
-}
-
-// SetAuthVersion sets the "auth_version" field.
-func (_u *UserUpdateOne) SetAuthVersion(v uint64) *UserUpdateOne {
-	_u.mutation.ResetAuthVersion()
-	_u.mutation.SetAuthVersion(v)
-	return _u
-}
-
-// SetNillableAuthVersion sets the "auth_version" field if the given value is not nil.
-func (_u *UserUpdateOne) SetNillableAuthVersion(v *uint64) *UserUpdateOne {
-	if v != nil {
-		_u.SetAuthVersion(*v)
-	}
-	return _u
-}
-
-// AddAuthVersion adds value to the "auth_version" field.
-func (_u *UserUpdateOne) AddAuthVersion(v int64) *UserUpdateOne {
-	_u.mutation.AddAuthVersion(v)
 	return _u
 }
 
@@ -881,26 +737,8 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	if value, ok := _u.mutation.AddedAge(); ok {
 		_spec.AddField(user.FieldAge, field.TypeUint64, value)
 	}
-	if value, ok := _u.mutation.LikeCount(); ok {
-		_spec.SetField(user.FieldLikeCount, field.TypeUint64, value)
-	}
-	if value, ok := _u.mutation.AddedLikeCount(); ok {
-		_spec.AddField(user.FieldLikeCount, field.TypeUint64, value)
-	}
-	if value, ok := _u.mutation.ReceiveLikeCount(); ok {
-		_spec.SetField(user.FieldReceiveLikeCount, field.TypeUint64, value)
-	}
-	if value, ok := _u.mutation.AddedReceiveLikeCount(); ok {
-		_spec.AddField(user.FieldReceiveLikeCount, field.TypeUint64, value)
-	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeString, value)
-	}
-	if value, ok := _u.mutation.AuthVersion(); ok {
-		_spec.SetField(user.FieldAuthVersion, field.TypeUint64, value)
-	}
-	if value, ok := _u.mutation.AddedAuthVersion(); ok {
-		_spec.AddField(user.FieldAuthVersion, field.TypeUint64, value)
 	}
 	if _u.mutation.StatCleared() {
 		edge := &sqlgraph.EdgeSpec{

@@ -8,6 +8,7 @@ import (
 	"core-server/internal/infras/repov2/ent/userstat"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -18,6 +19,48 @@ type UserStatCreate struct {
 	config
 	mutation *UserStatMutation
 	hooks    []Hook
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (_c *UserStatCreate) SetCreatedAt(v time.Time) *UserStatCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (_c *UserStatCreate) SetNillableCreatedAt(v *time.Time) *UserStatCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
+	}
+	return _c
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (_c *UserStatCreate) SetUpdatedAt(v time.Time) *UserStatCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (_c *UserStatCreate) SetNillableUpdatedAt(v *time.Time) *UserStatCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
+	}
+	return _c
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (_c *UserStatCreate) SetDeletedAt(v time.Time) *UserStatCreate {
+	_c.mutation.SetDeletedAt(v)
+	return _c
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_c *UserStatCreate) SetNillableDeletedAt(v *time.Time) *UserStatCreate {
+	if v != nil {
+		_c.SetDeletedAt(*v)
+	}
+	return _c
 }
 
 // SetUserID sets the "user_id" field.
@@ -178,6 +221,14 @@ func (_c *UserStatCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *UserStatCreate) defaults() {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
+		v := userstat.DefaultCreatedAt()
+		_c.mutation.SetCreatedAt(v)
+	}
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
+		v := userstat.DefaultUpdatedAt()
+		_c.mutation.SetUpdatedAt(v)
+	}
 	if _, ok := _c.mutation.FollowersCount(); !ok {
 		v := userstat.DefaultFollowersCount
 		_c.mutation.SetFollowersCount(v)
@@ -214,6 +265,12 @@ func (_c *UserStatCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_c *UserStatCreate) check() error {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "UserStat.created_at"`)}
+	}
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "UserStat.updated_at"`)}
+	}
 	if _, ok := _c.mutation.UserID(); !ok {
 		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "UserStat.user_id"`)}
 	}
@@ -270,6 +327,18 @@ func (_c *UserStatCreate) createSpec() (*UserStat, *sqlgraph.CreateSpec) {
 		_node = &UserStat{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(userstat.Table, sqlgraph.NewFieldSpec(userstat.FieldID, field.TypeInt))
 	)
+	if value, ok := _c.mutation.CreatedAt(); ok {
+		_spec.SetField(userstat.FieldCreatedAt, field.TypeTime, value)
+		_node.CreatedAt = value
+	}
+	if value, ok := _c.mutation.UpdatedAt(); ok {
+		_spec.SetField(userstat.FieldUpdatedAt, field.TypeTime, value)
+		_node.UpdatedAt = value
+	}
+	if value, ok := _c.mutation.DeletedAt(); ok {
+		_spec.SetField(userstat.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = &value
+	}
 	if value, ok := _c.mutation.FollowersCount(); ok {
 		_spec.SetField(userstat.FieldFollowersCount, field.TypeUint64, value)
 		_node.FollowersCount = value

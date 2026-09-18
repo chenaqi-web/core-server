@@ -40,14 +40,8 @@ type User struct {
 	Sex string `json:"sex,omitempty"`
 	// 年龄
 	Age uint64 `json:"age,omitempty"`
-	// 总点赞数
-	LikeCount uint64 `json:"like_count,omitempty"`
-	// 总收到点赞数
-	ReceiveLikeCount uint64 `json:"receive_like_count,omitempty"`
 	// 用户状态
 	Status string `json:"status,omitempty"`
-	// 鉴权版本号
-	AuthVersion uint64 `json:"auth_version,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges        UserEdges `json:"edges"`
@@ -79,7 +73,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldID, user.FieldAge, user.FieldLikeCount, user.FieldReceiveLikeCount, user.FieldAuthVersion:
+		case user.FieldID, user.FieldAge:
 			values[i] = new(sql.NullInt64)
 		case user.FieldName, user.FieldPassword, user.FieldPhone, user.FieldAvatar, user.FieldEmail, user.FieldRole, user.FieldSex, user.FieldStatus:
 			values[i] = new(sql.NullString)
@@ -173,29 +167,11 @@ func (_m *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Age = uint64(value.Int64)
 			}
-		case user.FieldLikeCount:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field like_count", values[i])
-			} else if value.Valid {
-				_m.LikeCount = uint64(value.Int64)
-			}
-		case user.FieldReceiveLikeCount:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field receive_like_count", values[i])
-			} else if value.Valid {
-				_m.ReceiveLikeCount = uint64(value.Int64)
-			}
 		case user.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
 				_m.Status = value.String
-			}
-		case user.FieldAuthVersion:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field auth_version", values[i])
-			} else if value.Valid {
-				_m.AuthVersion = uint64(value.Int64)
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -273,17 +249,8 @@ func (_m *User) String() string {
 	builder.WriteString("age=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Age))
 	builder.WriteString(", ")
-	builder.WriteString("like_count=")
-	builder.WriteString(fmt.Sprintf("%v", _m.LikeCount))
-	builder.WriteString(", ")
-	builder.WriteString("receive_like_count=")
-	builder.WriteString(fmt.Sprintf("%v", _m.ReceiveLikeCount))
-	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(_m.Status)
-	builder.WriteString(", ")
-	builder.WriteString("auth_version=")
-	builder.WriteString(fmt.Sprintf("%v", _m.AuthVersion))
 	builder.WriteByte(')')
 	return builder.String()
 }

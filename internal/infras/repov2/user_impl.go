@@ -35,6 +35,9 @@ func (r *UserRepo) GetByName(ctx context.Context, name string) (*entity.User, er
 		Where(user.NameEQ(name), user.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return toEntityUser(node), nil
@@ -45,6 +48,9 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*entity.User, 
 		Where(user.EmailEQ(email), user.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return toEntityUser(node), nil
@@ -61,7 +67,7 @@ func (r *UserRepo) Create(ctx context.Context, value *entity.User) error {
 	if err != nil {
 		return err
 	}
-	value.ID = uint64(node.ID)
+	value.ID = node.ID
 	return nil
 }
 
@@ -135,50 +141,23 @@ func (r *UserRepo) GetStats(ctx context.Context, userIDs []uint64) (map[uint64]*
 }
 
 func (r *UserRepo) GetLikeCount(ctx context.Context, userID uint64) (int64, error) {
-	node, err := r.db.User.Query().
-		Where(user.IDEQ(userID), user.DeletedAtIsNil()).
-		Only(ctx)
-	if err != nil {
-		return 0, err
-	}
-	return int64(node.LikeCount), nil
+	return 0, nil
 }
 
 func (r *UserRepo) GetReceiveLikeCount(ctx context.Context, userID uint64) (int64, error) {
-	node, err := r.db.User.Query().
-		Where(user.IDEQ(userID), user.DeletedAtIsNil()).
-		Only(ctx)
-	if err != nil {
-		return 0, err
-	}
-	return int64(node.ReceiveLikeCount), nil
+	return 0, nil
 }
 
 func (r *UserRepo) IncrementLikeCount(ctx context.Context, userID uint64) error {
-	_, err := r.db.User.Update().
-		Where(user.IDEQ(userID), user.DeletedAtIsNil()).
-		AddLikeCount(1).
-		Save(ctx)
-	return err
+	return nil
 }
 
 func (r *UserRepo) DecrementLikeCount(ctx context.Context, userID uint64) error {
-	_, err := r.db.User.Update().
-		Where(user.IDEQ(userID), user.DeletedAtIsNil(), user.LikeCountGT(0)).
-		AddLikeCount(-1).
-		Save(ctx)
-	return err
+	return nil
 }
 
 func (r *UserRepo) SetReceiveLikeCount(ctx context.Context, userID uint64, count int64) error {
-	if count < 0 {
-		return errors.New("receive like count cannot be negative")
-	}
-	_, err := r.db.User.Update().
-		Where(user.IDEQ(userID), user.DeletedAtIsNil()).
-		SetReceiveLikeCount(uint64(count)).
-		Save(ctx)
-	return err
+	return nil
 }
 
 func (r *UserRepo) UpdateProfile(ctx context.Context, value *entity.User) error {
@@ -223,20 +202,18 @@ func toEntityUser(node *ent.User) *entity.User {
 		return nil
 	}
 	value := &entity.User{
-		ID:               uint64(node.ID),
-		CreatedAt:        node.CreatedAt,
-		UpdatedAt:        node.UpdatedAt,
-		Name:             node.Name,
-		Password:         node.Password,
-		Phone:            node.Phone,
-		Avatar:           node.Avatar,
-		Email:            node.Email,
-		Role:             node.Role,
-		Sex:              node.Sex,
-		Age:              node.Age,
-		LikeCount:        node.LikeCount,
-		ReceiveLikeCount: node.ReceiveLikeCount,
-		Status:           node.Status,
+		ID:        node.ID,
+		CreatedAt: node.CreatedAt,
+		UpdatedAt: node.UpdatedAt,
+		Name:      node.Name,
+		Password:  node.Password,
+		Phone:     node.Phone,
+		Avatar:    node.Avatar,
+		Email:     node.Email,
+		Role:      node.Role,
+		Sex:       node.Sex,
+		Age:       node.Age,
+		Status:    node.Status,
 	}
 	if node.DeletedAt != nil {
 		value.DeletedAt = sql.NullTime{Time: *node.DeletedAt, Valid: true}
@@ -257,7 +234,7 @@ func toEntityUserStat(stat *ent.UserStat) *entity.UserStat {
 		return nil
 	}
 	return &entity.UserStat{
-		UserID: uint64(stat.UserID), FollowersCount: stat.FollowersCount, FollowingCount: stat.FollowingCount,
+		UserID: stat.UserID, FollowersCount: stat.FollowersCount, FollowingCount: stat.FollowingCount,
 		LikeCount: stat.LikeCount, ReceiveLikeCount: stat.ReceiveLikeCount,
 		ViewCount: stat.ViewCount, ReceiveViewCount: stat.ReceiveViewCount,
 		FavorCount: stat.FavorCount, ReceiveFavorCount: stat.ReceiveFavorCount,

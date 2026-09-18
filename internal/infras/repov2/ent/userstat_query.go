@@ -298,12 +298,12 @@ func (_q *UserStatQuery) WithUser(opts ...func(*UserQuery)) *UserStatQuery {
 // Example:
 //
 //	var v []struct {
-//		UserID uint64 `json:"user_id,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.UserStat.Query().
-//		GroupBy(userstat.FieldUserID).
+//		GroupBy(userstat.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (_q *UserStatQuery) GroupBy(field string, fields ...string) *UserStatGroupBy {
@@ -321,11 +321,11 @@ func (_q *UserStatQuery) GroupBy(field string, fields ...string) *UserStatGroupB
 // Example:
 //
 //	var v []struct {
-//		UserID uint64 `json:"user_id,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
 //	client.UserStat.Query().
-//		Select(userstat.FieldUserID).
+//		Select(userstat.FieldCreatedAt).
 //		Scan(ctx, &v)
 func (_q *UserStatQuery) Select(fields ...string) *UserStatSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)

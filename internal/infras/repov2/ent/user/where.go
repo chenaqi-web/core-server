@@ -110,24 +110,9 @@ func Age(v uint64) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldAge, v))
 }
 
-// LikeCount applies equality check predicate on the "like_count" field. It's identical to LikeCountEQ.
-func LikeCount(v uint64) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldLikeCount, v))
-}
-
-// ReceiveLikeCount applies equality check predicate on the "receive_like_count" field. It's identical to ReceiveLikeCountEQ.
-func ReceiveLikeCount(v uint64) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldReceiveLikeCount, v))
-}
-
 // Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
 func Status(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldStatus, v))
-}
-
-// AuthVersion applies equality check predicate on the "auth_version" field. It's identical to AuthVersionEQ.
-func AuthVersion(v uint64) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldAuthVersion, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -755,86 +740,6 @@ func AgeLTE(v uint64) predicate.User {
 	return predicate.User(sql.FieldLTE(FieldAge, v))
 }
 
-// LikeCountEQ applies the EQ predicate on the "like_count" field.
-func LikeCountEQ(v uint64) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldLikeCount, v))
-}
-
-// LikeCountNEQ applies the NEQ predicate on the "like_count" field.
-func LikeCountNEQ(v uint64) predicate.User {
-	return predicate.User(sql.FieldNEQ(FieldLikeCount, v))
-}
-
-// LikeCountIn applies the In predicate on the "like_count" field.
-func LikeCountIn(vs ...uint64) predicate.User {
-	return predicate.User(sql.FieldIn(FieldLikeCount, vs...))
-}
-
-// LikeCountNotIn applies the NotIn predicate on the "like_count" field.
-func LikeCountNotIn(vs ...uint64) predicate.User {
-	return predicate.User(sql.FieldNotIn(FieldLikeCount, vs...))
-}
-
-// LikeCountGT applies the GT predicate on the "like_count" field.
-func LikeCountGT(v uint64) predicate.User {
-	return predicate.User(sql.FieldGT(FieldLikeCount, v))
-}
-
-// LikeCountGTE applies the GTE predicate on the "like_count" field.
-func LikeCountGTE(v uint64) predicate.User {
-	return predicate.User(sql.FieldGTE(FieldLikeCount, v))
-}
-
-// LikeCountLT applies the LT predicate on the "like_count" field.
-func LikeCountLT(v uint64) predicate.User {
-	return predicate.User(sql.FieldLT(FieldLikeCount, v))
-}
-
-// LikeCountLTE applies the LTE predicate on the "like_count" field.
-func LikeCountLTE(v uint64) predicate.User {
-	return predicate.User(sql.FieldLTE(FieldLikeCount, v))
-}
-
-// ReceiveLikeCountEQ applies the EQ predicate on the "receive_like_count" field.
-func ReceiveLikeCountEQ(v uint64) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldReceiveLikeCount, v))
-}
-
-// ReceiveLikeCountNEQ applies the NEQ predicate on the "receive_like_count" field.
-func ReceiveLikeCountNEQ(v uint64) predicate.User {
-	return predicate.User(sql.FieldNEQ(FieldReceiveLikeCount, v))
-}
-
-// ReceiveLikeCountIn applies the In predicate on the "receive_like_count" field.
-func ReceiveLikeCountIn(vs ...uint64) predicate.User {
-	return predicate.User(sql.FieldIn(FieldReceiveLikeCount, vs...))
-}
-
-// ReceiveLikeCountNotIn applies the NotIn predicate on the "receive_like_count" field.
-func ReceiveLikeCountNotIn(vs ...uint64) predicate.User {
-	return predicate.User(sql.FieldNotIn(FieldReceiveLikeCount, vs...))
-}
-
-// ReceiveLikeCountGT applies the GT predicate on the "receive_like_count" field.
-func ReceiveLikeCountGT(v uint64) predicate.User {
-	return predicate.User(sql.FieldGT(FieldReceiveLikeCount, v))
-}
-
-// ReceiveLikeCountGTE applies the GTE predicate on the "receive_like_count" field.
-func ReceiveLikeCountGTE(v uint64) predicate.User {
-	return predicate.User(sql.FieldGTE(FieldReceiveLikeCount, v))
-}
-
-// ReceiveLikeCountLT applies the LT predicate on the "receive_like_count" field.
-func ReceiveLikeCountLT(v uint64) predicate.User {
-	return predicate.User(sql.FieldLT(FieldReceiveLikeCount, v))
-}
-
-// ReceiveLikeCountLTE applies the LTE predicate on the "receive_like_count" field.
-func ReceiveLikeCountLTE(v uint64) predicate.User {
-	return predicate.User(sql.FieldLTE(FieldReceiveLikeCount, v))
-}
-
 // StatusEQ applies the EQ predicate on the "status" field.
 func StatusEQ(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldStatus, v))
@@ -898,46 +803,6 @@ func StatusEqualFold(v string) predicate.User {
 // StatusContainsFold applies the ContainsFold predicate on the "status" field.
 func StatusContainsFold(v string) predicate.User {
 	return predicate.User(sql.FieldContainsFold(FieldStatus, v))
-}
-
-// AuthVersionEQ applies the EQ predicate on the "auth_version" field.
-func AuthVersionEQ(v uint64) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldAuthVersion, v))
-}
-
-// AuthVersionNEQ applies the NEQ predicate on the "auth_version" field.
-func AuthVersionNEQ(v uint64) predicate.User {
-	return predicate.User(sql.FieldNEQ(FieldAuthVersion, v))
-}
-
-// AuthVersionIn applies the In predicate on the "auth_version" field.
-func AuthVersionIn(vs ...uint64) predicate.User {
-	return predicate.User(sql.FieldIn(FieldAuthVersion, vs...))
-}
-
-// AuthVersionNotIn applies the NotIn predicate on the "auth_version" field.
-func AuthVersionNotIn(vs ...uint64) predicate.User {
-	return predicate.User(sql.FieldNotIn(FieldAuthVersion, vs...))
-}
-
-// AuthVersionGT applies the GT predicate on the "auth_version" field.
-func AuthVersionGT(v uint64) predicate.User {
-	return predicate.User(sql.FieldGT(FieldAuthVersion, v))
-}
-
-// AuthVersionGTE applies the GTE predicate on the "auth_version" field.
-func AuthVersionGTE(v uint64) predicate.User {
-	return predicate.User(sql.FieldGTE(FieldAuthVersion, v))
-}
-
-// AuthVersionLT applies the LT predicate on the "auth_version" field.
-func AuthVersionLT(v uint64) predicate.User {
-	return predicate.User(sql.FieldLT(FieldAuthVersion, v))
-}
-
-// AuthVersionLTE applies the LTE predicate on the "auth_version" field.
-func AuthVersionLTE(v uint64) predicate.User {
-	return predicate.User(sql.FieldLTE(FieldAuthVersion, v))
 }
 
 // HasStat applies the HasEdge predicate on the "stat" edge.

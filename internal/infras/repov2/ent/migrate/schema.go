@@ -23,10 +23,7 @@ var (
 		{Name: "role", Type: field.TypeString, Size: 20, Default: "user"},
 		{Name: "sex", Type: field.TypeString, Size: 6, Default: ""},
 		{Name: "age", Type: field.TypeUint64, Default: 0},
-		{Name: "like_count", Type: field.TypeUint64, Default: 0},
-		{Name: "receive_like_count", Type: field.TypeUint64, Default: 0},
 		{Name: "status", Type: field.TypeString, Size: 20, Default: "active"},
-		{Name: "auth_version", Type: field.TypeUint64, Default: 1},
 	}
 	// UserTable holds the schema information for the "user" table.
 	UserTable = &schema.Table{
@@ -37,6 +34,9 @@ var (
 	// UserStatColumns holds the columns for the "user_stat" table.
 	UserStatColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "followers_count", Type: field.TypeUint64, Default: 0},
 		{Name: "following_count", Type: field.TypeUint64, Default: 0},
 		{Name: "like_count", Type: field.TypeUint64, Default: 0},
@@ -55,7 +55,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "user_stat_user_stat",
-				Columns:    []*schema.Column{UserStatColumns[9]},
+				Columns:    []*schema.Column{UserStatColumns[12]},
 				RefColumns: []*schema.Column{UserColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

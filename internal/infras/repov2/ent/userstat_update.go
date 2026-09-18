@@ -9,6 +9,7 @@ import (
 	"core-server/internal/infras/repov2/ent/userstat"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -25,6 +26,32 @@ type UserStatUpdate struct {
 // Where appends a list predicates to the UserStatUpdate builder.
 func (_u *UserStatUpdate) Where(ps ...predicate.UserStat) *UserStatUpdate {
 	_u.mutation.Where(ps...)
+	return _u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (_u *UserStatUpdate) SetUpdatedAt(v time.Time) *UserStatUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (_u *UserStatUpdate) SetDeletedAt(v time.Time) *UserStatUpdate {
+	_u.mutation.SetDeletedAt(v)
+	return _u
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_u *UserStatUpdate) SetNillableDeletedAt(v *time.Time) *UserStatUpdate {
+	if v != nil {
+		_u.SetDeletedAt(*v)
+	}
+	return _u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (_u *UserStatUpdate) ClearDeletedAt() *UserStatUpdate {
+	_u.mutation.ClearDeletedAt()
 	return _u
 }
 
@@ -228,6 +255,7 @@ func (_u *UserStatUpdate) ClearUser() *UserStatUpdate {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *UserStatUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -253,6 +281,14 @@ func (_u *UserStatUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (_u *UserStatUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		v := userstat.UpdateDefaultUpdatedAt()
+		_u.mutation.SetUpdatedAt(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (_u *UserStatUpdate) check() error {
 	if _u.mutation.UserCleared() && len(_u.mutation.UserIDs()) > 0 {
@@ -272,6 +308,15 @@ func (_u *UserStatUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.UpdatedAt(); ok {
+		_spec.SetField(userstat.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.DeletedAt(); ok {
+		_spec.SetField(userstat.FieldDeletedAt, field.TypeTime, value)
+	}
+	if _u.mutation.DeletedAtCleared() {
+		_spec.ClearField(userstat.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.FollowersCount(); ok {
 		_spec.SetField(userstat.FieldFollowersCount, field.TypeUint64, value)
@@ -368,6 +413,32 @@ type UserStatUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *UserStatMutation
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (_u *UserStatUpdateOne) SetUpdatedAt(v time.Time) *UserStatUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (_u *UserStatUpdateOne) SetDeletedAt(v time.Time) *UserStatUpdateOne {
+	_u.mutation.SetDeletedAt(v)
+	return _u
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_u *UserStatUpdateOne) SetNillableDeletedAt(v *time.Time) *UserStatUpdateOne {
+	if v != nil {
+		_u.SetDeletedAt(*v)
+	}
+	return _u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (_u *UserStatUpdateOne) ClearDeletedAt() *UserStatUpdateOne {
+	_u.mutation.ClearDeletedAt()
+	return _u
 }
 
 // SetUserID sets the "user_id" field.
@@ -583,6 +654,7 @@ func (_u *UserStatUpdateOne) Select(field string, fields ...string) *UserStatUpd
 
 // Save executes the query and returns the updated UserStat entity.
 func (_u *UserStatUpdateOne) Save(ctx context.Context) (*UserStat, error) {
+	_u.defaults()
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -605,6 +677,14 @@ func (_u *UserStatUpdateOne) Exec(ctx context.Context) error {
 func (_u *UserStatUpdateOne) ExecX(ctx context.Context) {
 	if err := _u.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (_u *UserStatUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
+		v := userstat.UpdateDefaultUpdatedAt()
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
@@ -644,6 +724,15 @@ func (_u *UserStatUpdateOne) sqlSave(ctx context.Context) (_node *UserStat, err 
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.UpdatedAt(); ok {
+		_spec.SetField(userstat.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.DeletedAt(); ok {
+		_spec.SetField(userstat.FieldDeletedAt, field.TypeTime, value)
+	}
+	if _u.mutation.DeletedAtCleared() {
+		_spec.ClearField(userstat.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.FollowersCount(); ok {
 		_spec.SetField(userstat.FieldFollowersCount, field.TypeUint64, value)
