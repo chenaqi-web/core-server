@@ -134,23 +134,6 @@ func (s *UserService) ForgotPassword(ctx context.Context, req *dto.ForgotPasswor
 // 用户信息方面
 
 func (s *UserService) GetProfile(ctx context.Context, req *dto.GetProfileRequest) (*dto.GetProfileResponse, error) {
-	//// 1.拿到用户的基础信息
-	//userMsg, err := s.repo.GetByID(ctx, req.UserID)
-	//if err != nil {
-	//	s.log.Error("GetProfile error", zap.Error(err))
-	//	return nil, err
-	//}
-	//if userMsg == nil {
-	//	return nil, ErrUserNotFound
-	//}
-	//
-	//// 2.拿到用户的计数信息
-	//userStat, err := s.repo.GetStat(ctx, req.UserID)
-	//if err != nil {
-	//	s.log.Error("GetProfile error", zap.Error(err))
-	//	return nil, err
-	//}
-
 	userMsg, err := s.repo.GetUserMsgByID(ctx, req.UserID)
 	if err != nil {
 		s.log.Error("GetProfile error", zap.Error(err))

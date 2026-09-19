@@ -57,7 +57,7 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 		return nil, err
 	}
 	likeRPC := rpc.NewLikeRPC(likeService)
-	categoryRepo := repo.NewCategoryRepo(dbClient)
+	categoryRepo := repov2.NewCategoryRepo(entClient)
 	categoryService, err := application.NewCategoryService(log, categoryRepo, cfg)
 	if err != nil {
 		return nil, err

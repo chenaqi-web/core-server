@@ -9,6 +9,28 @@ import (
 )
 
 var (
+	// CategoryColumns holds the columns for the "category" table.
+	CategoryColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUint64, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "parent_id", Type: field.TypeUint64, Default: 0},
+		{Name: "name", Type: field.TypeString, Size: 64},
+	}
+	// CategoryTable holds the schema information for the "category" table.
+	CategoryTable = &schema.Table{
+		Name:       "category",
+		Columns:    CategoryColumns,
+		PrimaryKey: []*schema.Column{CategoryColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "category_parent_id_name",
+				Unique:  true,
+				Columns: []*schema.Column{CategoryColumns[4], CategoryColumns[5]},
+			},
+		},
+	}
 	// UserColumns holds the columns for the "user" table.
 	UserColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUint64, Increment: true},
@@ -62,12 +84,16 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		CategoryTable,
 		UserTable,
 		UserStatTable,
 	}
 )
 
 func init() {
+	CategoryTable.Annotation = &entsql.Annotation{
+		Table: "category",
+	}
 	UserTable.Annotation = &entsql.Annotation{
 		Table: "user",
 	}

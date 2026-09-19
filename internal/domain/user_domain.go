@@ -20,7 +20,7 @@ type UserRepo interface {
 	List(ctx context.Context, limit, offset uint32) ([]*entity.User, uint64, error)
 	ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User, error)
 
-	// 有关用户互动方面的操作
+	// todo 有关用户互动方面的操作
 
 	GetLikeCount(ctx context.Context, userID uint64) (int64, error)
 	GetReceiveLikeCount(ctx context.Context, userID uint64) (int64, error)

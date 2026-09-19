@@ -6,7 +6,6 @@ import (
 	"core-server/internal/infras/repov2/ent/user"
 	"core-server/internal/model/aggregate"
 	"core-server/internal/model/entity"
-	"database/sql"
 	"errors"
 )
 
@@ -210,56 +209,4 @@ func (r *UserRepo) UpdateStatus(ctx context.Context, userID uint64, status strin
 		SetStatus(status).
 		Exec(ctx)
 	return err
-}
-
-// =====================================================================================================================
-
-func toEntityUser(node *ent.User) *entity.User {
-	if node == nil {
-		return nil
-	}
-	value := &entity.User{
-		ID:        node.ID,
-		CreatedAt: node.CreatedAt,
-		UpdatedAt: node.UpdatedAt,
-		Name:      node.Name,
-		Password:  node.Password,
-		Phone:     node.Phone,
-		Avatar:    node.Avatar,
-		Email:     node.Email,
-		Role:      node.Role,
-		Sex:       node.Sex,
-		Status:    node.Status,
-	}
-	if node.Birthday != nil {
-		value.Birthday = *node.Birthday
-	}
-	if node.DeletedAt != nil {
-		value.DeletedAt = sql.NullTime{Time: *node.DeletedAt, Valid: true}
-	}
-	return value
-}
-
-func toEntityUsers(nodes []*ent.User) []*entity.User {
-	users := make([]*entity.User, 0, len(nodes))
-	for _, node := range nodes {
-		users = append(users, toEntityUser(node))
-	}
-	return users
-}
-
-func toEntityUserStat(stat *ent.UserStat) *entity.UserStat {
-	if stat == nil {
-		return nil
-	}
-	return &entity.UserStat{
-		UserID:            stat.UserID,
-		ArticleCount:      stat.ArticleCount,
-		FollowersCount:    stat.FollowersCount,
-		FollowingCount:    stat.FollowingCount,
-		LikeCount:         stat.LikeCount,
-		ReceiveLikeCount:  stat.ReceiveLikeCount,
-		FavorCount:        stat.FavorCount,
-		ReceiveFavorCount: stat.ReceiveFavorCount,
-	}
 }

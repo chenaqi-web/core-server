@@ -73,7 +73,7 @@ func (b *EntClient) WithTransaction(ctx context.Context, fn func(ctx context.Con
 	return nil
 }
 
-func (b *EntClient) getEntClient(ctx context.Context) *ent.Client {
+func (b *EntClient) DB(ctx context.Context) *ent.Client {
 	db := ent.FromContext(ctx)
 	return db
 }

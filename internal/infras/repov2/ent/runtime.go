@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"core-server/internal/infras/repov2/ent/category"
 	"core-server/internal/infras/repov2/ent/schema"
 	"core-server/internal/infras/repov2/ent/user"
 	"core-server/internal/infras/repov2/ent/userstat"
@@ -13,6 +14,26 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	categoryFields := schema.Category{}.Fields()
+	_ = categoryFields
+	// categoryDescCreatedAt is the schema descriptor for created_at field.
+	categoryDescCreatedAt := categoryFields[1].Descriptor()
+	// category.DefaultCreatedAt holds the default value on creation for the created_at field.
+	category.DefaultCreatedAt = categoryDescCreatedAt.Default.(func() time.Time)
+	// categoryDescUpdatedAt is the schema descriptor for updated_at field.
+	categoryDescUpdatedAt := categoryFields[2].Descriptor()
+	// category.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	category.DefaultUpdatedAt = categoryDescUpdatedAt.Default.(func() time.Time)
+	// category.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	category.UpdateDefaultUpdatedAt = categoryDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// categoryDescParentID is the schema descriptor for parent_id field.
+	categoryDescParentID := categoryFields[4].Descriptor()
+	// category.DefaultParentID holds the default value on creation for the parent_id field.
+	category.DefaultParentID = categoryDescParentID.Default.(uint64)
+	// categoryDescName is the schema descriptor for name field.
+	categoryDescName := categoryFields[5].Descriptor()
+	// category.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	category.NameValidator = categoryDescName.Validators[0].(func(string) error)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescCreatedAt is the schema descriptor for created_at field.
