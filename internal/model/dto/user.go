@@ -16,6 +16,7 @@ type LoginResponse struct {
 	Name   string
 	Avatar string
 	Status string
+	Role   string
 }
 
 type RegisterRequest struct {
@@ -135,6 +136,7 @@ func ToLoginResponse(user *entity.User) *LoginResponse {
 		Name:   user.Name,
 		Avatar: user.Avatar,
 		Status: user.Status,
+		Role:   user.Role,
 	}
 }
 

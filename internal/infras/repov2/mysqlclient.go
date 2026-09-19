@@ -49,9 +49,9 @@ func (b *EntClient) WithTransaction(ctx context.Context, fn func(ctx context.Con
 
 	defer func() {
 		if v := recover(); v != nil {
-			err := tx.Rollback()
-			if err != nil {
-				return
+			// 回滚失败也只是记录，不掩盖原始 panic
+			if rerr := tx.Rollback(); rerr != nil {
+				err = fmt.Errorf("rolling back transaction: %w", rerr)
 			}
 			panic(v)
 		}
@@ -65,6 +65,7 @@ func (b *EntClient) WithTransaction(ctx context.Context, fn func(ctx context.Con
 		}
 		return err
 	}
+
 	if err := tx.Commit(); err != nil {
 		return err
 	}

@@ -227,6 +227,7 @@ type LoginResponse struct {
 	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
 	Avatar        string                 `protobuf:"bytes,3,opt,name=avatar,proto3" json:"avatar,omitempty"`
 	Role          string                 `protobuf:"bytes,4,opt,name=role,proto3" json:"role,omitempty"`
+	Status        string                 `protobuf:"bytes,5,opt,name=status,proto3" json:"status,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -285,6 +286,13 @@ func (x *LoginResponse) GetAvatar() string {
 func (x *LoginResponse) GetRole() string {
 	if x != nil {
 		return x.Role
+	}
+	return ""
+}
+
+func (x *LoginResponse) GetStatus() string {
+	if x != nil {
+		return x.Status
 	}
 	return ""
 }
@@ -409,12 +417,13 @@ const file_auth_proto_rawDesc = "" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\")\n" +
 	"\x11EmailLoginRequest\x12\x14\n" +
-	"\x05email\x18\x01 \x01(\tR\x05email\"g\n" +
+	"\x05email\x18\x01 \x01(\tR\x05email\"\x7f\n" +
 	"\rLoginResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x16\n" +
 	"\x06avatar\x18\x03 \x01(\tR\x06avatar\x12\x12\n" +
-	"\x04role\x18\x04 \x01(\tR\x04role\"{\n" +
+	"\x04role\x18\x04 \x01(\tR\x04role\x12\x16\n" +
+	"\x06status\x18\x05 \x01(\tR\x06status\"{\n" +
 	"\x15ForgotPasswordRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12!\n" +
 	"\fnew_password\x18\x02 \x01(\tR\vnewPassword\x12)\n" +

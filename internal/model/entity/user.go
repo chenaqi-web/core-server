@@ -17,8 +17,8 @@ type User struct {
 	Email     string       `db:"email"`
 	Role      string       `db:"role"`
 	Sex       string       `db:"sex"`
-	Age       uint64       `db:"age"`
 	Status    string       `db:"status"`
+	Birthday  time.Time    `db:"birthday"`
 }
 
 func (User) TableName() string {
@@ -37,7 +37,3 @@ const (
 	StatusApproved = "approved" // 已通过
 	StatusBlocked  = "blocked"  // 拉黑中
 )
-
-func IsValidUserStatus(status string) bool {
-	return status == StatusApproved || status == StatusBlocked
-}
