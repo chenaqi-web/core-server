@@ -176,10 +176,10 @@ func (s *UserService) UpdateProfile(ctx context.Context, req *dto.UpdateProfileR
 	return nil
 }
 
-// todo 后续修改
 func (s *UserService) UpdateAvatar(ctx context.Context, req *dto.UpdateAvatarRequest) (*dto.UserAvatarResponse, error) {
 	user, err := s.repo.GetByID(ctx, req.UserID)
 	if err != nil {
+		s.log.Error("UpdateAvatar error", zap.Error(err))
 		return nil, err
 	}
 	if user == nil {
