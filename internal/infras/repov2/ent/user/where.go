@@ -105,9 +105,9 @@ func Sex(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldSex, v))
 }
 
-// Age applies equality check predicate on the "age" field. It's identical to AgeEQ.
-func Age(v uint64) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldAge, v))
+// Birthday applies equality check predicate on the "birthday" field. It's identical to BirthdayEQ.
+func Birthday(v time.Time) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldBirthday, v))
 }
 
 // Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
@@ -700,44 +700,54 @@ func SexContainsFold(v string) predicate.User {
 	return predicate.User(sql.FieldContainsFold(FieldSex, v))
 }
 
-// AgeEQ applies the EQ predicate on the "age" field.
-func AgeEQ(v uint64) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldAge, v))
+// BirthdayEQ applies the EQ predicate on the "birthday" field.
+func BirthdayEQ(v time.Time) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldBirthday, v))
 }
 
-// AgeNEQ applies the NEQ predicate on the "age" field.
-func AgeNEQ(v uint64) predicate.User {
-	return predicate.User(sql.FieldNEQ(FieldAge, v))
+// BirthdayNEQ applies the NEQ predicate on the "birthday" field.
+func BirthdayNEQ(v time.Time) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldBirthday, v))
 }
 
-// AgeIn applies the In predicate on the "age" field.
-func AgeIn(vs ...uint64) predicate.User {
-	return predicate.User(sql.FieldIn(FieldAge, vs...))
+// BirthdayIn applies the In predicate on the "birthday" field.
+func BirthdayIn(vs ...time.Time) predicate.User {
+	return predicate.User(sql.FieldIn(FieldBirthday, vs...))
 }
 
-// AgeNotIn applies the NotIn predicate on the "age" field.
-func AgeNotIn(vs ...uint64) predicate.User {
-	return predicate.User(sql.FieldNotIn(FieldAge, vs...))
+// BirthdayNotIn applies the NotIn predicate on the "birthday" field.
+func BirthdayNotIn(vs ...time.Time) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldBirthday, vs...))
 }
 
-// AgeGT applies the GT predicate on the "age" field.
-func AgeGT(v uint64) predicate.User {
-	return predicate.User(sql.FieldGT(FieldAge, v))
+// BirthdayGT applies the GT predicate on the "birthday" field.
+func BirthdayGT(v time.Time) predicate.User {
+	return predicate.User(sql.FieldGT(FieldBirthday, v))
 }
 
-// AgeGTE applies the GTE predicate on the "age" field.
-func AgeGTE(v uint64) predicate.User {
-	return predicate.User(sql.FieldGTE(FieldAge, v))
+// BirthdayGTE applies the GTE predicate on the "birthday" field.
+func BirthdayGTE(v time.Time) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldBirthday, v))
 }
 
-// AgeLT applies the LT predicate on the "age" field.
-func AgeLT(v uint64) predicate.User {
-	return predicate.User(sql.FieldLT(FieldAge, v))
+// BirthdayLT applies the LT predicate on the "birthday" field.
+func BirthdayLT(v time.Time) predicate.User {
+	return predicate.User(sql.FieldLT(FieldBirthday, v))
 }
 
-// AgeLTE applies the LTE predicate on the "age" field.
-func AgeLTE(v uint64) predicate.User {
-	return predicate.User(sql.FieldLTE(FieldAge, v))
+// BirthdayLTE applies the LTE predicate on the "birthday" field.
+func BirthdayLTE(v time.Time) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldBirthday, v))
+}
+
+// BirthdayIsNil applies the IsNil predicate on the "birthday" field.
+func BirthdayIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldBirthday))
+}
+
+// BirthdayNotNil applies the NotNil predicate on the "birthday" field.
+func BirthdayNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldBirthday))
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.

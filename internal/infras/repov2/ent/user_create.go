@@ -145,16 +145,16 @@ func (_c *UserCreate) SetNillableSex(v *string) *UserCreate {
 	return _c
 }
 
-// SetAge sets the "age" field.
-func (_c *UserCreate) SetAge(v uint64) *UserCreate {
-	_c.mutation.SetAge(v)
+// SetBirthday sets the "birthday" field.
+func (_c *UserCreate) SetBirthday(v time.Time) *UserCreate {
+	_c.mutation.SetBirthday(v)
 	return _c
 }
 
-// SetNillableAge sets the "age" field if the given value is not nil.
-func (_c *UserCreate) SetNillableAge(v *uint64) *UserCreate {
+// SetNillableBirthday sets the "birthday" field if the given value is not nil.
+func (_c *UserCreate) SetNillableBirthday(v *time.Time) *UserCreate {
 	if v != nil {
-		_c.SetAge(*v)
+		_c.SetBirthday(*v)
 	}
 	return _c
 }
@@ -261,10 +261,6 @@ func (_c *UserCreate) defaults() {
 		v := user.DefaultSex
 		_c.mutation.SetSex(v)
 	}
-	if _, ok := _c.mutation.Age(); !ok {
-		v := user.DefaultAge
-		_c.mutation.SetAge(v)
-	}
 	if _, ok := _c.mutation.Status(); !ok {
 		v := user.DefaultStatus
 		_c.mutation.SetStatus(v)
@@ -329,9 +325,6 @@ func (_c *UserCreate) check() error {
 		if err := user.SexValidator(v); err != nil {
 			return &ValidationError{Name: "sex", err: fmt.Errorf(`ent: validator failed for field "User.sex": %w`, err)}
 		}
-	}
-	if _, ok := _c.mutation.Age(); !ok {
-		return &ValidationError{Name: "age", err: errors.New(`ent: missing required field "User.age"`)}
 	}
 	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "User.status"`)}
@@ -413,9 +406,9 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldSex, field.TypeString, value)
 		_node.Sex = value
 	}
-	if value, ok := _c.mutation.Age(); ok {
-		_spec.SetField(user.FieldAge, field.TypeUint64, value)
-		_node.Age = value
+	if value, ok := _c.mutation.Birthday(); ok {
+		_spec.SetField(user.FieldBirthday, field.TypeTime, value)
+		_node.Birthday = &value
 	}
 	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeString, value)

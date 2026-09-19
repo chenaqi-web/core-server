@@ -59,10 +59,6 @@ func init() {
 	user.DefaultSex = userDescSex.Default.(string)
 	// user.SexValidator is a validator for the "sex" field. It is called by the builders before save.
 	user.SexValidator = userDescSex.Validators[0].(func(string) error)
-	// userDescAge is the schema descriptor for age field.
-	userDescAge := userFields[11].Descriptor()
-	// user.DefaultAge holds the default value on creation for the age field.
-	user.DefaultAge = userDescAge.Default.(uint64)
 	// userDescStatus is the schema descriptor for status field.
 	userDescStatus := userFields[12].Descriptor()
 	// user.DefaultStatus holds the default value on creation for the status field.

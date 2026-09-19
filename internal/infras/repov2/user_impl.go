@@ -169,7 +169,7 @@ func (r *UserRepo) UpdateProfile(ctx context.Context, value *entity.User) error 
 		SetName(value.Name).
 		SetPhone(value.Phone).
 		SetSex(value.Sex).
-		//SetAge(value.Age).
+		SetBirthday(value.Birthday).
 		Save(ctx)
 	return err
 }
@@ -215,8 +215,10 @@ func toEntityUser(node *ent.User) *entity.User {
 		Email:     node.Email,
 		Role:      node.Role,
 		Sex:       node.Sex,
-		//Age:       node.Age,
-		Status: node.Status,
+		Status:    node.Status,
+	}
+	if node.Birthday != nil {
+		value.Birthday = *node.Birthday
 	}
 	if node.DeletedAt != nil {
 		value.DeletedAt = sql.NullTime{Time: *node.DeletedAt, Valid: true}

@@ -10,7 +10,7 @@ import (
 	"core-server/internal/model/entity"
 )
 
-const userListColumns = `id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, sex, age, like_count, receive_like_count, status`
+const userListColumns = `id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, sex, birthday, like_count, receive_like_count, status`
 
 type UserRepo struct {
 	*DBClient
@@ -23,7 +23,7 @@ func NewUserRepo(client *DBClient) *UserRepo {
 func (r *UserRepo) GetByID(ctx context.Context, id uint64) (*entity.User, error) {
 	var u entity.User
 	const query = `
-SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, status, sex, age, like_count, receive_like_count
+SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, status, sex, birthday, like_count, receive_like_count
 FROM user
 WHERE id = ? AND deleted_at IS NULL
 LIMIT 1`
@@ -38,7 +38,7 @@ LIMIT 1`
 func (r *UserRepo) GetByName(ctx context.Context, name string) (*entity.User, error) {
 	var u entity.User
 	const query = `
-SELECT id, created_at, updated_at, deleted_at, name, password, phone, avatar, email, role, status, sex, age
+SELECT id, created_at, updated_at, deleted_at, name, password, phone, avatar, email, role, status, sex, birthday
 FROM user
 WHERE name = ? AND deleted_at IS NULL
 LIMIT 1`
@@ -53,7 +53,7 @@ LIMIT 1`
 func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*entity.User, error) {
 	var u entity.User
 	const query = `
-SELECT id, created_at, updated_at, deleted_at, name, password, phone, avatar, email, role, status, sex, age
+SELECT id, created_at, updated_at, deleted_at, name, password, phone, avatar, email, role, status, sex, birthday
 FROM user
 WHERE email = ? AND deleted_at IS NULL
 LIMIT 1`
@@ -87,7 +87,7 @@ func (r *UserRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User,
 	}
 
 	const baseQuery = `
-SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, sex, age, like_count, receive_like_count, status
+SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, sex, birthday, like_count, receive_like_count, status
 FROM user
 WHERE id IN (?) AND deleted_at IS NULL`
 
@@ -184,10 +184,10 @@ WHERE id = ? AND deleted_at IS NULL`
 func (r *UserRepo) UpdateProfile(ctx context.Context, user *entity.User) error {
 	const query = `
 UPDATE user
-SET name = ?, phone = ?, sex = ?, age = ?, updated_at = NOW(3)
+SET name = ?, phone = ?, sex = ?, birthday = ?, updated_at = NOW(3)
 WHERE id = ? AND deleted_at IS NULL`
 
-	_, err := r.db(ctx).ExecContext(ctx, query, user.Name, user.Phone, user.Sex, user.Age, user.ID)
+	_, err := r.db(ctx).ExecContext(ctx, query, user.Name, user.Phone, user.Sex, user.Birthday, user.ID)
 	return err
 }
 

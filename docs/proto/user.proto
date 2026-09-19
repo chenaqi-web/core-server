@@ -11,7 +11,7 @@ message UserInfo {
   string phone = 4;
   string avatar = 5;
   string sex = 6;
-  uint32 age = 7;
+  string birthday = 7;
   string role = 8;
   string status = 9;
 }
@@ -28,7 +28,7 @@ message GetProfileResponse {
   string phone = 4;
   string avatar = 5;
   string sex = 6;
-  uint32 age = 7;
+  string birthday = 7;
   string role = 8;
   string status = 9;
 
@@ -46,7 +46,7 @@ message UpdateProfileRequest {
   string username = 2;
   string phone = 3;
   string sex = 4;
-  uint32 age = 5;
+  string birthday = 5;
 }
 
 message UpdateProfileResponse {

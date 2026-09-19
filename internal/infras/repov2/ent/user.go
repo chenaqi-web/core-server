@@ -38,8 +38,8 @@ type User struct {
 	Role string `json:"role,omitempty"`
 	// 性别
 	Sex string `json:"sex,omitempty"`
-	// 年龄
-	Age uint64 `json:"age,omitempty"`
+	// 生日
+	Birthday *time.Time `json:"birthday,omitempty"`
 	// 用户状态
 	Status string `json:"status,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -73,11 +73,11 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldID, user.FieldAge:
+		case user.FieldID:
 			values[i] = new(sql.NullInt64)
 		case user.FieldName, user.FieldPassword, user.FieldPhone, user.FieldAvatar, user.FieldEmail, user.FieldRole, user.FieldSex, user.FieldStatus:
 			values[i] = new(sql.NullString)
-		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldDeletedAt:
+		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldDeletedAt, user.FieldBirthday:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -161,11 +161,12 @@ func (_m *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Sex = value.String
 			}
-		case user.FieldAge:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field age", values[i])
+		case user.FieldBirthday:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field birthday", values[i])
 			} else if value.Valid {
-				_m.Age = uint64(value.Int64)
+				_m.Birthday = new(time.Time)
+				*_m.Birthday = value.Time
 			}
 		case user.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -246,8 +247,10 @@ func (_m *User) String() string {
 	builder.WriteString("sex=")
 	builder.WriteString(_m.Sex)
 	builder.WriteString(", ")
-	builder.WriteString("age=")
-	builder.WriteString(fmt.Sprintf("%v", _m.Age))
+	if v := _m.Birthday; v != nil {
+		builder.WriteString("birthday=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(_m.Status)

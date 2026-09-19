@@ -45,8 +45,7 @@ type UserMutation struct {
 	email         *string
 	role          *string
 	sex           *string
-	age           *uint64
-	addage        *int64
+	birthday      *time.Time
 	status        *string
 	clearedFields map[string]struct{}
 	stat          *int
@@ -533,60 +532,53 @@ func (m *UserMutation) ResetSex() {
 	m.sex = nil
 }
 
-// SetAge sets the "age" field.
-func (m *UserMutation) SetAge(u uint64) {
-	m.age = &u
-	m.addage = nil
+// SetBirthday sets the "birthday" field.
+func (m *UserMutation) SetBirthday(t time.Time) {
+	m.birthday = &t
 }
 
-// Age returns the value of the "age" field in the mutation.
-func (m *UserMutation) Age() (r uint64, exists bool) {
-	v := m.age
+// Birthday returns the value of the "birthday" field in the mutation.
+func (m *UserMutation) Birthday() (r time.Time, exists bool) {
+	v := m.birthday
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldAge returns the old "age" field's value of the User entity.
+// OldBirthday returns the old "birthday" field's value of the User entity.
 // If the User object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UserMutation) OldAge(ctx context.Context) (v uint64, err error) {
+func (m *UserMutation) OldBirthday(ctx context.Context) (v *time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldAge is only allowed on UpdateOne operations")
+		return v, errors.New("OldBirthday is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldAge requires an ID field in the mutation")
+		return v, errors.New("OldBirthday requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldAge: %w", err)
+		return v, fmt.Errorf("querying old value for OldBirthday: %w", err)
 	}
-	return oldValue.Age, nil
+	return oldValue.Birthday, nil
 }
 
-// AddAge adds u to the "age" field.
-func (m *UserMutation) AddAge(u int64) {
-	if m.addage != nil {
-		*m.addage += u
-	} else {
-		m.addage = &u
-	}
+// ClearBirthday clears the value of the "birthday" field.
+func (m *UserMutation) ClearBirthday() {
+	m.birthday = nil
+	m.clearedFields[user.FieldBirthday] = struct{}{}
 }
 
-// AddedAge returns the value that was added to the "age" field in this mutation.
-func (m *UserMutation) AddedAge() (r int64, exists bool) {
-	v := m.addage
-	if v == nil {
-		return
-	}
-	return *v, true
+// BirthdayCleared returns if the "birthday" field was cleared in this mutation.
+func (m *UserMutation) BirthdayCleared() bool {
+	_, ok := m.clearedFields[user.FieldBirthday]
+	return ok
 }
 
-// ResetAge resets all changes to the "age" field.
-func (m *UserMutation) ResetAge() {
-	m.age = nil
-	m.addage = nil
+// ResetBirthday resets all changes to the "birthday" field.
+func (m *UserMutation) ResetBirthday() {
+	m.birthday = nil
+	delete(m.clearedFields, user.FieldBirthday)
 }
 
 // SetStatus sets the "status" field.
@@ -729,8 +721,8 @@ func (m *UserMutation) Fields() []string {
 	if m.sex != nil {
 		fields = append(fields, user.FieldSex)
 	}
-	if m.age != nil {
-		fields = append(fields, user.FieldAge)
+	if m.birthday != nil {
+		fields = append(fields, user.FieldBirthday)
 	}
 	if m.status != nil {
 		fields = append(fields, user.FieldStatus)
@@ -763,8 +755,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.Role()
 	case user.FieldSex:
 		return m.Sex()
-	case user.FieldAge:
-		return m.Age()
+	case user.FieldBirthday:
+		return m.Birthday()
 	case user.FieldStatus:
 		return m.Status()
 	}
@@ -796,8 +788,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldRole(ctx)
 	case user.FieldSex:
 		return m.OldSex(ctx)
-	case user.FieldAge:
-		return m.OldAge(ctx)
+	case user.FieldBirthday:
+		return m.OldBirthday(ctx)
 	case user.FieldStatus:
 		return m.OldStatus(ctx)
 	}
@@ -879,12 +871,12 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetSex(v)
 		return nil
-	case user.FieldAge:
-		v, ok := value.(uint64)
+	case user.FieldBirthday:
+		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetAge(v)
+		m.SetBirthday(v)
 		return nil
 	case user.FieldStatus:
 		v, ok := value.(string)
@@ -900,21 +892,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *UserMutation) AddedFields() []string {
-	var fields []string
-	if m.addage != nil {
-		fields = append(fields, user.FieldAge)
-	}
-	return fields
+	return nil
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *UserMutation) AddedField(name string) (ent.Value, bool) {
-	switch name {
-	case user.FieldAge:
-		return m.AddedAge()
-	}
 	return nil, false
 }
 
@@ -923,13 +907,6 @@ func (m *UserMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *UserMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case user.FieldAge:
-		v, ok := value.(int64)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddAge(v)
-		return nil
 	}
 	return fmt.Errorf("unknown User numeric field %s", name)
 }
@@ -940,6 +917,9 @@ func (m *UserMutation) ClearedFields() []string {
 	var fields []string
 	if m.FieldCleared(user.FieldDeletedAt) {
 		fields = append(fields, user.FieldDeletedAt)
+	}
+	if m.FieldCleared(user.FieldBirthday) {
+		fields = append(fields, user.FieldBirthday)
 	}
 	return fields
 }
@@ -957,6 +937,9 @@ func (m *UserMutation) ClearField(name string) error {
 	switch name {
 	case user.FieldDeletedAt:
 		m.ClearDeletedAt()
+		return nil
+	case user.FieldBirthday:
+		m.ClearBirthday()
 		return nil
 	}
 	return fmt.Errorf("unknown User nullable field %s", name)
@@ -996,8 +979,8 @@ func (m *UserMutation) ResetField(name string) error {
 	case user.FieldSex:
 		m.ResetSex()
 		return nil
-	case user.FieldAge:
-		m.ResetAge()
+	case user.FieldBirthday:
+		m.ResetBirthday()
 		return nil
 	case user.FieldStatus:
 		m.ResetStatus()

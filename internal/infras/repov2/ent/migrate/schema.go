@@ -22,7 +22,7 @@ var (
 		{Name: "email", Type: field.TypeString, Size: 100, Default: ""},
 		{Name: "role", Type: field.TypeString, Size: 20, Default: "user"},
 		{Name: "sex", Type: field.TypeString, Size: 6, Default: ""},
-		{Name: "age", Type: field.TypeUint64, Default: 0},
+		{Name: "birthday", Type: field.TypeTime, Nullable: true},
 		{Name: "status", Type: field.TypeString, Size: 20, Default: "active"},
 	}
 	// UserTable holds the schema information for the "user" table.

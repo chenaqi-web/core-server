@@ -153,24 +153,23 @@ func (_u *UserUpdate) SetNillableSex(v *string) *UserUpdate {
 	return _u
 }
 
-// SetAge sets the "age" field.
-func (_u *UserUpdate) SetAge(v uint64) *UserUpdate {
-	_u.mutation.ResetAge()
-	_u.mutation.SetAge(v)
+// SetBirthday sets the "birthday" field.
+func (_u *UserUpdate) SetBirthday(v time.Time) *UserUpdate {
+	_u.mutation.SetBirthday(v)
 	return _u
 }
 
-// SetNillableAge sets the "age" field if the given value is not nil.
-func (_u *UserUpdate) SetNillableAge(v *uint64) *UserUpdate {
+// SetNillableBirthday sets the "birthday" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableBirthday(v *time.Time) *UserUpdate {
 	if v != nil {
-		_u.SetAge(*v)
+		_u.SetBirthday(*v)
 	}
 	return _u
 }
 
-// AddAge adds value to the "age" field.
-func (_u *UserUpdate) AddAge(v int64) *UserUpdate {
-	_u.mutation.AddAge(v)
+// ClearBirthday clears the value of the "birthday" field.
+func (_u *UserUpdate) ClearBirthday() *UserUpdate {
+	_u.mutation.ClearBirthday()
 	return _u
 }
 
@@ -336,11 +335,11 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.Sex(); ok {
 		_spec.SetField(user.FieldSex, field.TypeString, value)
 	}
-	if value, ok := _u.mutation.Age(); ok {
-		_spec.SetField(user.FieldAge, field.TypeUint64, value)
+	if value, ok := _u.mutation.Birthday(); ok {
+		_spec.SetField(user.FieldBirthday, field.TypeTime, value)
 	}
-	if value, ok := _u.mutation.AddedAge(); ok {
-		_spec.AddField(user.FieldAge, field.TypeUint64, value)
+	if _u.mutation.BirthdayCleared() {
+		_spec.ClearField(user.FieldBirthday, field.TypeTime)
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeString, value)
@@ -518,24 +517,23 @@ func (_u *UserUpdateOne) SetNillableSex(v *string) *UserUpdateOne {
 	return _u
 }
 
-// SetAge sets the "age" field.
-func (_u *UserUpdateOne) SetAge(v uint64) *UserUpdateOne {
-	_u.mutation.ResetAge()
-	_u.mutation.SetAge(v)
+// SetBirthday sets the "birthday" field.
+func (_u *UserUpdateOne) SetBirthday(v time.Time) *UserUpdateOne {
+	_u.mutation.SetBirthday(v)
 	return _u
 }
 
-// SetNillableAge sets the "age" field if the given value is not nil.
-func (_u *UserUpdateOne) SetNillableAge(v *uint64) *UserUpdateOne {
+// SetNillableBirthday sets the "birthday" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableBirthday(v *time.Time) *UserUpdateOne {
 	if v != nil {
-		_u.SetAge(*v)
+		_u.SetBirthday(*v)
 	}
 	return _u
 }
 
-// AddAge adds value to the "age" field.
-func (_u *UserUpdateOne) AddAge(v int64) *UserUpdateOne {
-	_u.mutation.AddAge(v)
+// ClearBirthday clears the value of the "birthday" field.
+func (_u *UserUpdateOne) ClearBirthday() *UserUpdateOne {
+	_u.mutation.ClearBirthday()
 	return _u
 }
 
@@ -731,11 +729,11 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	if value, ok := _u.mutation.Sex(); ok {
 		_spec.SetField(user.FieldSex, field.TypeString, value)
 	}
-	if value, ok := _u.mutation.Age(); ok {
-		_spec.SetField(user.FieldAge, field.TypeUint64, value)
+	if value, ok := _u.mutation.Birthday(); ok {
+		_spec.SetField(user.FieldBirthday, field.TypeTime, value)
 	}
-	if value, ok := _u.mutation.AddedAge(); ok {
-		_spec.AddField(user.FieldAge, field.TypeUint64, value)
+	if _u.mutation.BirthdayCleared() {
+		_spec.ClearField(user.FieldBirthday, field.TypeTime)
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeString, value)

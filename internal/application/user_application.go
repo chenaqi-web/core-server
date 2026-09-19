@@ -168,7 +168,7 @@ func (s *UserService) UpdateProfile(ctx context.Context, req *dto.UpdateProfileR
 	user.Name = req.Username
 	user.Phone = req.Phone
 	user.Sex = req.Sex
-	//user.Birthday = req.Birthday
+	user.Birthday = req.Birthday
 	if err := s.repo.UpdateProfile(ctx, user); err != nil {
 		s.log.Error("UpdateProfile error", zap.Error(err))
 		return err

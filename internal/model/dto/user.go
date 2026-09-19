@@ -2,6 +2,7 @@ package dto
 
 import (
 	"core-server/internal/model/entity"
+	"time"
 )
 
 type LoginRequest struct {
@@ -41,7 +42,7 @@ type GetProfileResponse struct {
 	Phone    string
 	Avatar   string
 	Sex      string
-	Age      uint32
+	Birthday time.Time
 	Role     string
 	Status   string
 
@@ -57,7 +58,7 @@ type GetProfileResponse struct {
 type UpdateProfileRequest struct {
 	UserID               uint64
 	Username, Phone, Sex string
-	Age                  uint32
+	Birthday             time.Time
 }
 
 type UpdateAvatarRequest struct {
@@ -87,7 +88,7 @@ type UserInfo struct {
 	Phone    string
 	Avatar   string
 	Sex      string
-	Age      uint32
+	Birthday time.Time
 	Role     string
 	Status   string
 }
@@ -117,7 +118,7 @@ func ToGetProfileResponse(user *entity.User, stat *entity.UserStat) *GetProfileR
 		Phone:             user.Phone,
 		Avatar:            user.Avatar,
 		Sex:               user.Sex,
-		Age:               uint32(user.Age),
+		Birthday:          user.Birthday,
 		Role:              user.Role,
 		Status:            user.Status,
 		ArticleCount:      stat.ArticleCount,
@@ -157,7 +158,7 @@ func ToUserInfo(user *entity.User) *UserInfo {
 		Phone:    user.Phone,
 		Avatar:   user.Avatar,
 		Sex:      user.Sex,
-		Age:      uint32(user.Age),
+		Birthday: user.Birthday,
 		Role:     user.Role,
 		Status:   user.Status,
 	}

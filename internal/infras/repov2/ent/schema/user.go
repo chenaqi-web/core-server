@@ -39,7 +39,7 @@ func (User) Fields() []ent.Field {
 		field.String("email").MaxLen(100).Default("").Comment("邮箱"),
 		field.String("role").MaxLen(20).Default("user").Comment("角色"),
 		field.String("sex").MaxLen(6).Default("").Comment("性别"),
-		field.Uint64("age").Default(0).Comment("年龄"),
+		field.Time("birthday").Optional().Nillable().Comment("生日"),
 		field.String("status").MaxLen(20).Default("active").Comment("用户状态"),
 	}
 }

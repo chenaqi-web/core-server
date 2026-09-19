@@ -34,8 +34,8 @@ const (
 	FieldRole = "role"
 	// FieldSex holds the string denoting the sex field in the database.
 	FieldSex = "sex"
-	// FieldAge holds the string denoting the age field in the database.
-	FieldAge = "age"
+	// FieldBirthday holds the string denoting the birthday field in the database.
+	FieldBirthday = "birthday"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// EdgeStat holds the string denoting the stat edge name in mutations.
@@ -64,7 +64,7 @@ var Columns = []string{
 	FieldEmail,
 	FieldRole,
 	FieldSex,
-	FieldAge,
+	FieldBirthday,
 	FieldStatus,
 }
 
@@ -107,8 +107,6 @@ var (
 	DefaultSex string
 	// SexValidator is a validator for the "sex" field. It is called by the builders before save.
 	SexValidator func(string) error
-	// DefaultAge holds the default value on creation for the "age" field.
-	DefaultAge uint64
 	// DefaultStatus holds the default value on creation for the "status" field.
 	DefaultStatus string
 	// StatusValidator is a validator for the "status" field. It is called by the builders before save.
@@ -173,9 +171,9 @@ func BySex(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSex, opts...).ToFunc()
 }
 
-// ByAge orders the results by the age field.
-func ByAge(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldAge, opts...).ToFunc()
+// ByBirthday orders the results by the birthday field.
+func ByBirthday(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBirthday, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.

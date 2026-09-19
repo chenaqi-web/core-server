@@ -5,6 +5,7 @@ import (
 	"core-server/internal/application"
 	"core-server/internal/model/dto"
 	"core-server/internal/rpc/userpb"
+	"time"
 )
 
 type UserRPC struct {
@@ -28,7 +29,7 @@ func (u *UserRPC) GetProfile(ctx context.Context, request *userpb.GetProfileRequ
 		Phone:             res.Phone,
 		Avatar:            res.Avatar,
 		Sex:               res.Sex,
-		Age:               res.Age,
+		Birthday:          formatBirthday(res.Birthday),
 		Role:              res.Role,
 		Status:            res.Status,
 		FollowersCount:    res.FollowersCount,
@@ -43,7 +44,7 @@ func (u *UserRPC) GetProfile(ctx context.Context, request *userpb.GetProfileRequ
 func (u *UserRPC) UpdateProfile(ctx context.Context, request *userpb.UpdateProfileRequest) (*userpb.UpdateProfileResponse, error) {
 	err := u.UserService.UpdateProfile(
 		ctx,
-		&dto.UpdateProfileRequest{UserID: request.GetUserId(), Username: request.GetUsername(), Phone: request.GetPhone(), Sex: request.GetSex(), Age: request.GetAge()},
+		&dto.UpdateProfileRequest{UserID: request.GetUserId(), Username: request.GetUsername(), Phone: request.GetPhone(), Sex: request.GetSex(), Birthday: parseBirthday(request.GetBirthday())},
 	)
 	if err != nil {
 		return nil, err
@@ -110,8 +111,26 @@ func ConvertToUserInfo(res *dto.UserInfo) *userpb.UserInfo {
 		Phone:    res.Phone,
 		Avatar:   res.Avatar,
 		Sex:      res.Sex,
-		Age:      res.Age,
+		Birthday: formatBirthday(res.Birthday),
 		Role:     res.Role,
 		Status:   res.Status,
 	}
+}
+
+func parseBirthday(value string) time.Time {
+	if value == "" {
+		return time.Time{}
+	}
+	parsed, err := time.Parse(time.RFC3339, value)
+	if err != nil {
+		parsed, _ = time.Parse("2006-01-02", value)
+	}
+	return parsed
+}
+
+func formatBirthday(value time.Time) string {
+	if value.IsZero() {
+		return ""
+	}
+	return value.Format(time.RFC3339)
 }
