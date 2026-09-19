@@ -12,16 +12,10 @@ type EmailLoginRequest struct {
 	Email string
 }
 type LoginResponse struct {
-	Id       uint64
-	Name     string
-	Password string
-	Phone    string
-	Avatar   string
-	Email    string
-	Role     string
-	Sex      string
-	Age      uint32
-	Status   string
+	Id     uint64
+	Name   string
+	Avatar string
+	Status string
 }
 
 type RegisterRequest struct {
@@ -50,12 +44,11 @@ type GetProfileResponse struct {
 	Role     string
 	Status   string
 
+	ArticleCount      uint64
 	FollowersCount    uint64
 	FollowingCount    uint64
 	LikeCount         uint64
 	ReceiveLikeCount  uint64
-	ViewCount         uint64
-	ReceiveViewCount  uint64
 	FavorCount        uint64
 	ReceiveFavorCount uint64
 }
@@ -126,12 +119,11 @@ func ToGetProfileResponse(user *entity.User, stat *entity.UserStat) *GetProfileR
 		Age:               uint32(user.Age),
 		Role:              user.Role,
 		Status:            user.Status,
+		ArticleCount:      stat.ArticleCount,
 		FollowersCount:    stat.FollowersCount,
 		FollowingCount:    stat.FollowingCount,
 		LikeCount:         stat.LikeCount,
 		ReceiveLikeCount:  stat.ReceiveLikeCount,
-		ViewCount:         stat.ViewCount,
-		ReceiveViewCount:  stat.ReceiveViewCount,
 		FavorCount:        stat.FavorCount,
 		ReceiveFavorCount: stat.ReceiveFavorCount,
 	}
@@ -141,12 +133,7 @@ func ToLoginResponse(user *entity.User) *LoginResponse {
 	return &LoginResponse{
 		Id:     user.ID,
 		Name:   user.Name,
-		Email:  user.Email,
-		Phone:  user.Phone,
 		Avatar: user.Avatar,
-		Sex:    user.Sex,
-		Age:    uint32(user.Age),
-		Role:   user.Role,
 		Status: user.Status,
 	}
 }

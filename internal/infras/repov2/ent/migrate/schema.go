@@ -37,12 +37,11 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "article_count", Type: field.TypeUint64, Nullable: true},
 		{Name: "followers_count", Type: field.TypeUint64, Default: 0},
 		{Name: "following_count", Type: field.TypeUint64, Default: 0},
 		{Name: "like_count", Type: field.TypeUint64, Default: 0},
 		{Name: "receive_like_count", Type: field.TypeUint64, Default: 0},
-		{Name: "view_count", Type: field.TypeUint64, Default: 0},
-		{Name: "receive_view_count", Type: field.TypeUint64, Default: 0},
 		{Name: "favor_count", Type: field.TypeUint64, Default: 0},
 		{Name: "receive_favor_count", Type: field.TypeUint64, Default: 0},
 		{Name: "user_id", Type: field.TypeUint64, Unique: true},
@@ -55,7 +54,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "user_stat_user_stat",
-				Columns:    []*schema.Column{UserStatColumns[12]},
+				Columns:    []*schema.Column{UserStatColumns[11]},
 				RefColumns: []*schema.Column{UserColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

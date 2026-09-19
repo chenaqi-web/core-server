@@ -56,34 +56,38 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*entity.User, 
 	return toEntityUser(node), nil
 }
 
-func (r *UserRepo) Create(ctx context.Context, value *entity.User) error {
-	node, err := r.db.User.Create().
-		SetName(value.Name).
-		SetPassword(value.Password).
-		SetEmail(value.Email).
-		SetRole(value.Role).
-		SetStatus(value.Status).
-		Save(ctx)
+func (r *UserRepo) CreateUser(ctx context.Context, value *entity.User) error {
+	err := r.WithTransaction(ctx, func(ctx context.Context) error {
+		node, err := r.db.User.Create().
+			SetName(value.Name).
+			SetPassword(value.Password).
+			SetEmail(value.Email).
+			SetRole(value.Role).
+			SetStatus(value.Status).
+			Save(ctx)
+		if err != nil {
+			return err
+		}
+
+		_, err = r.db.UserStat.Create().
+			SetUserID(node.ID).
+			SetArticleCount(0).
+			SetFollowersCount(0).
+			SetFollowingCount(0).
+			SetLikeCount(0).
+			SetReceiveLikeCount(0).
+			SetFavorCount(0).
+			SetReceiveFavorCount(0).
+			Save(ctx)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
-	value.ID = node.ID
 	return nil
-}
-
-func (r *UserRepo) CreateStat(ctx context.Context, value *entity.UserStat) error {
-	_, err := r.db.UserStat.Create().
-		SetUserID(value.UserID).
-		SetFollowersCount(value.FollowersCount).
-		SetFollowingCount(value.FollowingCount).
-		SetLikeCount(value.LikeCount).
-		SetReceiveLikeCount(value.ReceiveLikeCount).
-		SetViewCount(value.ViewCount).
-		SetReceiveViewCount(value.ReceiveViewCount).
-		SetFavorCount(value.FavorCount).
-		SetReceiveFavorCount(value.ReceiveFavorCount).
-		Save(ctx)
-	return err
 }
 
 func (r *UserRepo) List(ctx context.Context, limit, offset uint32) ([]*entity.User, uint64, error) {
@@ -233,9 +237,13 @@ func toEntityUserStat(stat *ent.UserStat) *entity.UserStat {
 		return nil
 	}
 	return &entity.UserStat{
-		UserID: stat.UserID, FollowersCount: stat.FollowersCount, FollowingCount: stat.FollowingCount,
-		LikeCount: stat.LikeCount, ReceiveLikeCount: stat.ReceiveLikeCount,
-		ViewCount: stat.ViewCount, ReceiveViewCount: stat.ReceiveViewCount,
-		FavorCount: stat.FavorCount, ReceiveFavorCount: stat.ReceiveFavorCount,
+		UserID:            stat.UserID,
+		ArticleCount:      stat.ArticleCount,
+		FollowersCount:    stat.FollowersCount,
+		FollowingCount:    stat.FollowingCount,
+		LikeCount:         stat.LikeCount,
+		ReceiveLikeCount:  stat.ReceiveLikeCount,
+		FavorCount:        stat.FavorCount,
+		ReceiveFavorCount: stat.ReceiveFavorCount,
 	}
 }

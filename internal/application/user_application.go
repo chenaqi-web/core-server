@@ -96,20 +96,8 @@ func (s *UserService) Register(ctx context.Context, req *dto.RegisterRequest) er
 		Status:   entity.StatusApproved,
 	}
 
-	// 事务处理user和stat表
-	err = s.repo.WithTransaction(ctx, func(ctx context.Context) error {
-		if err := s.repo.Create(ctx, user); err != nil {
-			s.log.Error("UserService/Register error:", zap.Error(err))
-			return err
-		}
-		// stat直接就默认值0
-		if err := s.repo.CreateStat(ctx, &entity.UserStat{UserID: user.ID}); err != nil {
-			s.log.Error("UserService/Register error:", zap.Error(err))
-			return err
-		}
-		return nil
-	})
-	if err != nil {
+	if err := s.repo.CreateUser(ctx, user); err != nil {
+		s.log.Error("UserService/Register error:", zap.Error(err))
 		return err
 	}
 
@@ -192,12 +180,12 @@ func (s *UserService) UpdateProfile(ctx context.Context, req *dto.UpdateProfileR
 func (s *UserService) UpdateAvatar(ctx context.Context, req *dto.UpdateAvatarRequest) (*dto.UserAvatarResponse, error) {
 	user, err := s.repo.GetByID(ctx, req.UserID)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, ErrUserNotFound
-		}
-		s.log.Error("UpdateAvatar error", zap.Error(err))
 		return nil, err
 	}
+	if user == nil {
+		return nil, ErrUserNotFound
+	}
+
 	if err := s.repo.UpdateAvatar(ctx, req.UserID, req.Avatar); err != nil {
 		s.log.Error("UpdateAvatar error", zap.Error(err))
 		return nil, err
@@ -211,8 +199,7 @@ func (s *UserService) UpdateAvatar(ctx context.Context, req *dto.UpdateAvatarReq
 // 管理用户方面
 
 func (s *UserService) UpdateStatus(ctx context.Context, req *dto.UpdateUserStatusRequest) error {
-	userID, status := req.UserID, req.Status
-	if err := s.repo.UpdateStatus(ctx, userID, status); err != nil {
+	if err := s.repo.UpdateStatus(ctx, req.UserID, req.Status); err != nil {
 		s.log.Error("UserService/UpdateStatus error:", zap.Error(err))
 		return err
 	}

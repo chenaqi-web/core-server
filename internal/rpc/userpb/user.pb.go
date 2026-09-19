@@ -188,10 +188,9 @@ type GetProfileResponse struct {
 	FollowingCount    uint64                 `protobuf:"varint,11,opt,name=following_count,json=followingCount,proto3" json:"following_count,omitempty"`
 	LikeCount         uint64                 `protobuf:"varint,12,opt,name=like_count,json=likeCount,proto3" json:"like_count,omitempty"`
 	ReceiveLikeCount  uint64                 `protobuf:"varint,13,opt,name=receive_like_count,json=receiveLikeCount,proto3" json:"receive_like_count,omitempty"`
-	ViewCount         uint64                 `protobuf:"varint,14,opt,name=view_count,json=viewCount,proto3" json:"view_count,omitempty"`
-	ReceiveViewCount  uint64                 `protobuf:"varint,15,opt,name=receive_view_count,json=receiveViewCount,proto3" json:"receive_view_count,omitempty"`
-	FavorCount        uint64                 `protobuf:"varint,16,opt,name=favor_count,json=favorCount,proto3" json:"favor_count,omitempty"`
-	ReceiveFavorCount uint64                 `protobuf:"varint,17,opt,name=receive_favor_count,json=receiveFavorCount,proto3" json:"receive_favor_count,omitempty"`
+	FavorCount        uint64                 `protobuf:"varint,14,opt,name=favor_count,json=favorCount,proto3" json:"favor_count,omitempty"`
+	ReceiveFavorCount uint64                 `protobuf:"varint,15,opt,name=receive_favor_count,json=receiveFavorCount,proto3" json:"receive_favor_count,omitempty"`
+	ArticleCount      uint64                 `protobuf:"varint,16,opt,name=article_count,json=articleCount,proto3" json:"article_count,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -317,20 +316,6 @@ func (x *GetProfileResponse) GetReceiveLikeCount() uint64 {
 	return 0
 }
 
-func (x *GetProfileResponse) GetViewCount() uint64 {
-	if x != nil {
-		return x.ViewCount
-	}
-	return 0
-}
-
-func (x *GetProfileResponse) GetReceiveViewCount() uint64 {
-	if x != nil {
-		return x.ReceiveViewCount
-	}
-	return 0
-}
-
 func (x *GetProfileResponse) GetFavorCount() uint64 {
 	if x != nil {
 		return x.FavorCount
@@ -341,6 +326,13 @@ func (x *GetProfileResponse) GetFavorCount() uint64 {
 func (x *GetProfileResponse) GetReceiveFavorCount() uint64 {
 	if x != nil {
 		return x.ReceiveFavorCount
+	}
+	return 0
+}
+
+func (x *GetProfileResponse) GetArticleCount() uint64 {
+	if x != nil {
+		return x.ArticleCount
 	}
 	return 0
 }
@@ -890,7 +882,7 @@ const file_user_proto_rawDesc = "" +
 	"\x04role\x18\b \x01(\tR\x04role\x12\x16\n" +
 	"\x06status\x18\t \x01(\tR\x06status\",\n" +
 	"\x11GetProfileRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x04R\x06userId\"\x91\x04\n" +
+	"\auser_id\x18\x01 \x01(\x04R\x06userId\"\xe9\x03\n" +
 	"\x12GetProfileResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x14\n" +
@@ -906,13 +898,11 @@ const file_user_proto_rawDesc = "" +
 	"\x0ffollowing_count\x18\v \x01(\x04R\x0efollowingCount\x12\x1d\n" +
 	"\n" +
 	"like_count\x18\f \x01(\x04R\tlikeCount\x12,\n" +
-	"\x12receive_like_count\x18\r \x01(\x04R\x10receiveLikeCount\x12\x1d\n" +
-	"\n" +
-	"view_count\x18\x0e \x01(\x04R\tviewCount\x12,\n" +
-	"\x12receive_view_count\x18\x0f \x01(\x04R\x10receiveViewCount\x12\x1f\n" +
-	"\vfavor_count\x18\x10 \x01(\x04R\n" +
+	"\x12receive_like_count\x18\r \x01(\x04R\x10receiveLikeCount\x12\x1f\n" +
+	"\vfavor_count\x18\x0e \x01(\x04R\n" +
 	"favorCount\x12.\n" +
-	"\x13receive_favor_count\x18\x11 \x01(\x04R\x11receiveFavorCount\"\x85\x01\n" +
+	"\x13receive_favor_count\x18\x0f \x01(\x04R\x11receiveFavorCount\x12#\n" +
+	"\rarticle_count\x18\x10 \x01(\x04R\farticleCount\"\x85\x01\n" +
 	"\x14UpdateProfileRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x04R\x06userId\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x14\n" +

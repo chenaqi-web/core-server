@@ -1089,6 +1089,8 @@ type UserStatMutation struct {
 	created_at             *time.Time
 	updated_at             *time.Time
 	deleted_at             *time.Time
+	article_count          *uint64
+	addarticle_count       *int64
 	followers_count        *uint64
 	addfollowers_count     *int64
 	following_count        *uint64
@@ -1097,10 +1099,6 @@ type UserStatMutation struct {
 	addlike_count          *int64
 	receive_like_count     *uint64
 	addreceive_like_count  *int64
-	view_count             *uint64
-	addview_count          *int64
-	receive_view_count     *uint64
-	addreceive_view_count  *int64
 	favor_count            *uint64
 	addfavor_count         *int64
 	receive_favor_count    *uint64
@@ -1368,6 +1366,76 @@ func (m *UserStatMutation) ResetUserID() {
 	m.user = nil
 }
 
+// SetArticleCount sets the "article_count" field.
+func (m *UserStatMutation) SetArticleCount(u uint64) {
+	m.article_count = &u
+	m.addarticle_count = nil
+}
+
+// ArticleCount returns the value of the "article_count" field in the mutation.
+func (m *UserStatMutation) ArticleCount() (r uint64, exists bool) {
+	v := m.article_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldArticleCount returns the old "article_count" field's value of the UserStat entity.
+// If the UserStat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserStatMutation) OldArticleCount(ctx context.Context) (v uint64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldArticleCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldArticleCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldArticleCount: %w", err)
+	}
+	return oldValue.ArticleCount, nil
+}
+
+// AddArticleCount adds u to the "article_count" field.
+func (m *UserStatMutation) AddArticleCount(u int64) {
+	if m.addarticle_count != nil {
+		*m.addarticle_count += u
+	} else {
+		m.addarticle_count = &u
+	}
+}
+
+// AddedArticleCount returns the value that was added to the "article_count" field in this mutation.
+func (m *UserStatMutation) AddedArticleCount() (r int64, exists bool) {
+	v := m.addarticle_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearArticleCount clears the value of the "article_count" field.
+func (m *UserStatMutation) ClearArticleCount() {
+	m.article_count = nil
+	m.addarticle_count = nil
+	m.clearedFields[userstat.FieldArticleCount] = struct{}{}
+}
+
+// ArticleCountCleared returns if the "article_count" field was cleared in this mutation.
+func (m *UserStatMutation) ArticleCountCleared() bool {
+	_, ok := m.clearedFields[userstat.FieldArticleCount]
+	return ok
+}
+
+// ResetArticleCount resets all changes to the "article_count" field.
+func (m *UserStatMutation) ResetArticleCount() {
+	m.article_count = nil
+	m.addarticle_count = nil
+	delete(m.clearedFields, userstat.FieldArticleCount)
+}
+
 // SetFollowersCount sets the "followers_count" field.
 func (m *UserStatMutation) SetFollowersCount(u uint64) {
 	m.followers_count = &u
@@ -1592,118 +1660,6 @@ func (m *UserStatMutation) ResetReceiveLikeCount() {
 	m.addreceive_like_count = nil
 }
 
-// SetViewCount sets the "view_count" field.
-func (m *UserStatMutation) SetViewCount(u uint64) {
-	m.view_count = &u
-	m.addview_count = nil
-}
-
-// ViewCount returns the value of the "view_count" field in the mutation.
-func (m *UserStatMutation) ViewCount() (r uint64, exists bool) {
-	v := m.view_count
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldViewCount returns the old "view_count" field's value of the UserStat entity.
-// If the UserStat object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UserStatMutation) OldViewCount(ctx context.Context) (v uint64, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldViewCount is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldViewCount requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldViewCount: %w", err)
-	}
-	return oldValue.ViewCount, nil
-}
-
-// AddViewCount adds u to the "view_count" field.
-func (m *UserStatMutation) AddViewCount(u int64) {
-	if m.addview_count != nil {
-		*m.addview_count += u
-	} else {
-		m.addview_count = &u
-	}
-}
-
-// AddedViewCount returns the value that was added to the "view_count" field in this mutation.
-func (m *UserStatMutation) AddedViewCount() (r int64, exists bool) {
-	v := m.addview_count
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ResetViewCount resets all changes to the "view_count" field.
-func (m *UserStatMutation) ResetViewCount() {
-	m.view_count = nil
-	m.addview_count = nil
-}
-
-// SetReceiveViewCount sets the "receive_view_count" field.
-func (m *UserStatMutation) SetReceiveViewCount(u uint64) {
-	m.receive_view_count = &u
-	m.addreceive_view_count = nil
-}
-
-// ReceiveViewCount returns the value of the "receive_view_count" field in the mutation.
-func (m *UserStatMutation) ReceiveViewCount() (r uint64, exists bool) {
-	v := m.receive_view_count
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldReceiveViewCount returns the old "receive_view_count" field's value of the UserStat entity.
-// If the UserStat object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UserStatMutation) OldReceiveViewCount(ctx context.Context) (v uint64, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldReceiveViewCount is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldReceiveViewCount requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldReceiveViewCount: %w", err)
-	}
-	return oldValue.ReceiveViewCount, nil
-}
-
-// AddReceiveViewCount adds u to the "receive_view_count" field.
-func (m *UserStatMutation) AddReceiveViewCount(u int64) {
-	if m.addreceive_view_count != nil {
-		*m.addreceive_view_count += u
-	} else {
-		m.addreceive_view_count = &u
-	}
-}
-
-// AddedReceiveViewCount returns the value that was added to the "receive_view_count" field in this mutation.
-func (m *UserStatMutation) AddedReceiveViewCount() (r int64, exists bool) {
-	v := m.addreceive_view_count
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ResetReceiveViewCount resets all changes to the "receive_view_count" field.
-func (m *UserStatMutation) ResetReceiveViewCount() {
-	m.receive_view_count = nil
-	m.addreceive_view_count = nil
-}
-
 // SetFavorCount sets the "favor_count" field.
 func (m *UserStatMutation) SetFavorCount(u uint64) {
 	m.favor_count = &u
@@ -1877,7 +1833,7 @@ func (m *UserStatMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserStatMutation) Fields() []string {
-	fields := make([]string, 0, 12)
+	fields := make([]string, 0, 11)
 	if m.created_at != nil {
 		fields = append(fields, userstat.FieldCreatedAt)
 	}
@@ -1890,6 +1846,9 @@ func (m *UserStatMutation) Fields() []string {
 	if m.user != nil {
 		fields = append(fields, userstat.FieldUserID)
 	}
+	if m.article_count != nil {
+		fields = append(fields, userstat.FieldArticleCount)
+	}
 	if m.followers_count != nil {
 		fields = append(fields, userstat.FieldFollowersCount)
 	}
@@ -1901,12 +1860,6 @@ func (m *UserStatMutation) Fields() []string {
 	}
 	if m.receive_like_count != nil {
 		fields = append(fields, userstat.FieldReceiveLikeCount)
-	}
-	if m.view_count != nil {
-		fields = append(fields, userstat.FieldViewCount)
-	}
-	if m.receive_view_count != nil {
-		fields = append(fields, userstat.FieldReceiveViewCount)
 	}
 	if m.favor_count != nil {
 		fields = append(fields, userstat.FieldFavorCount)
@@ -1930,6 +1883,8 @@ func (m *UserStatMutation) Field(name string) (ent.Value, bool) {
 		return m.DeletedAt()
 	case userstat.FieldUserID:
 		return m.UserID()
+	case userstat.FieldArticleCount:
+		return m.ArticleCount()
 	case userstat.FieldFollowersCount:
 		return m.FollowersCount()
 	case userstat.FieldFollowingCount:
@@ -1938,10 +1893,6 @@ func (m *UserStatMutation) Field(name string) (ent.Value, bool) {
 		return m.LikeCount()
 	case userstat.FieldReceiveLikeCount:
 		return m.ReceiveLikeCount()
-	case userstat.FieldViewCount:
-		return m.ViewCount()
-	case userstat.FieldReceiveViewCount:
-		return m.ReceiveViewCount()
 	case userstat.FieldFavorCount:
 		return m.FavorCount()
 	case userstat.FieldReceiveFavorCount:
@@ -1963,6 +1914,8 @@ func (m *UserStatMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldDeletedAt(ctx)
 	case userstat.FieldUserID:
 		return m.OldUserID(ctx)
+	case userstat.FieldArticleCount:
+		return m.OldArticleCount(ctx)
 	case userstat.FieldFollowersCount:
 		return m.OldFollowersCount(ctx)
 	case userstat.FieldFollowingCount:
@@ -1971,10 +1924,6 @@ func (m *UserStatMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldLikeCount(ctx)
 	case userstat.FieldReceiveLikeCount:
 		return m.OldReceiveLikeCount(ctx)
-	case userstat.FieldViewCount:
-		return m.OldViewCount(ctx)
-	case userstat.FieldReceiveViewCount:
-		return m.OldReceiveViewCount(ctx)
 	case userstat.FieldFavorCount:
 		return m.OldFavorCount(ctx)
 	case userstat.FieldReceiveFavorCount:
@@ -2016,6 +1965,13 @@ func (m *UserStatMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetUserID(v)
 		return nil
+	case userstat.FieldArticleCount:
+		v, ok := value.(uint64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetArticleCount(v)
+		return nil
 	case userstat.FieldFollowersCount:
 		v, ok := value.(uint64)
 		if !ok {
@@ -2044,20 +2000,6 @@ func (m *UserStatMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetReceiveLikeCount(v)
 		return nil
-	case userstat.FieldViewCount:
-		v, ok := value.(uint64)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetViewCount(v)
-		return nil
-	case userstat.FieldReceiveViewCount:
-		v, ok := value.(uint64)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetReceiveViewCount(v)
-		return nil
 	case userstat.FieldFavorCount:
 		v, ok := value.(uint64)
 		if !ok {
@@ -2080,6 +2022,9 @@ func (m *UserStatMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *UserStatMutation) AddedFields() []string {
 	var fields []string
+	if m.addarticle_count != nil {
+		fields = append(fields, userstat.FieldArticleCount)
+	}
 	if m.addfollowers_count != nil {
 		fields = append(fields, userstat.FieldFollowersCount)
 	}
@@ -2091,12 +2036,6 @@ func (m *UserStatMutation) AddedFields() []string {
 	}
 	if m.addreceive_like_count != nil {
 		fields = append(fields, userstat.FieldReceiveLikeCount)
-	}
-	if m.addview_count != nil {
-		fields = append(fields, userstat.FieldViewCount)
-	}
-	if m.addreceive_view_count != nil {
-		fields = append(fields, userstat.FieldReceiveViewCount)
 	}
 	if m.addfavor_count != nil {
 		fields = append(fields, userstat.FieldFavorCount)
@@ -2112,6 +2051,8 @@ func (m *UserStatMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *UserStatMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case userstat.FieldArticleCount:
+		return m.AddedArticleCount()
 	case userstat.FieldFollowersCount:
 		return m.AddedFollowersCount()
 	case userstat.FieldFollowingCount:
@@ -2120,10 +2061,6 @@ func (m *UserStatMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedLikeCount()
 	case userstat.FieldReceiveLikeCount:
 		return m.AddedReceiveLikeCount()
-	case userstat.FieldViewCount:
-		return m.AddedViewCount()
-	case userstat.FieldReceiveViewCount:
-		return m.AddedReceiveViewCount()
 	case userstat.FieldFavorCount:
 		return m.AddedFavorCount()
 	case userstat.FieldReceiveFavorCount:
@@ -2137,6 +2074,13 @@ func (m *UserStatMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *UserStatMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case userstat.FieldArticleCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddArticleCount(v)
+		return nil
 	case userstat.FieldFollowersCount:
 		v, ok := value.(int64)
 		if !ok {
@@ -2165,20 +2109,6 @@ func (m *UserStatMutation) AddField(name string, value ent.Value) error {
 		}
 		m.AddReceiveLikeCount(v)
 		return nil
-	case userstat.FieldViewCount:
-		v, ok := value.(int64)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddViewCount(v)
-		return nil
-	case userstat.FieldReceiveViewCount:
-		v, ok := value.(int64)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddReceiveViewCount(v)
-		return nil
 	case userstat.FieldFavorCount:
 		v, ok := value.(int64)
 		if !ok {
@@ -2204,6 +2134,9 @@ func (m *UserStatMutation) ClearedFields() []string {
 	if m.FieldCleared(userstat.FieldDeletedAt) {
 		fields = append(fields, userstat.FieldDeletedAt)
 	}
+	if m.FieldCleared(userstat.FieldArticleCount) {
+		fields = append(fields, userstat.FieldArticleCount)
+	}
 	return fields
 }
 
@@ -2220,6 +2153,9 @@ func (m *UserStatMutation) ClearField(name string) error {
 	switch name {
 	case userstat.FieldDeletedAt:
 		m.ClearDeletedAt()
+		return nil
+	case userstat.FieldArticleCount:
+		m.ClearArticleCount()
 		return nil
 	}
 	return fmt.Errorf("unknown UserStat nullable field %s", name)
@@ -2241,6 +2177,9 @@ func (m *UserStatMutation) ResetField(name string) error {
 	case userstat.FieldUserID:
 		m.ResetUserID()
 		return nil
+	case userstat.FieldArticleCount:
+		m.ResetArticleCount()
+		return nil
 	case userstat.FieldFollowersCount:
 		m.ResetFollowersCount()
 		return nil
@@ -2252,12 +2191,6 @@ func (m *UserStatMutation) ResetField(name string) error {
 		return nil
 	case userstat.FieldReceiveLikeCount:
 		m.ResetReceiveLikeCount()
-		return nil
-	case userstat.FieldViewCount:
-		m.ResetViewCount()
-		return nil
-	case userstat.FieldReceiveViewCount:
-		m.ResetReceiveViewCount()
 		return nil
 	case userstat.FieldFavorCount:
 		m.ResetFavorCount()

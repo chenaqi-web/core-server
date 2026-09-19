@@ -13,8 +13,7 @@ type UserRepo interface {
 	GetByEmail(ctx context.Context, email string) (*entity.User, error)
 	GetStat(ctx context.Context, userID uint64) (*entity.UserStat, error)
 
-	Create(ctx context.Context, user *entity.User) error
-	CreateStat(ctx context.Context, user *entity.UserStat) error
+	CreateUser(ctx context.Context, user *entity.User) error
 	Search(ctx context.Context, keyword string, limit, offset uint32) ([]*entity.User, uint64, error)
 	List(ctx context.Context, limit, offset uint32) ([]*entity.User, uint64, error)
 	ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User, error)

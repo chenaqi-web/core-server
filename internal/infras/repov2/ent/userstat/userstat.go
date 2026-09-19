@@ -22,6 +22,8 @@ const (
 	FieldDeletedAt = "deleted_at"
 	// FieldUserID holds the string denoting the user_id field in the database.
 	FieldUserID = "user_id"
+	// FieldArticleCount holds the string denoting the article_count field in the database.
+	FieldArticleCount = "article_count"
 	// FieldFollowersCount holds the string denoting the followers_count field in the database.
 	FieldFollowersCount = "followers_count"
 	// FieldFollowingCount holds the string denoting the following_count field in the database.
@@ -30,10 +32,6 @@ const (
 	FieldLikeCount = "like_count"
 	// FieldReceiveLikeCount holds the string denoting the receive_like_count field in the database.
 	FieldReceiveLikeCount = "receive_like_count"
-	// FieldViewCount holds the string denoting the view_count field in the database.
-	FieldViewCount = "view_count"
-	// FieldReceiveViewCount holds the string denoting the receive_view_count field in the database.
-	FieldReceiveViewCount = "receive_view_count"
 	// FieldFavorCount holds the string denoting the favor_count field in the database.
 	FieldFavorCount = "favor_count"
 	// FieldReceiveFavorCount holds the string denoting the receive_favor_count field in the database.
@@ -58,12 +56,11 @@ var Columns = []string{
 	FieldUpdatedAt,
 	FieldDeletedAt,
 	FieldUserID,
+	FieldArticleCount,
 	FieldFollowersCount,
 	FieldFollowingCount,
 	FieldLikeCount,
 	FieldReceiveLikeCount,
-	FieldViewCount,
-	FieldReceiveViewCount,
 	FieldFavorCount,
 	FieldReceiveFavorCount,
 }
@@ -93,10 +90,6 @@ var (
 	DefaultLikeCount uint64
 	// DefaultReceiveLikeCount holds the default value on creation for the "receive_like_count" field.
 	DefaultReceiveLikeCount uint64
-	// DefaultViewCount holds the default value on creation for the "view_count" field.
-	DefaultViewCount uint64
-	// DefaultReceiveViewCount holds the default value on creation for the "receive_view_count" field.
-	DefaultReceiveViewCount uint64
 	// DefaultFavorCount holds the default value on creation for the "favor_count" field.
 	DefaultFavorCount uint64
 	// DefaultReceiveFavorCount holds the default value on creation for the "receive_favor_count" field.
@@ -131,6 +124,11 @@ func ByUserID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUserID, opts...).ToFunc()
 }
 
+// ByArticleCount orders the results by the article_count field.
+func ByArticleCount(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldArticleCount, opts...).ToFunc()
+}
+
 // ByFollowersCount orders the results by the followers_count field.
 func ByFollowersCount(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldFollowersCount, opts...).ToFunc()
@@ -149,16 +147,6 @@ func ByLikeCount(opts ...sql.OrderTermOption) OrderOption {
 // ByReceiveLikeCount orders the results by the receive_like_count field.
 func ByReceiveLikeCount(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldReceiveLikeCount, opts...).ToFunc()
-}
-
-// ByViewCount orders the results by the view_count field.
-func ByViewCount(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldViewCount, opts...).ToFunc()
-}
-
-// ByReceiveViewCount orders the results by the receive_view_count field.
-func ByReceiveViewCount(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldReceiveViewCount, opts...).ToFunc()
 }
 
 // ByFavorCount orders the results by the favor_count field.

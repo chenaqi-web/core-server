@@ -69,6 +69,33 @@ func (_u *UserStatUpdate) SetNillableUserID(v *uint64) *UserStatUpdate {
 	return _u
 }
 
+// SetArticleCount sets the "article_count" field.
+func (_u *UserStatUpdate) SetArticleCount(v uint64) *UserStatUpdate {
+	_u.mutation.ResetArticleCount()
+	_u.mutation.SetArticleCount(v)
+	return _u
+}
+
+// SetNillableArticleCount sets the "article_count" field if the given value is not nil.
+func (_u *UserStatUpdate) SetNillableArticleCount(v *uint64) *UserStatUpdate {
+	if v != nil {
+		_u.SetArticleCount(*v)
+	}
+	return _u
+}
+
+// AddArticleCount adds value to the "article_count" field.
+func (_u *UserStatUpdate) AddArticleCount(v int64) *UserStatUpdate {
+	_u.mutation.AddArticleCount(v)
+	return _u
+}
+
+// ClearArticleCount clears the value of the "article_count" field.
+func (_u *UserStatUpdate) ClearArticleCount() *UserStatUpdate {
+	_u.mutation.ClearArticleCount()
+	return _u
+}
+
 // SetFollowersCount sets the "followers_count" field.
 func (_u *UserStatUpdate) SetFollowersCount(v uint64) *UserStatUpdate {
 	_u.mutation.ResetFollowersCount()
@@ -150,48 +177,6 @@ func (_u *UserStatUpdate) SetNillableReceiveLikeCount(v *uint64) *UserStatUpdate
 // AddReceiveLikeCount adds value to the "receive_like_count" field.
 func (_u *UserStatUpdate) AddReceiveLikeCount(v int64) *UserStatUpdate {
 	_u.mutation.AddReceiveLikeCount(v)
-	return _u
-}
-
-// SetViewCount sets the "view_count" field.
-func (_u *UserStatUpdate) SetViewCount(v uint64) *UserStatUpdate {
-	_u.mutation.ResetViewCount()
-	_u.mutation.SetViewCount(v)
-	return _u
-}
-
-// SetNillableViewCount sets the "view_count" field if the given value is not nil.
-func (_u *UserStatUpdate) SetNillableViewCount(v *uint64) *UserStatUpdate {
-	if v != nil {
-		_u.SetViewCount(*v)
-	}
-	return _u
-}
-
-// AddViewCount adds value to the "view_count" field.
-func (_u *UserStatUpdate) AddViewCount(v int64) *UserStatUpdate {
-	_u.mutation.AddViewCount(v)
-	return _u
-}
-
-// SetReceiveViewCount sets the "receive_view_count" field.
-func (_u *UserStatUpdate) SetReceiveViewCount(v uint64) *UserStatUpdate {
-	_u.mutation.ResetReceiveViewCount()
-	_u.mutation.SetReceiveViewCount(v)
-	return _u
-}
-
-// SetNillableReceiveViewCount sets the "receive_view_count" field if the given value is not nil.
-func (_u *UserStatUpdate) SetNillableReceiveViewCount(v *uint64) *UserStatUpdate {
-	if v != nil {
-		_u.SetReceiveViewCount(*v)
-	}
-	return _u
-}
-
-// AddReceiveViewCount adds value to the "receive_view_count" field.
-func (_u *UserStatUpdate) AddReceiveViewCount(v int64) *UserStatUpdate {
-	_u.mutation.AddReceiveViewCount(v)
 	return _u
 }
 
@@ -318,6 +303,15 @@ func (_u *UserStatUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.DeletedAtCleared() {
 		_spec.ClearField(userstat.FieldDeletedAt, field.TypeTime)
 	}
+	if value, ok := _u.mutation.ArticleCount(); ok {
+		_spec.SetField(userstat.FieldArticleCount, field.TypeUint64, value)
+	}
+	if value, ok := _u.mutation.AddedArticleCount(); ok {
+		_spec.AddField(userstat.FieldArticleCount, field.TypeUint64, value)
+	}
+	if _u.mutation.ArticleCountCleared() {
+		_spec.ClearField(userstat.FieldArticleCount, field.TypeUint64)
+	}
 	if value, ok := _u.mutation.FollowersCount(); ok {
 		_spec.SetField(userstat.FieldFollowersCount, field.TypeUint64, value)
 	}
@@ -341,18 +335,6 @@ func (_u *UserStatUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.AddedReceiveLikeCount(); ok {
 		_spec.AddField(userstat.FieldReceiveLikeCount, field.TypeUint64, value)
-	}
-	if value, ok := _u.mutation.ViewCount(); ok {
-		_spec.SetField(userstat.FieldViewCount, field.TypeUint64, value)
-	}
-	if value, ok := _u.mutation.AddedViewCount(); ok {
-		_spec.AddField(userstat.FieldViewCount, field.TypeUint64, value)
-	}
-	if value, ok := _u.mutation.ReceiveViewCount(); ok {
-		_spec.SetField(userstat.FieldReceiveViewCount, field.TypeUint64, value)
-	}
-	if value, ok := _u.mutation.AddedReceiveViewCount(); ok {
-		_spec.AddField(userstat.FieldReceiveViewCount, field.TypeUint64, value)
 	}
 	if value, ok := _u.mutation.FavorCount(); ok {
 		_spec.SetField(userstat.FieldFavorCount, field.TypeUint64, value)
@@ -455,6 +437,33 @@ func (_u *UserStatUpdateOne) SetNillableUserID(v *uint64) *UserStatUpdateOne {
 	return _u
 }
 
+// SetArticleCount sets the "article_count" field.
+func (_u *UserStatUpdateOne) SetArticleCount(v uint64) *UserStatUpdateOne {
+	_u.mutation.ResetArticleCount()
+	_u.mutation.SetArticleCount(v)
+	return _u
+}
+
+// SetNillableArticleCount sets the "article_count" field if the given value is not nil.
+func (_u *UserStatUpdateOne) SetNillableArticleCount(v *uint64) *UserStatUpdateOne {
+	if v != nil {
+		_u.SetArticleCount(*v)
+	}
+	return _u
+}
+
+// AddArticleCount adds value to the "article_count" field.
+func (_u *UserStatUpdateOne) AddArticleCount(v int64) *UserStatUpdateOne {
+	_u.mutation.AddArticleCount(v)
+	return _u
+}
+
+// ClearArticleCount clears the value of the "article_count" field.
+func (_u *UserStatUpdateOne) ClearArticleCount() *UserStatUpdateOne {
+	_u.mutation.ClearArticleCount()
+	return _u
+}
+
 // SetFollowersCount sets the "followers_count" field.
 func (_u *UserStatUpdateOne) SetFollowersCount(v uint64) *UserStatUpdateOne {
 	_u.mutation.ResetFollowersCount()
@@ -536,48 +545,6 @@ func (_u *UserStatUpdateOne) SetNillableReceiveLikeCount(v *uint64) *UserStatUpd
 // AddReceiveLikeCount adds value to the "receive_like_count" field.
 func (_u *UserStatUpdateOne) AddReceiveLikeCount(v int64) *UserStatUpdateOne {
 	_u.mutation.AddReceiveLikeCount(v)
-	return _u
-}
-
-// SetViewCount sets the "view_count" field.
-func (_u *UserStatUpdateOne) SetViewCount(v uint64) *UserStatUpdateOne {
-	_u.mutation.ResetViewCount()
-	_u.mutation.SetViewCount(v)
-	return _u
-}
-
-// SetNillableViewCount sets the "view_count" field if the given value is not nil.
-func (_u *UserStatUpdateOne) SetNillableViewCount(v *uint64) *UserStatUpdateOne {
-	if v != nil {
-		_u.SetViewCount(*v)
-	}
-	return _u
-}
-
-// AddViewCount adds value to the "view_count" field.
-func (_u *UserStatUpdateOne) AddViewCount(v int64) *UserStatUpdateOne {
-	_u.mutation.AddViewCount(v)
-	return _u
-}
-
-// SetReceiveViewCount sets the "receive_view_count" field.
-func (_u *UserStatUpdateOne) SetReceiveViewCount(v uint64) *UserStatUpdateOne {
-	_u.mutation.ResetReceiveViewCount()
-	_u.mutation.SetReceiveViewCount(v)
-	return _u
-}
-
-// SetNillableReceiveViewCount sets the "receive_view_count" field if the given value is not nil.
-func (_u *UserStatUpdateOne) SetNillableReceiveViewCount(v *uint64) *UserStatUpdateOne {
-	if v != nil {
-		_u.SetReceiveViewCount(*v)
-	}
-	return _u
-}
-
-// AddReceiveViewCount adds value to the "receive_view_count" field.
-func (_u *UserStatUpdateOne) AddReceiveViewCount(v int64) *UserStatUpdateOne {
-	_u.mutation.AddReceiveViewCount(v)
 	return _u
 }
 
@@ -734,6 +701,15 @@ func (_u *UserStatUpdateOne) sqlSave(ctx context.Context) (_node *UserStat, err 
 	if _u.mutation.DeletedAtCleared() {
 		_spec.ClearField(userstat.FieldDeletedAt, field.TypeTime)
 	}
+	if value, ok := _u.mutation.ArticleCount(); ok {
+		_spec.SetField(userstat.FieldArticleCount, field.TypeUint64, value)
+	}
+	if value, ok := _u.mutation.AddedArticleCount(); ok {
+		_spec.AddField(userstat.FieldArticleCount, field.TypeUint64, value)
+	}
+	if _u.mutation.ArticleCountCleared() {
+		_spec.ClearField(userstat.FieldArticleCount, field.TypeUint64)
+	}
 	if value, ok := _u.mutation.FollowersCount(); ok {
 		_spec.SetField(userstat.FieldFollowersCount, field.TypeUint64, value)
 	}
@@ -757,18 +733,6 @@ func (_u *UserStatUpdateOne) sqlSave(ctx context.Context) (_node *UserStat, err 
 	}
 	if value, ok := _u.mutation.AddedReceiveLikeCount(); ok {
 		_spec.AddField(userstat.FieldReceiveLikeCount, field.TypeUint64, value)
-	}
-	if value, ok := _u.mutation.ViewCount(); ok {
-		_spec.SetField(userstat.FieldViewCount, field.TypeUint64, value)
-	}
-	if value, ok := _u.mutation.AddedViewCount(); ok {
-		_spec.AddField(userstat.FieldViewCount, field.TypeUint64, value)
-	}
-	if value, ok := _u.mutation.ReceiveViewCount(); ok {
-		_spec.SetField(userstat.FieldReceiveViewCount, field.TypeUint64, value)
-	}
-	if value, ok := _u.mutation.AddedReceiveViewCount(); ok {
-		_spec.AddField(userstat.FieldReceiveViewCount, field.TypeUint64, value)
 	}
 	if value, ok := _u.mutation.FavorCount(); ok {
 		_spec.SetField(userstat.FieldFavorCount, field.TypeUint64, value)

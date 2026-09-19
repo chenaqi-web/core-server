@@ -18,29 +18,27 @@ type UserStat struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// CreatedAt holds the value of the "created_at" field.
+	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
-	// UpdatedAt holds the value of the "updated_at" field.
+	// 更新时间
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// 软删除时间，为空表示未删除
+	// 删除时间
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 	// UserID holds the value of the "user_id" field.
 	UserID uint64 `json:"user_id,omitempty"`
-	// FollowersCount holds the value of the "followers_count" field.
+	// 发帖/文章数量
+	ArticleCount uint64 `json:"article_count,omitempty"`
+	// 粉丝数
 	FollowersCount uint64 `json:"followers_count,omitempty"`
-	// FollowingCount holds the value of the "following_count" field.
+	// 关注数
 	FollowingCount uint64 `json:"following_count,omitempty"`
-	// LikeCount holds the value of the "like_count" field.
+	// 点赞总数
 	LikeCount uint64 `json:"like_count,omitempty"`
-	// ReceiveLikeCount holds the value of the "receive_like_count" field.
+	// 收到的点赞总数
 	ReceiveLikeCount uint64 `json:"receive_like_count,omitempty"`
-	// ViewCount holds the value of the "view_count" field.
-	ViewCount uint64 `json:"view_count,omitempty"`
-	// ReceiveViewCount holds the value of the "receive_view_count" field.
-	ReceiveViewCount uint64 `json:"receive_view_count,omitempty"`
-	// FavorCount holds the value of the "favor_count" field.
+	// 收藏的数量
 	FavorCount uint64 `json:"favor_count,omitempty"`
-	// ReceiveFavorCount holds the value of the "receive_favor_count" field.
+	// 被收藏的总数
 	ReceiveFavorCount uint64 `json:"receive_favor_count,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserStatQuery when eager-loading is set.
@@ -73,7 +71,7 @@ func (*UserStat) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case userstat.FieldID, userstat.FieldUserID, userstat.FieldFollowersCount, userstat.FieldFollowingCount, userstat.FieldLikeCount, userstat.FieldReceiveLikeCount, userstat.FieldViewCount, userstat.FieldReceiveViewCount, userstat.FieldFavorCount, userstat.FieldReceiveFavorCount:
+		case userstat.FieldID, userstat.FieldUserID, userstat.FieldArticleCount, userstat.FieldFollowersCount, userstat.FieldFollowingCount, userstat.FieldLikeCount, userstat.FieldReceiveLikeCount, userstat.FieldFavorCount, userstat.FieldReceiveFavorCount:
 			values[i] = new(sql.NullInt64)
 		case userstat.FieldCreatedAt, userstat.FieldUpdatedAt, userstat.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
@@ -123,6 +121,12 @@ func (_m *UserStat) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.UserID = uint64(value.Int64)
 			}
+		case userstat.FieldArticleCount:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field article_count", values[i])
+			} else if value.Valid {
+				_m.ArticleCount = uint64(value.Int64)
+			}
 		case userstat.FieldFollowersCount:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field followers_count", values[i])
@@ -146,18 +150,6 @@ func (_m *UserStat) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field receive_like_count", values[i])
 			} else if value.Valid {
 				_m.ReceiveLikeCount = uint64(value.Int64)
-			}
-		case userstat.FieldViewCount:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field view_count", values[i])
-			} else if value.Valid {
-				_m.ViewCount = uint64(value.Int64)
-			}
-		case userstat.FieldReceiveViewCount:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field receive_view_count", values[i])
-			} else if value.Valid {
-				_m.ReceiveViewCount = uint64(value.Int64)
 			}
 		case userstat.FieldFavorCount:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -226,6 +218,9 @@ func (_m *UserStat) String() string {
 	builder.WriteString("user_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.UserID))
 	builder.WriteString(", ")
+	builder.WriteString("article_count=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ArticleCount))
+	builder.WriteString(", ")
 	builder.WriteString("followers_count=")
 	builder.WriteString(fmt.Sprintf("%v", _m.FollowersCount))
 	builder.WriteString(", ")
@@ -237,12 +232,6 @@ func (_m *UserStat) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("receive_like_count=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ReceiveLikeCount))
-	builder.WriteString(", ")
-	builder.WriteString("view_count=")
-	builder.WriteString(fmt.Sprintf("%v", _m.ViewCount))
-	builder.WriteString(", ")
-	builder.WriteString("receive_view_count=")
-	builder.WriteString(fmt.Sprintf("%v", _m.ReceiveViewCount))
 	builder.WriteString(", ")
 	builder.WriteString("favor_count=")
 	builder.WriteString(fmt.Sprintf("%v", _m.FavorCount))

@@ -75,6 +75,11 @@ func UserID(v uint64) predicate.UserStat {
 	return predicate.UserStat(sql.FieldEQ(FieldUserID, v))
 }
 
+// ArticleCount applies equality check predicate on the "article_count" field. It's identical to ArticleCountEQ.
+func ArticleCount(v uint64) predicate.UserStat {
+	return predicate.UserStat(sql.FieldEQ(FieldArticleCount, v))
+}
+
 // FollowersCount applies equality check predicate on the "followers_count" field. It's identical to FollowersCountEQ.
 func FollowersCount(v uint64) predicate.UserStat {
 	return predicate.UserStat(sql.FieldEQ(FieldFollowersCount, v))
@@ -93,16 +98,6 @@ func LikeCount(v uint64) predicate.UserStat {
 // ReceiveLikeCount applies equality check predicate on the "receive_like_count" field. It's identical to ReceiveLikeCountEQ.
 func ReceiveLikeCount(v uint64) predicate.UserStat {
 	return predicate.UserStat(sql.FieldEQ(FieldReceiveLikeCount, v))
-}
-
-// ViewCount applies equality check predicate on the "view_count" field. It's identical to ViewCountEQ.
-func ViewCount(v uint64) predicate.UserStat {
-	return predicate.UserStat(sql.FieldEQ(FieldViewCount, v))
-}
-
-// ReceiveViewCount applies equality check predicate on the "receive_view_count" field. It's identical to ReceiveViewCountEQ.
-func ReceiveViewCount(v uint64) predicate.UserStat {
-	return predicate.UserStat(sql.FieldEQ(FieldReceiveViewCount, v))
 }
 
 // FavorCount applies equality check predicate on the "favor_count" field. It's identical to FavorCountEQ.
@@ -265,6 +260,56 @@ func UserIDNotIn(vs ...uint64) predicate.UserStat {
 	return predicate.UserStat(sql.FieldNotIn(FieldUserID, vs...))
 }
 
+// ArticleCountEQ applies the EQ predicate on the "article_count" field.
+func ArticleCountEQ(v uint64) predicate.UserStat {
+	return predicate.UserStat(sql.FieldEQ(FieldArticleCount, v))
+}
+
+// ArticleCountNEQ applies the NEQ predicate on the "article_count" field.
+func ArticleCountNEQ(v uint64) predicate.UserStat {
+	return predicate.UserStat(sql.FieldNEQ(FieldArticleCount, v))
+}
+
+// ArticleCountIn applies the In predicate on the "article_count" field.
+func ArticleCountIn(vs ...uint64) predicate.UserStat {
+	return predicate.UserStat(sql.FieldIn(FieldArticleCount, vs...))
+}
+
+// ArticleCountNotIn applies the NotIn predicate on the "article_count" field.
+func ArticleCountNotIn(vs ...uint64) predicate.UserStat {
+	return predicate.UserStat(sql.FieldNotIn(FieldArticleCount, vs...))
+}
+
+// ArticleCountGT applies the GT predicate on the "article_count" field.
+func ArticleCountGT(v uint64) predicate.UserStat {
+	return predicate.UserStat(sql.FieldGT(FieldArticleCount, v))
+}
+
+// ArticleCountGTE applies the GTE predicate on the "article_count" field.
+func ArticleCountGTE(v uint64) predicate.UserStat {
+	return predicate.UserStat(sql.FieldGTE(FieldArticleCount, v))
+}
+
+// ArticleCountLT applies the LT predicate on the "article_count" field.
+func ArticleCountLT(v uint64) predicate.UserStat {
+	return predicate.UserStat(sql.FieldLT(FieldArticleCount, v))
+}
+
+// ArticleCountLTE applies the LTE predicate on the "article_count" field.
+func ArticleCountLTE(v uint64) predicate.UserStat {
+	return predicate.UserStat(sql.FieldLTE(FieldArticleCount, v))
+}
+
+// ArticleCountIsNil applies the IsNil predicate on the "article_count" field.
+func ArticleCountIsNil() predicate.UserStat {
+	return predicate.UserStat(sql.FieldIsNull(FieldArticleCount))
+}
+
+// ArticleCountNotNil applies the NotNil predicate on the "article_count" field.
+func ArticleCountNotNil() predicate.UserStat {
+	return predicate.UserStat(sql.FieldNotNull(FieldArticleCount))
+}
+
 // FollowersCountEQ applies the EQ predicate on the "followers_count" field.
 func FollowersCountEQ(v uint64) predicate.UserStat {
 	return predicate.UserStat(sql.FieldEQ(FieldFollowersCount, v))
@@ -423,86 +468,6 @@ func ReceiveLikeCountLT(v uint64) predicate.UserStat {
 // ReceiveLikeCountLTE applies the LTE predicate on the "receive_like_count" field.
 func ReceiveLikeCountLTE(v uint64) predicate.UserStat {
 	return predicate.UserStat(sql.FieldLTE(FieldReceiveLikeCount, v))
-}
-
-// ViewCountEQ applies the EQ predicate on the "view_count" field.
-func ViewCountEQ(v uint64) predicate.UserStat {
-	return predicate.UserStat(sql.FieldEQ(FieldViewCount, v))
-}
-
-// ViewCountNEQ applies the NEQ predicate on the "view_count" field.
-func ViewCountNEQ(v uint64) predicate.UserStat {
-	return predicate.UserStat(sql.FieldNEQ(FieldViewCount, v))
-}
-
-// ViewCountIn applies the In predicate on the "view_count" field.
-func ViewCountIn(vs ...uint64) predicate.UserStat {
-	return predicate.UserStat(sql.FieldIn(FieldViewCount, vs...))
-}
-
-// ViewCountNotIn applies the NotIn predicate on the "view_count" field.
-func ViewCountNotIn(vs ...uint64) predicate.UserStat {
-	return predicate.UserStat(sql.FieldNotIn(FieldViewCount, vs...))
-}
-
-// ViewCountGT applies the GT predicate on the "view_count" field.
-func ViewCountGT(v uint64) predicate.UserStat {
-	return predicate.UserStat(sql.FieldGT(FieldViewCount, v))
-}
-
-// ViewCountGTE applies the GTE predicate on the "view_count" field.
-func ViewCountGTE(v uint64) predicate.UserStat {
-	return predicate.UserStat(sql.FieldGTE(FieldViewCount, v))
-}
-
-// ViewCountLT applies the LT predicate on the "view_count" field.
-func ViewCountLT(v uint64) predicate.UserStat {
-	return predicate.UserStat(sql.FieldLT(FieldViewCount, v))
-}
-
-// ViewCountLTE applies the LTE predicate on the "view_count" field.
-func ViewCountLTE(v uint64) predicate.UserStat {
-	return predicate.UserStat(sql.FieldLTE(FieldViewCount, v))
-}
-
-// ReceiveViewCountEQ applies the EQ predicate on the "receive_view_count" field.
-func ReceiveViewCountEQ(v uint64) predicate.UserStat {
-	return predicate.UserStat(sql.FieldEQ(FieldReceiveViewCount, v))
-}
-
-// ReceiveViewCountNEQ applies the NEQ predicate on the "receive_view_count" field.
-func ReceiveViewCountNEQ(v uint64) predicate.UserStat {
-	return predicate.UserStat(sql.FieldNEQ(FieldReceiveViewCount, v))
-}
-
-// ReceiveViewCountIn applies the In predicate on the "receive_view_count" field.
-func ReceiveViewCountIn(vs ...uint64) predicate.UserStat {
-	return predicate.UserStat(sql.FieldIn(FieldReceiveViewCount, vs...))
-}
-
-// ReceiveViewCountNotIn applies the NotIn predicate on the "receive_view_count" field.
-func ReceiveViewCountNotIn(vs ...uint64) predicate.UserStat {
-	return predicate.UserStat(sql.FieldNotIn(FieldReceiveViewCount, vs...))
-}
-
-// ReceiveViewCountGT applies the GT predicate on the "receive_view_count" field.
-func ReceiveViewCountGT(v uint64) predicate.UserStat {
-	return predicate.UserStat(sql.FieldGT(FieldReceiveViewCount, v))
-}
-
-// ReceiveViewCountGTE applies the GTE predicate on the "receive_view_count" field.
-func ReceiveViewCountGTE(v uint64) predicate.UserStat {
-	return predicate.UserStat(sql.FieldGTE(FieldReceiveViewCount, v))
-}
-
-// ReceiveViewCountLT applies the LT predicate on the "receive_view_count" field.
-func ReceiveViewCountLT(v uint64) predicate.UserStat {
-	return predicate.UserStat(sql.FieldLT(FieldReceiveViewCount, v))
-}
-
-// ReceiveViewCountLTE applies the LTE predicate on the "receive_view_count" field.
-func ReceiveViewCountLTE(v uint64) predicate.UserStat {
-	return predicate.UserStat(sql.FieldLTE(FieldReceiveViewCount, v))
 }
 
 // FavorCountEQ applies the EQ predicate on the "favor_count" field.

@@ -21,22 +21,20 @@ func (UserStat) Annotations() []entschema.Annotation {
 
 func (UserStat) Fields() []ent.Field {
 	return []ent.Field{
-		field.Time("created_at").Immutable().Default(time.Now),
-		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
-		field.Time("deleted_at").Optional().Nillable().Comment("软删除时间，为空表示未删除"),
+		field.Time("created_at").Immutable().Default(time.Now).Comment("创建时间"),
+		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now).Comment("更新时间"),
+		field.Time("deleted_at").Optional().Nillable().Comment("删除时间"),
 
 		field.Uint64("user_id").Unique(),
-		field.Uint64("followers_count").Default(0),
-		field.Uint64("following_count").Default(0),
-		field.Uint64("like_count").Default(0),
-		field.Uint64("receive_like_count").Default(0),
-		field.Uint64("view_count").Default(0),
-		field.Uint64("receive_view_count").Default(0),
-		field.Uint64("favor_count").Default(0),
-		field.Uint64("receive_favor_count").Default(0),
+		field.Uint64("article_count").Optional().Comment("发帖/文章数量"),
+		field.Uint64("followers_count").Default(0).Comment("粉丝数"),
+		field.Uint64("following_count").Default(0).Comment("关注数"),
+		field.Uint64("like_count").Default(0).Comment("点赞总数"),
+		field.Uint64("receive_like_count").Default(0).Comment("收到的点赞总数"),
+		field.Uint64("favor_count").Default(0).Comment("收藏的数量"),
+		field.Uint64("receive_favor_count").Default(0).Comment("被收藏的总数"),
 	}
 }
-
 func (UserStat) Edges() []ent.Edge {
 	return []ent.Edge{edge.From("user", User.Type).Ref("stat").Field("user_id").Unique().Required()}
 }

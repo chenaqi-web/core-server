@@ -36,10 +36,9 @@ message GetProfileResponse {
   uint64 following_count = 11;
   uint64 like_count = 12;
   uint64 receive_like_count = 13;
-  uint64 view_count = 14;
-  uint64 receive_view_count = 15;
-  uint64 favor_count = 16;
-  uint64 receive_favor_count = 17;
+  uint64 favor_count = 14;
+  uint64 receive_favor_count = 15;
+  uint64 article_count = 16;
 }
 
 message UpdateProfileRequest {

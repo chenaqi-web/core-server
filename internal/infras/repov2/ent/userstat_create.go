@@ -69,6 +69,20 @@ func (_c *UserStatCreate) SetUserID(v uint64) *UserStatCreate {
 	return _c
 }
 
+// SetArticleCount sets the "article_count" field.
+func (_c *UserStatCreate) SetArticleCount(v uint64) *UserStatCreate {
+	_c.mutation.SetArticleCount(v)
+	return _c
+}
+
+// SetNillableArticleCount sets the "article_count" field if the given value is not nil.
+func (_c *UserStatCreate) SetNillableArticleCount(v *uint64) *UserStatCreate {
+	if v != nil {
+		_c.SetArticleCount(*v)
+	}
+	return _c
+}
+
 // SetFollowersCount sets the "followers_count" field.
 func (_c *UserStatCreate) SetFollowersCount(v uint64) *UserStatCreate {
 	_c.mutation.SetFollowersCount(v)
@@ -121,34 +135,6 @@ func (_c *UserStatCreate) SetReceiveLikeCount(v uint64) *UserStatCreate {
 func (_c *UserStatCreate) SetNillableReceiveLikeCount(v *uint64) *UserStatCreate {
 	if v != nil {
 		_c.SetReceiveLikeCount(*v)
-	}
-	return _c
-}
-
-// SetViewCount sets the "view_count" field.
-func (_c *UserStatCreate) SetViewCount(v uint64) *UserStatCreate {
-	_c.mutation.SetViewCount(v)
-	return _c
-}
-
-// SetNillableViewCount sets the "view_count" field if the given value is not nil.
-func (_c *UserStatCreate) SetNillableViewCount(v *uint64) *UserStatCreate {
-	if v != nil {
-		_c.SetViewCount(*v)
-	}
-	return _c
-}
-
-// SetReceiveViewCount sets the "receive_view_count" field.
-func (_c *UserStatCreate) SetReceiveViewCount(v uint64) *UserStatCreate {
-	_c.mutation.SetReceiveViewCount(v)
-	return _c
-}
-
-// SetNillableReceiveViewCount sets the "receive_view_count" field if the given value is not nil.
-func (_c *UserStatCreate) SetNillableReceiveViewCount(v *uint64) *UserStatCreate {
-	if v != nil {
-		_c.SetReceiveViewCount(*v)
 	}
 	return _c
 }
@@ -245,14 +231,6 @@ func (_c *UserStatCreate) defaults() {
 		v := userstat.DefaultReceiveLikeCount
 		_c.mutation.SetReceiveLikeCount(v)
 	}
-	if _, ok := _c.mutation.ViewCount(); !ok {
-		v := userstat.DefaultViewCount
-		_c.mutation.SetViewCount(v)
-	}
-	if _, ok := _c.mutation.ReceiveViewCount(); !ok {
-		v := userstat.DefaultReceiveViewCount
-		_c.mutation.SetReceiveViewCount(v)
-	}
 	if _, ok := _c.mutation.FavorCount(); !ok {
 		v := userstat.DefaultFavorCount
 		_c.mutation.SetFavorCount(v)
@@ -285,12 +263,6 @@ func (_c *UserStatCreate) check() error {
 	}
 	if _, ok := _c.mutation.ReceiveLikeCount(); !ok {
 		return &ValidationError{Name: "receive_like_count", err: errors.New(`ent: missing required field "UserStat.receive_like_count"`)}
-	}
-	if _, ok := _c.mutation.ViewCount(); !ok {
-		return &ValidationError{Name: "view_count", err: errors.New(`ent: missing required field "UserStat.view_count"`)}
-	}
-	if _, ok := _c.mutation.ReceiveViewCount(); !ok {
-		return &ValidationError{Name: "receive_view_count", err: errors.New(`ent: missing required field "UserStat.receive_view_count"`)}
 	}
 	if _, ok := _c.mutation.FavorCount(); !ok {
 		return &ValidationError{Name: "favor_count", err: errors.New(`ent: missing required field "UserStat.favor_count"`)}
@@ -339,6 +311,10 @@ func (_c *UserStatCreate) createSpec() (*UserStat, *sqlgraph.CreateSpec) {
 		_spec.SetField(userstat.FieldDeletedAt, field.TypeTime, value)
 		_node.DeletedAt = &value
 	}
+	if value, ok := _c.mutation.ArticleCount(); ok {
+		_spec.SetField(userstat.FieldArticleCount, field.TypeUint64, value)
+		_node.ArticleCount = value
+	}
 	if value, ok := _c.mutation.FollowersCount(); ok {
 		_spec.SetField(userstat.FieldFollowersCount, field.TypeUint64, value)
 		_node.FollowersCount = value
@@ -354,14 +330,6 @@ func (_c *UserStatCreate) createSpec() (*UserStat, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.ReceiveLikeCount(); ok {
 		_spec.SetField(userstat.FieldReceiveLikeCount, field.TypeUint64, value)
 		_node.ReceiveLikeCount = value
-	}
-	if value, ok := _c.mutation.ViewCount(); ok {
-		_spec.SetField(userstat.FieldViewCount, field.TypeUint64, value)
-		_node.ViewCount = value
-	}
-	if value, ok := _c.mutation.ReceiveViewCount(); ok {
-		_spec.SetField(userstat.FieldReceiveViewCount, field.TypeUint64, value)
-		_node.ReceiveViewCount = value
 	}
 	if value, ok := _c.mutation.FavorCount(); ok {
 		_spec.SetField(userstat.FieldFavorCount, field.TypeUint64, value)
