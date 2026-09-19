@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	"core-server/internal/model/aggregate"
 	"core-server/internal/model/entity"
 )
 
@@ -11,9 +12,10 @@ type UserRepo interface {
 	GetByID(ctx context.Context, id uint64) (*entity.User, error)
 	GetByName(ctx context.Context, name string) (*entity.User, error)
 	GetByEmail(ctx context.Context, email string) (*entity.User, error)
-	GetStat(ctx context.Context, userID uint64) (*entity.UserStat, error)
 
 	CreateUser(ctx context.Context, user *entity.User) error
+	GetUserMsgByID(ctx context.Context, id uint64) (*aggregate.UserAggregate, error)
+
 	Search(ctx context.Context, keyword string, limit, offset uint32) ([]*entity.User, uint64, error)
 	List(ctx context.Context, limit, offset uint32) ([]*entity.User, uint64, error)
 	ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User, error)

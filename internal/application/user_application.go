@@ -7,7 +7,6 @@ import (
 	"core-server/internal/model/dto"
 	"core-server/internal/model/entity"
 	"core-server/internal/utils"
-	"database/sql"
 	"errors"
 
 	"go.uber.org/zap"
@@ -135,8 +134,24 @@ func (s *UserService) ForgotPassword(ctx context.Context, req *dto.ForgotPasswor
 // 用户信息方面
 
 func (s *UserService) GetProfile(ctx context.Context, req *dto.GetProfileRequest) (*dto.GetProfileResponse, error) {
-	// 1.拿到用户的基础信息
-	userMsg, err := s.repo.GetByID(ctx, req.UserID)
+	//// 1.拿到用户的基础信息
+	//userMsg, err := s.repo.GetByID(ctx, req.UserID)
+	//if err != nil {
+	//	s.log.Error("GetProfile error", zap.Error(err))
+	//	return nil, err
+	//}
+	//if userMsg == nil {
+	//	return nil, ErrUserNotFound
+	//}
+	//
+	//// 2.拿到用户的计数信息
+	//userStat, err := s.repo.GetStat(ctx, req.UserID)
+	//if err != nil {
+	//	s.log.Error("GetProfile error", zap.Error(err))
+	//	return nil, err
+	//}
+
+	userMsg, err := s.repo.GetUserMsgByID(ctx, req.UserID)
 	if err != nil {
 		s.log.Error("GetProfile error", zap.Error(err))
 		return nil, err
@@ -145,24 +160,17 @@ func (s *UserService) GetProfile(ctx context.Context, req *dto.GetProfileRequest
 		return nil, ErrUserNotFound
 	}
 
-	// 2.拿到用户的计数信息
-	userStat, err := s.repo.GetStat(ctx, req.UserID)
-	if err != nil {
-		s.log.Error("GetProfile error", zap.Error(err))
-		return nil, err
-	}
-
-	return dto.ToGetProfileResponse(userMsg, userStat), nil
+	return dto.ToGetProfileResponse(userMsg.User, userMsg.Stat), nil
 }
 
 func (s *UserService) UpdateProfile(ctx context.Context, req *dto.UpdateProfileRequest) error {
 	user, err := s.repo.GetByID(ctx, req.UserID)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return ErrUserNotFound
-		}
 		s.log.Error("UpdateProfile error", zap.Error(err))
 		return err
+	}
+	if user == nil {
+		return ErrUserNotFound
 	}
 
 	user.Name = req.Username

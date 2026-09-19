@@ -4,7 +4,7 @@ import (
 	"context"
 	"core-server/internal/infras/repov2/ent"
 	"core-server/internal/infras/repov2/ent/user"
-	"core-server/internal/infras/repov2/ent/userstat"
+	"core-server/internal/model/aggregate"
 	"core-server/internal/model/entity"
 	"database/sql"
 	"errors"
@@ -90,8 +90,30 @@ func (r *UserRepo) CreateUser(ctx context.Context, value *entity.User) error {
 	return nil
 }
 
-func (r *UserRepo) List(ctx context.Context, limit, offset uint32) ([]*entity.User, uint64, error) {
-	query := r.db.User.Query().Where(user.DeletedAtIsNil())
+func (r *UserRepo) GetUserMsgByID(ctx context.Context, id uint64) (*aggregate.UserAggregate, error) {
+	node, err := r.db.User.Query().
+		Where(user.IDEQ(id), user.DeletedAtIsNil()).
+		WithStat(). // 预加载边
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// 拿到关联的 stat
+	stat := node.Edges.Stat
+
+	return &aggregate.UserAggregate{
+		User: toEntityUser(node),
+		Stat: toEntityUserStat(stat),
+	}, err
+}
+
+func (r *UserRepo) Search(ctx context.Context, keyword string, limit, offset uint32) ([]*entity.User, uint64, error) {
+	query := r.db.User.Query().Where(
+		user.DeletedAtIsNil(),
+		user.Or(user.NameContains(keyword), user.EmailContains(keyword)),
+	)
+
 	total, err := query.Clone().Count(ctx)
 	if err != nil {
 		return nil, 0, err
@@ -103,12 +125,8 @@ func (r *UserRepo) List(ctx context.Context, limit, offset uint32) ([]*entity.Us
 	return toEntityUsers(nodes), uint64(total), nil
 }
 
-func (r *UserRepo) Search(ctx context.Context, keyword string, limit, offset uint32) ([]*entity.User, uint64, error) {
-	query := r.db.User.Query().Where(
-		user.DeletedAtIsNil(),
-		user.Or(user.NameContains(keyword), user.EmailContains(keyword)),
-	)
-
+func (r *UserRepo) List(ctx context.Context, limit, offset uint32) ([]*entity.User, uint64, error) {
+	query := r.db.User.Query().Where(user.DeletedAtIsNil())
 	total, err := query.Clone().Count(ctx)
 	if err != nil {
 		return nil, 0, err
@@ -135,13 +153,7 @@ func (r *UserRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User,
 	return toEntityUsers(nodes), nil
 }
 
-func (r *UserRepo) GetStat(ctx context.Context, userID uint64) (*entity.UserStat, error) {
-	stat, err := r.db.UserStat.Query().Where(userstat.UserIDEQ(userID)).Only(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return toEntityUserStat(stat), nil
-}
+// =====================================================================================================================
 
 func (r *UserRepo) GetLikeCount(ctx context.Context, userID uint64) (int64, error) {
 	return 0, nil
@@ -162,6 +174,8 @@ func (r *UserRepo) DecrementLikeCount(ctx context.Context, userID uint64) error 
 func (r *UserRepo) SetReceiveLikeCount(ctx context.Context, userID uint64, count int64) error {
 	return nil
 }
+
+// =====================================================================================================================
 
 func (r *UserRepo) UpdateProfile(ctx context.Context, value *entity.User) error {
 	_, err := r.db.User.Update().
