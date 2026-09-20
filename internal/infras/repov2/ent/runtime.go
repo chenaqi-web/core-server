@@ -27,11 +27,11 @@ func init() {
 	// category.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	category.UpdateDefaultUpdatedAt = categoryDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// categoryDescParentID is the schema descriptor for parent_id field.
-	categoryDescParentID := categoryFields[4].Descriptor()
+	categoryDescParentID := categoryFields[3].Descriptor()
 	// category.DefaultParentID holds the default value on creation for the parent_id field.
 	category.DefaultParentID = categoryDescParentID.Default.(uint64)
 	// categoryDescName is the schema descriptor for name field.
-	categoryDescName := categoryFields[5].Descriptor()
+	categoryDescName := categoryFields[4].Descriptor()
 	// category.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	category.NameValidator = categoryDescName.Validators[0].(func(string) error)
 	userFields := schema.User{}.Fields()

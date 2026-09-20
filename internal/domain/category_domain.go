@@ -7,7 +7,8 @@ import (
 )
 
 type CategoryRepo interface {
-	Create(ctx context.Context, cate *entity.Category) error
+	CreateType(ctx context.Context, cate *entity.Category) error
+	CreateCate(ctx context.Context, cate *entity.Category) error
 
 	DeleteType(ctx context.Context, id uint64) error
 	DeleteCate(ctx context.Context, id uint64) error

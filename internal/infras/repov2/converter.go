@@ -67,9 +67,6 @@ func toEntityCategory(node *ent.Category) *entity.Category {
 		ParentID:  node.ParentID,
 		Name:      node.Name,
 	}
-	if node.DeletedAt != nil {
-		value.DeletedAt = sql.NullTime{Time: *node.DeletedAt, Valid: true}
-	}
 	return value
 }
 

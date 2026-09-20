@@ -48,26 +48,6 @@ func (_u *CategoryUpdate) SetUpdatedAt(v time.Time) *CategoryUpdate {
 	return _u
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (_u *CategoryUpdate) SetDeletedAt(v time.Time) *CategoryUpdate {
-	_u.mutation.SetDeletedAt(v)
-	return _u
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (_u *CategoryUpdate) SetNillableDeletedAt(v *time.Time) *CategoryUpdate {
-	if v != nil {
-		_u.SetDeletedAt(*v)
-	}
-	return _u
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (_u *CategoryUpdate) ClearDeletedAt() *CategoryUpdate {
-	_u.mutation.ClearDeletedAt()
-	return _u
-}
-
 // SetParentID sets the "parent_id" field.
 func (_u *CategoryUpdate) SetParentID(v uint64) *CategoryUpdate {
 	_u.mutation.ResetParentID()
@@ -172,12 +152,6 @@ func (_u *CategoryUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(category.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if value, ok := _u.mutation.DeletedAt(); ok {
-		_spec.SetField(category.FieldDeletedAt, field.TypeTime, value)
-	}
-	if _u.mutation.DeletedAtCleared() {
-		_spec.ClearField(category.FieldDeletedAt, field.TypeTime)
-	}
 	if value, ok := _u.mutation.ParentID(); ok {
 		_spec.SetField(category.FieldParentID, field.TypeUint64, value)
 	}
@@ -224,26 +198,6 @@ func (_u *CategoryUpdateOne) SetNillableCreatedAt(v *time.Time) *CategoryUpdateO
 // SetUpdatedAt sets the "updated_at" field.
 func (_u *CategoryUpdateOne) SetUpdatedAt(v time.Time) *CategoryUpdateOne {
 	_u.mutation.SetUpdatedAt(v)
-	return _u
-}
-
-// SetDeletedAt sets the "deleted_at" field.
-func (_u *CategoryUpdateOne) SetDeletedAt(v time.Time) *CategoryUpdateOne {
-	_u.mutation.SetDeletedAt(v)
-	return _u
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (_u *CategoryUpdateOne) SetNillableDeletedAt(v *time.Time) *CategoryUpdateOne {
-	if v != nil {
-		_u.SetDeletedAt(*v)
-	}
-	return _u
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (_u *CategoryUpdateOne) ClearDeletedAt() *CategoryUpdateOne {
-	_u.mutation.ClearDeletedAt()
 	return _u
 }
 
@@ -380,12 +334,6 @@ func (_u *CategoryUpdateOne) sqlSave(ctx context.Context) (_node *Category, err 
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(category.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if value, ok := _u.mutation.DeletedAt(); ok {
-		_spec.SetField(category.FieldDeletedAt, field.TypeTime, value)
-	}
-	if _u.mutation.DeletedAtCleared() {
-		_spec.ClearField(category.FieldDeletedAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.ParentID(); ok {
 		_spec.SetField(category.FieldParentID, field.TypeUint64, value)

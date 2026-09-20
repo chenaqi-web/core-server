@@ -39,7 +39,6 @@ type CategoryMutation struct {
 	id            *uint64
 	created_at    *time.Time
 	updated_at    *time.Time
-	deleted_at    *time.Time
 	parent_id     *uint64
 	addparent_id  *int64
 	name          *string
@@ -225,55 +224,6 @@ func (m *CategoryMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (m *CategoryMutation) SetDeletedAt(t time.Time) {
-	m.deleted_at = &t
-}
-
-// DeletedAt returns the value of the "deleted_at" field in the mutation.
-func (m *CategoryMutation) DeletedAt() (r time.Time, exists bool) {
-	v := m.deleted_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldDeletedAt returns the old "deleted_at" field's value of the Category entity.
-// If the Category object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *CategoryMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
-	}
-	return oldValue.DeletedAt, nil
-}
-
-// ClearDeletedAt clears the value of the "deleted_at" field.
-func (m *CategoryMutation) ClearDeletedAt() {
-	m.deleted_at = nil
-	m.clearedFields[category.FieldDeletedAt] = struct{}{}
-}
-
-// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
-func (m *CategoryMutation) DeletedAtCleared() bool {
-	_, ok := m.clearedFields[category.FieldDeletedAt]
-	return ok
-}
-
-// ResetDeletedAt resets all changes to the "deleted_at" field.
-func (m *CategoryMutation) ResetDeletedAt() {
-	m.deleted_at = nil
-	delete(m.clearedFields, category.FieldDeletedAt)
-}
-
 // SetParentID sets the "parent_id" field.
 func (m *CategoryMutation) SetParentID(u uint64) {
 	m.parent_id = &u
@@ -400,15 +350,12 @@ func (m *CategoryMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *CategoryMutation) Fields() []string {
-	fields := make([]string, 0, 5)
+	fields := make([]string, 0, 4)
 	if m.created_at != nil {
 		fields = append(fields, category.FieldCreatedAt)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, category.FieldUpdatedAt)
-	}
-	if m.deleted_at != nil {
-		fields = append(fields, category.FieldDeletedAt)
 	}
 	if m.parent_id != nil {
 		fields = append(fields, category.FieldParentID)
@@ -428,8 +375,6 @@ func (m *CategoryMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case category.FieldUpdatedAt:
 		return m.UpdatedAt()
-	case category.FieldDeletedAt:
-		return m.DeletedAt()
 	case category.FieldParentID:
 		return m.ParentID()
 	case category.FieldName:
@@ -447,8 +392,6 @@ func (m *CategoryMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldCreatedAt(ctx)
 	case category.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
-	case category.FieldDeletedAt:
-		return m.OldDeletedAt(ctx)
 	case category.FieldParentID:
 		return m.OldParentID(ctx)
 	case category.FieldName:
@@ -475,13 +418,6 @@ func (m *CategoryMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUpdatedAt(v)
-		return nil
-	case category.FieldDeletedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetDeletedAt(v)
 		return nil
 	case category.FieldParentID:
 		v, ok := value.(uint64)
@@ -541,11 +477,7 @@ func (m *CategoryMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *CategoryMutation) ClearedFields() []string {
-	var fields []string
-	if m.FieldCleared(category.FieldDeletedAt) {
-		fields = append(fields, category.FieldDeletedAt)
-	}
-	return fields
+	return nil
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -558,11 +490,6 @@ func (m *CategoryMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *CategoryMutation) ClearField(name string) error {
-	switch name {
-	case category.FieldDeletedAt:
-		m.ClearDeletedAt()
-		return nil
-	}
 	return fmt.Errorf("unknown Category nullable field %s", name)
 }
 
@@ -575,9 +502,6 @@ func (m *CategoryMutation) ResetField(name string) error {
 		return nil
 	case category.FieldUpdatedAt:
 		m.ResetUpdatedAt()
-		return nil
-	case category.FieldDeletedAt:
-		m.ResetDeletedAt()
 		return nil
 	case category.FieldParentID:
 		m.ResetParentID()

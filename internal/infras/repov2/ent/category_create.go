@@ -48,20 +48,6 @@ func (_c *CategoryCreate) SetNillableUpdatedAt(v *time.Time) *CategoryCreate {
 	return _c
 }
 
-// SetDeletedAt sets the "deleted_at" field.
-func (_c *CategoryCreate) SetDeletedAt(v time.Time) *CategoryCreate {
-	_c.mutation.SetDeletedAt(v)
-	return _c
-}
-
-// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (_c *CategoryCreate) SetNillableDeletedAt(v *time.Time) *CategoryCreate {
-	if v != nil {
-		_c.SetDeletedAt(*v)
-	}
-	return _c
-}
-
 // SetParentID sets the "parent_id" field.
 func (_c *CategoryCreate) SetParentID(v uint64) *CategoryCreate {
 	_c.mutation.SetParentID(v)
@@ -195,10 +181,6 @@ func (_c *CategoryCreate) createSpec() (*Category, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(category.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
-	}
-	if value, ok := _c.mutation.DeletedAt(); ok {
-		_spec.SetField(category.FieldDeletedAt, field.TypeTime, value)
-		_node.DeletedAt = &value
 	}
 	if value, ok := _c.mutation.ParentID(); ok {
 		_spec.SetField(category.FieldParentID, field.TypeUint64, value)

@@ -36,7 +36,7 @@ func NewCategoryService(
 // 一级类型（parent_id = 0）
 
 func (s *CategoryService) CreateType(ctx context.Context, req *dto.CreateTypeRequest) error {
-	if err := s.repo.Create(ctx, &entity.Category{
+	if err := s.repo.CreateType(ctx, &entity.Category{
 		ParentID: entity.RootCategoryParentID,
 		Name:     req.Name,
 	}); err != nil {
@@ -47,6 +47,9 @@ func (s *CategoryService) CreateType(ctx context.Context, req *dto.CreateTypeReq
 }
 
 func (s *CategoryService) DeleteType(ctx context.Context, req *dto.DeleteTypeRequest) error {
+	if req == nil {
+		return errors.New("delete type request is nil")
+	}
 	if err := s.repo.DeleteType(ctx, req.ID); err != nil {
 		s.log.Error("DeleteType Error", zap.Error(err))
 		return err
@@ -67,7 +70,7 @@ func (s *CategoryService) ListTypes(ctx context.Context) (*dto.ListTypesResponse
 // 子分类
 
 func (s *CategoryService) CreateCategory(ctx context.Context, req *dto.CreateCategoryRequest) error {
-	if err := s.repo.Create(ctx, &entity.Category{
+	if err := s.repo.CreateCate(ctx, &entity.Category{
 		ParentID: req.ParentID,
 		Name:     req.Name,
 	}); err != nil {
@@ -78,6 +81,9 @@ func (s *CategoryService) CreateCategory(ctx context.Context, req *dto.CreateCat
 }
 
 func (s *CategoryService) DeleteCategory(ctx context.Context, req *dto.DeleteCategoryRequest) error {
+	if req == nil {
+		return errors.New("delete category request is nil")
+	}
 	if err := s.repo.DeleteCate(ctx, req.ID); err != nil {
 		if errors.Is(err, repo.ErrNotFound) {
 			return ErrCategoryNotFound

@@ -24,7 +24,6 @@ func (Category) Fields() []ent.Field {
 		field.Uint64("id"),
 		field.Time("created_at").Default(time.Now),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
-		field.Time("deleted_at").Optional().Nillable(),
 		field.Uint64("parent_id").Default(0),
 		field.String("name").MaxLen(64),
 	}

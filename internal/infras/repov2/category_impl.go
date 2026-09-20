@@ -2,7 +2,6 @@ package repov2
 
 import (
 	"context"
-	"time"
 
 	sqlrepo "core-server/internal/infras/repo"
 	"core-server/internal/infras/repov2/ent"
@@ -20,9 +19,9 @@ func NewCategoryRepo(client *EntClient) *CategoryRepo {
 	}
 }
 
-func (r *CategoryRepo) Create(ctx context.Context, value *entity.Category) error {
+func (r *CategoryRepo) CreateType(ctx context.Context, value *entity.Category) error {
 	_, err := r.DB(ctx).Category.Create().
-		SetParentID(value.ParentID).
+		SetParentID(entity.RootCategoryParentID).
 		SetName(value.Name).
 		Save(ctx)
 	if err != nil {
@@ -31,39 +30,41 @@ func (r *CategoryRepo) Create(ctx context.Context, value *entity.Category) error
 	return nil
 }
 
-func (r *CategoryRepo) DeleteCate(ctx context.Context, id uint64) error {
-	_, err := r.DB(ctx).Category.UpdateOneID(id).
-		Where(category.DeletedAtIsNil()).
-		SetDeletedAt(time.Now()).
+func (r *CategoryRepo) CreateCate(ctx context.Context, value *entity.Category) error {
+	if _, err := r.DB(ctx).Category.Query().
+		Where(category.IDEQ(value.ParentID), category.ParentIDEQ(entity.RootCategoryParentID)).
+		Only(ctx); err != nil {
+		return err
+	}
+
+	_, err := r.DB(ctx).Category.Create().
+		SetParentID(value.ParentID).
+		SetName(value.Name).
 		Save(ctx)
+	return err
+}
+
+func (r *CategoryRepo) DeleteCate(ctx context.Context, id uint64) error {
+	err := r.DB(ctx).Category.DeleteOneID(id).Exec(ctx)
 	if ent.IsNotFound(err) {
 		return sqlrepo.ErrNotFound
-	}
-	if err != nil {
-		return err
 	}
 	return err
 }
 
 func (r *CategoryRepo) DeleteType(ctx context.Context, id uint64) error {
 	err := r.WithTransaction(ctx, func(ctx context.Context) error {
-		_, err := r.DB(ctx).Category.UpdateOneID(id).
-			Where(category.DeletedAtIsNil()).
-			SetDeletedAt(time.Now()).
-			Save(ctx)
+		deleteBuilder := r.DB(ctx).Category.Delete().Where(category.IDEQ(id))
+		deleted, err := deleteBuilder.Exec(ctx)
 		if err != nil {
-			if ent.IsNotFound(err) {
-				return sqlrepo.ErrNotFound
-			}
 			return err
 		}
+		if deleted == 0 {
+			return sqlrepo.ErrNotFound
+		}
 
-		err = r.DB(ctx).Category.Update().
-			Where(
-				category.ParentID(id),
-				category.DeletedAtIsNil(),
-			).
-			SetDeletedAt(time.Now()).
+		_, err = r.DB(ctx).Category.Delete().
+			Where(category.ParentIDEQ(id)).
 			Exec(ctx)
 		if err != nil {
 			return err
@@ -79,7 +80,7 @@ func (r *CategoryRepo) DeleteType(ctx context.Context, id uint64) error {
 
 func (r *CategoryRepo) ListType(ctx context.Context) ([]*entity.Category, error) {
 	nodes, err := r.DB(ctx).Category.Query().
-		Where(category.ParentIDEQ(0), category.DeletedAtIsNil()).
+		Where(category.ParentIDEQ(0)).
 		Order(ent.Asc(category.FieldID)).
 		All(ctx)
 	if err != nil {
@@ -90,7 +91,7 @@ func (r *CategoryRepo) ListType(ctx context.Context) ([]*entity.Category, error)
 
 func (r *CategoryRepo) ListCate(ctx context.Context, parentID uint64) ([]*entity.Category, error) {
 	nodes, err := r.DB(ctx).Category.Query().
-		Where(category.ParentIDEQ(parentID), category.DeletedAtIsNil()).
+		Where(category.ParentIDEQ(parentID)).
 		Order(ent.Asc(category.FieldID)).
 		All(ctx)
 	if err != nil {
