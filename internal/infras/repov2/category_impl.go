@@ -21,20 +21,17 @@ func NewCategoryRepo(client *EntClient) *CategoryRepo {
 }
 
 func (r *CategoryRepo) Create(ctx context.Context, value *entity.Category) error {
-	node, err := r.DB(ctx).Category.Create().
+	_, err := r.DB(ctx).Category.Create().
 		SetParentID(value.ParentID).
 		SetName(value.Name).
 		Save(ctx)
 	if err != nil {
 		return err
 	}
-	value.ID = node.ID
-	value.CreatedAt = node.CreatedAt
-	value.UpdatedAt = node.UpdatedAt
 	return nil
 }
 
-func (r *CategoryRepo) DeleteByID(ctx context.Context, id uint64) error {
+func (r *CategoryRepo) DeleteCate(ctx context.Context, id uint64) error {
 	_, err := r.DB(ctx).Category.UpdateOneID(id).
 		Where(category.DeletedAtIsNil()).
 		SetDeletedAt(time.Now()).
@@ -48,22 +45,41 @@ func (r *CategoryRepo) DeleteByID(ctx context.Context, id uint64) error {
 	return err
 }
 
-func (r *CategoryRepo) GetByID(ctx context.Context, id uint64) (*entity.Category, error) {
-	node, err := r.DB(ctx).Category.Query().
-		Where(category.IDEQ(id), category.DeletedAtIsNil()).
-		Only(ctx)
-	if ent.IsNotFound(err) {
-		return nil, nil
-	}
+func (r *CategoryRepo) DeleteType(ctx context.Context, id uint64) error {
+	err := r.WithTransaction(ctx, func(ctx context.Context) error {
+		_, err := r.DB(ctx).Category.UpdateOneID(id).
+			Where(category.DeletedAtIsNil()).
+			SetDeletedAt(time.Now()).
+			Save(ctx)
+		if err != nil {
+			if ent.IsNotFound(err) {
+				return sqlrepo.ErrNotFound
+			}
+			return err
+		}
+
+		err = r.DB(ctx).Category.Update().
+			Where(
+				category.ParentID(id),
+				category.DeletedAtIsNil(),
+			).
+			SetDeletedAt(time.Now()).
+			Exec(ctx)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return toEntityCategory(node), nil
+
+	return err
 }
 
-func (r *CategoryRepo) ListByParentID(ctx context.Context, parentID uint64) ([]*entity.Category, error) {
+func (r *CategoryRepo) ListType(ctx context.Context) ([]*entity.Category, error) {
 	nodes, err := r.DB(ctx).Category.Query().
-		Where(category.ParentIDEQ(parentID), category.DeletedAtIsNil()).
+		Where(category.ParentIDEQ(0), category.DeletedAtIsNil()).
 		Order(ent.Asc(category.FieldID)).
 		All(ctx)
 	if err != nil {
@@ -72,10 +88,13 @@ func (r *CategoryRepo) ListByParentID(ctx context.Context, parentID uint64) ([]*
 	return toEntityCategories(nodes), nil
 }
 
-func (r *CategoryRepo) DeleteByParentID(ctx context.Context, parentID uint64) error {
-	_, err := r.DB(ctx).Category.Update().
+func (r *CategoryRepo) ListCate(ctx context.Context, parentID uint64) ([]*entity.Category, error) {
+	nodes, err := r.DB(ctx).Category.Query().
 		Where(category.ParentIDEQ(parentID), category.DeletedAtIsNil()).
-		SetDeletedAt(time.Now()).
-		Save(ctx)
-	return err
+		Order(ent.Asc(category.FieldID)).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return toEntityCategories(nodes), nil
 }

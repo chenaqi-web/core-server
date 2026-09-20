@@ -7,11 +7,13 @@ import (
 )
 
 type CategoryRepo interface {
-	Create(ctx context.Context, category *entity.Category) error
-	DeleteByID(ctx context.Context, id uint64) error
-	GetByID(ctx context.Context, id uint64) (*entity.Category, error)
-	ListByParentID(ctx context.Context, parentID uint64) ([]*entity.Category, error)
-	DeleteByParentID(ctx context.Context, parentID uint64) error
+	Create(ctx context.Context, cate *entity.Category) error
+
+	DeleteType(ctx context.Context, id uint64) error
+	DeleteCate(ctx context.Context, id uint64) error
+
+	ListType(ctx context.Context) ([]*entity.Category, error)
+	ListCate(ctx context.Context, parentID uint64) ([]*entity.Category, error)
 }
 
 type CategoryRepoDomain interface {

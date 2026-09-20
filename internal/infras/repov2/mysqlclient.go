@@ -74,6 +74,10 @@ func (b *EntClient) WithTransaction(ctx context.Context, fn func(ctx context.Con
 }
 
 func (b *EntClient) DB(ctx context.Context) *ent.Client {
-	db := ent.FromContext(ctx)
-	return db
+	// Transaction contexts carry a transactional Ent client. Normal request
+	// contexts do not, so fall back to the base client for regular operations.
+	if db := ent.FromContext(ctx); db != nil {
+		return db
+	}
+	return b.db
 }

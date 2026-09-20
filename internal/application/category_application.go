@@ -47,24 +47,15 @@ func (s *CategoryService) CreateType(ctx context.Context, req *dto.CreateTypeReq
 }
 
 func (s *CategoryService) DeleteType(ctx context.Context, req *dto.DeleteTypeRequest) error {
-	return s.repo.WithTransaction(ctx, func(ctx context.Context) error {
-		if err := s.repo.DeleteByParentID(ctx, req.ID); err != nil {
-			s.log.Error("DeleteType Error", zap.Error(err))
-			return err
-		}
-		if err := s.repo.DeleteByID(ctx, req.ID); err != nil {
-			if errors.Is(err, repo.ErrNotFound) {
-				return ErrCategoryTypeNotFound
-			}
-			s.log.Error("DeleteType Error", zap.Error(err))
-			return err
-		}
-		return nil
-	})
+	if err := s.repo.DeleteType(ctx, req.ID); err != nil {
+		s.log.Error("DeleteType Error", zap.Error(err))
+		return err
+	}
+	return nil
 }
 
 func (s *CategoryService) ListTypes(ctx context.Context) (*dto.ListTypesResponse, error) {
-	res, err := s.repo.ListByParentID(ctx, entity.RootCategoryParentID)
+	res, err := s.repo.ListType(ctx)
 	if err != nil {
 		s.log.Error("ListTypes Error", zap.Error(err))
 		return nil, err
@@ -87,7 +78,7 @@ func (s *CategoryService) CreateCategory(ctx context.Context, req *dto.CreateCat
 }
 
 func (s *CategoryService) DeleteCategory(ctx context.Context, req *dto.DeleteCategoryRequest) error {
-	if err := s.repo.DeleteByID(ctx, req.ID); err != nil {
+	if err := s.repo.DeleteCate(ctx, req.ID); err != nil {
 		if errors.Is(err, repo.ErrNotFound) {
 			return ErrCategoryNotFound
 		}
@@ -98,7 +89,7 @@ func (s *CategoryService) DeleteCategory(ctx context.Context, req *dto.DeleteCat
 }
 
 func (s *CategoryService) ListCategories(ctx context.Context, req *dto.ListCategoriesRequest) (*dto.ListCategoriesResponse, error) {
-	res, err := s.repo.ListByParentID(ctx, req.ParentID)
+	res, err := s.repo.ListCate(ctx, req.ParentID)
 	if err != nil {
 		s.log.Error("ListCategories Error", zap.Error(err))
 		return nil, err
