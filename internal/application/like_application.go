@@ -95,18 +95,6 @@ func (s *LikeService) HasThumbUp(ctx context.Context, userID uint64, objectType 
 	return interaction != nil, nil
 }
 
-func (s *LikeService) BatchHasThumbUp(ctx context.Context, userID uint64, objectType string, objectIDs []uint64) (map[uint64]bool, error) {
-	statuses := make(map[uint64]bool, len(objectIDs))
-	for _, objectID := range objectIDs {
-		liked, err := s.HasThumbUp(ctx, userID, objectType, objectID)
-		if err != nil {
-			return nil, err
-		}
-		statuses[objectID] = liked
-	}
-	return statuses, nil
-}
-
 // =====================================================================================================================
 // 点赞操作
 
@@ -234,13 +222,6 @@ func (s *LikeService) sendMessage(msg *event.Message) error {
 func (s *LikeService) UserLikeList(ctx context.Context, userID uint64, objectType string, page, pageSize int) ([]*aggregate.ArticleAggregate, int64, error) {
 	if !s.cfg.Kafka.Enabled {
 		return s.UserLikeListDirect(ctx, userID, objectType, page, pageSize)
-	}
-
-	if page <= 0 {
-		page = 1
-	}
-	if pageSize <= 0 {
-		pageSize = 10
 	}
 
 	// 1) 直接从 user 表查询用户点赞总数，不再走缓存

@@ -4,6 +4,7 @@ import (
 	"context"
 	"core-server/internal/application"
 	"core-server/internal/model/dto"
+	"core-server/internal/model/enum"
 	"core-server/internal/rpc/userpb"
 	"time"
 )
@@ -28,10 +29,11 @@ func (u *UserRPC) GetProfile(ctx context.Context, request *userpb.GetProfileRequ
 		Email:             res.Email,
 		Phone:             res.Phone,
 		Avatar:            res.Avatar,
-		Sex:               res.Sex,
+		Sex:               res.Sex.String(),
+		Signature:         res.Signature,
 		Birthday:          formatBirthday(res.Birthday),
-		Role:              res.Role,
-		Status:            res.Status,
+		Role:              res.Role.String(),
+		Status:            res.Status.String(),
 		FollowersCount:    res.FollowersCount,
 		FollowingCount:    res.FollowingCount,
 		LikeCount:         res.LikeCount,
@@ -43,11 +45,12 @@ func (u *UserRPC) GetProfile(ctx context.Context, request *userpb.GetProfileRequ
 
 func (u *UserRPC) UpdateProfile(ctx context.Context, request *userpb.UpdateProfileRequest) (*userpb.UpdateProfileResponse, error) {
 	err := u.UserService.UpdateProfile(ctx, &dto.UpdateProfileRequest{
-		UserID:   request.GetUserId(),
-		Username: request.GetUsername(),
-		Phone:    request.GetPhone(),
-		Sex:      request.GetSex(),
-		Birthday: parseBirthday(request.GetBirthday()),
+		UserID:    request.GetUserId(),
+		Username:  request.GetUsername(),
+		Phone:     request.GetPhone(),
+		Sex:       enum.ParseUserSex(request.GetSex()),
+		Birthday:  parseBirthday(request.GetBirthday()),
+		Signature: request.GetSignature(),
 	})
 	if err != nil {
 		return nil, err
@@ -98,7 +101,7 @@ func (u *UserRPC) SearchUsers(ctx context.Context, request *userpb.SearchUsersRe
 }
 
 func (u *UserRPC) UpdateUserStatus(ctx context.Context, request *userpb.UpdateUserStatusRequest) (*userpb.UpdateUserStatusResponse, error) {
-	err := u.UserService.UpdateStatus(ctx, &dto.UpdateUserStatusRequest{UserID: request.GetUserId(), Status: request.GetStatus()})
+	err := u.UserService.UpdateStatus(ctx, &dto.UpdateUserStatusRequest{UserID: request.GetUserId(), Status: enum.ParseUserStatus(request.GetStatus())})
 	if err != nil {
 		return nil, err
 	}
@@ -112,15 +115,16 @@ func ConvertToUserInfo(res *dto.UserInfo) *userpb.UserInfo {
 		return nil
 	}
 	return &userpb.UserInfo{
-		Id:       res.ID,
-		Username: res.Username,
-		Email:    res.Email,
-		Phone:    res.Phone,
-		Avatar:   res.Avatar,
-		Sex:      res.Sex,
-		Birthday: formatBirthday(res.Birthday),
-		Role:     res.Role,
-		Status:   res.Status,
+		Id:        res.ID,
+		Username:  res.Username,
+		Email:     res.Email,
+		Phone:     res.Phone,
+		Avatar:    res.Avatar,
+		Sex:       res.Sex.String(),
+		Birthday:  formatBirthday(res.Birthday),
+		Signature: res.Signature,
+		Role:      res.Role.String(),
+		Status:    res.Status.String(),
 	}
 }
 

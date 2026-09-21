@@ -30,8 +30,9 @@ type UserInfo struct {
 	Avatar        string                 `protobuf:"bytes,5,opt,name=avatar,proto3" json:"avatar,omitempty"`
 	Sex           string                 `protobuf:"bytes,6,opt,name=sex,proto3" json:"sex,omitempty"`
 	Birthday      string                 `protobuf:"bytes,7,opt,name=birthday,proto3" json:"birthday,omitempty"`
-	Role          string                 `protobuf:"bytes,8,opt,name=role,proto3" json:"role,omitempty"`
-	Status        string                 `protobuf:"bytes,9,opt,name=status,proto3" json:"status,omitempty"`
+	Signature     string                 `protobuf:"bytes,8,opt,name=signature,proto3" json:"signature,omitempty"`
+	Role          string                 `protobuf:"bytes,9,opt,name=role,proto3" json:"role,omitempty"`
+	Status        string                 `protobuf:"bytes,10,opt,name=status,proto3" json:"status,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -115,6 +116,13 @@ func (x *UserInfo) GetBirthday() string {
 	return ""
 }
 
+func (x *UserInfo) GetSignature() string {
+	if x != nil {
+		return x.Signature
+	}
+	return ""
+}
+
 func (x *UserInfo) GetRole() string {
 	if x != nil {
 		return x.Role
@@ -191,6 +199,7 @@ type GetProfileResponse struct {
 	FavorCount        uint64                 `protobuf:"varint,14,opt,name=favor_count,json=favorCount,proto3" json:"favor_count,omitempty"`
 	ReceiveFavorCount uint64                 `protobuf:"varint,15,opt,name=receive_favor_count,json=receiveFavorCount,proto3" json:"receive_favor_count,omitempty"`
 	ArticleCount      uint64                 `protobuf:"varint,16,opt,name=article_count,json=articleCount,proto3" json:"article_count,omitempty"`
+	Signature         string                 `protobuf:"bytes,17,opt,name=signature,proto3" json:"signature,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -337,6 +346,13 @@ func (x *GetProfileResponse) GetArticleCount() uint64 {
 	return 0
 }
 
+func (x *GetProfileResponse) GetSignature() string {
+	if x != nil {
+		return x.Signature
+	}
+	return ""
+}
+
 type UpdateProfileRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        uint64                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
@@ -344,6 +360,7 @@ type UpdateProfileRequest struct {
 	Phone         string                 `protobuf:"bytes,3,opt,name=phone,proto3" json:"phone,omitempty"`
 	Sex           string                 `protobuf:"bytes,4,opt,name=sex,proto3" json:"sex,omitempty"`
 	Birthday      string                 `protobuf:"bytes,5,opt,name=birthday,proto3" json:"birthday,omitempty"`
+	Signature     string                 `protobuf:"bytes,6,opt,name=signature,proto3" json:"signature,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -409,6 +426,13 @@ func (x *UpdateProfileRequest) GetSex() string {
 func (x *UpdateProfileRequest) GetBirthday() string {
 	if x != nil {
 		return x.Birthday
+	}
+	return ""
+}
+
+func (x *UpdateProfileRequest) GetSignature() string {
+	if x != nil {
+		return x.Signature
 	}
 	return ""
 }
@@ -870,7 +894,7 @@ var File_user_proto protoreflect.FileDescriptor
 const file_user_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"user.proto\x12\x04user\"\xd4\x01\n" +
+	"user.proto\x12\x04user\"\xf2\x01\n" +
 	"\bUserInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x14\n" +
@@ -878,11 +902,13 @@ const file_user_proto_rawDesc = "" +
 	"\x05phone\x18\x04 \x01(\tR\x05phone\x12\x16\n" +
 	"\x06avatar\x18\x05 \x01(\tR\x06avatar\x12\x10\n" +
 	"\x03sex\x18\x06 \x01(\tR\x03sex\x12\x1a\n" +
-	"\bbirthday\x18\a \x01(\tR\bbirthday\x12\x12\n" +
-	"\x04role\x18\b \x01(\tR\x04role\x12\x16\n" +
-	"\x06status\x18\t \x01(\tR\x06status\",\n" +
+	"\bbirthday\x18\a \x01(\tR\bbirthday\x12\x1c\n" +
+	"\tsignature\x18\b \x01(\tR\tsignature\x12\x12\n" +
+	"\x04role\x18\t \x01(\tR\x04role\x12\x16\n" +
+	"\x06status\x18\n" +
+	" \x01(\tR\x06status\",\n" +
 	"\x11GetProfileRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x04R\x06userId\"\xf3\x03\n" +
+	"\auser_id\x18\x01 \x01(\x04R\x06userId\"\x91\x04\n" +
 	"\x12GetProfileResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x14\n" +
@@ -902,13 +928,15 @@ const file_user_proto_rawDesc = "" +
 	"\vfavor_count\x18\x0e \x01(\x04R\n" +
 	"favorCount\x12.\n" +
 	"\x13receive_favor_count\x18\x0f \x01(\x04R\x11receiveFavorCount\x12#\n" +
-	"\rarticle_count\x18\x10 \x01(\x04R\farticleCount\"\x8f\x01\n" +
+	"\rarticle_count\x18\x10 \x01(\x04R\farticleCount\x12\x1c\n" +
+	"\tsignature\x18\x11 \x01(\tR\tsignature\"\xad\x01\n" +
 	"\x14UpdateProfileRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x04R\x06userId\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x14\n" +
 	"\x05phone\x18\x03 \x01(\tR\x05phone\x12\x10\n" +
 	"\x03sex\x18\x04 \x01(\tR\x03sex\x12\x1a\n" +
-	"\bbirthday\x18\x05 \x01(\tR\bbirthday\"1\n" +
+	"\bbirthday\x18\x05 \x01(\tR\bbirthday\x12\x1c\n" +
+	"\tsignature\x18\x06 \x01(\tR\tsignature\"1\n" +
 	"\x15UpdateProfileResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\"F\n" +
 	"\x13UpdateAvatarRequest\x12\x17\n" +

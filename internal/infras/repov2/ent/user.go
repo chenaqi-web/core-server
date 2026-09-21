@@ -22,26 +22,28 @@ type User struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// 软删除时间，为空表示未删除
+	// soft delete time
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
-	// 用户名
+	// username
 	Name string `json:"name,omitempty"`
-	// 密码
+	// password
 	Password string `json:"password,omitempty"`
-	// 手机号
+	// Phone holds the value of the "phone" field.
 	Phone string `json:"phone,omitempty"`
-	// 头像
+	// Avatar holds the value of the "avatar" field.
 	Avatar string `json:"avatar,omitempty"`
-	// 邮箱
+	// Email holds the value of the "email" field.
 	Email string `json:"email,omitempty"`
-	// 角色
-	Role string `json:"role,omitempty"`
-	// 性别
-	Sex string `json:"sex,omitempty"`
-	// 生日
+	// Role holds the value of the "role" field.
+	Role user.Role `json:"role,omitempty"`
+	// Sex holds the value of the "sex" field.
+	Sex user.Sex `json:"sex,omitempty"`
+	// Birthday holds the value of the "birthday" field.
 	Birthday *time.Time `json:"birthday,omitempty"`
-	// 用户状态
-	Status string `json:"status,omitempty"`
+	// Signature holds the value of the "signature" field.
+	Signature string `json:"signature,omitempty"`
+	// Status holds the value of the "status" field.
+	Status user.Status `json:"status,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges        UserEdges `json:"edges"`
@@ -75,7 +77,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case user.FieldID:
 			values[i] = new(sql.NullInt64)
-		case user.FieldName, user.FieldPassword, user.FieldPhone, user.FieldAvatar, user.FieldEmail, user.FieldRole, user.FieldSex, user.FieldStatus:
+		case user.FieldName, user.FieldPassword, user.FieldPhone, user.FieldAvatar, user.FieldEmail, user.FieldRole, user.FieldSex, user.FieldSignature, user.FieldStatus:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldDeletedAt, user.FieldBirthday:
 			values[i] = new(sql.NullTime)
@@ -153,13 +155,13 @@ func (_m *User) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field role", values[i])
 			} else if value.Valid {
-				_m.Role = value.String
+				_m.Role = user.Role(value.String)
 			}
 		case user.FieldSex:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field sex", values[i])
 			} else if value.Valid {
-				_m.Sex = value.String
+				_m.Sex = user.Sex(value.String)
 			}
 		case user.FieldBirthday:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -168,11 +170,17 @@ func (_m *User) assignValues(columns []string, values []any) error {
 				_m.Birthday = new(time.Time)
 				*_m.Birthday = value.Time
 			}
+		case user.FieldSignature:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field signature", values[i])
+			} else if value.Valid {
+				_m.Signature = value.String
+			}
 		case user.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				_m.Status = value.String
+				_m.Status = user.Status(value.String)
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -242,18 +250,21 @@ func (_m *User) String() string {
 	builder.WriteString(_m.Email)
 	builder.WriteString(", ")
 	builder.WriteString("role=")
-	builder.WriteString(_m.Role)
+	builder.WriteString(fmt.Sprintf("%v", _m.Role))
 	builder.WriteString(", ")
 	builder.WriteString("sex=")
-	builder.WriteString(_m.Sex)
+	builder.WriteString(fmt.Sprintf("%v", _m.Sex))
 	builder.WriteString(", ")
 	if v := _m.Birthday; v != nil {
 		builder.WriteString("birthday=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
+	builder.WriteString("signature=")
+	builder.WriteString(_m.Signature)
+	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(_m.Status)
+	builder.WriteString(fmt.Sprintf("%v", _m.Status))
 	builder.WriteByte(')')
 	return builder.String()
 }

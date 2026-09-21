@@ -12,8 +12,9 @@ message UserInfo {
   string avatar = 5;
   string sex = 6;
   string birthday = 7;
-  string role = 8;
-  string status = 9;
+  string signature = 8;
+  string role = 9;
+  string status = 10;
 }
 
 
@@ -39,6 +40,7 @@ message GetProfileResponse {
   uint64 favor_count = 14;
   uint64 receive_favor_count = 15;
   uint64 article_count = 16;
+  string signature = 17;
 }
 
 message UpdateProfileRequest {
@@ -47,6 +49,7 @@ message UpdateProfileRequest {
   string phone = 3;
   string sex = 4;
   string birthday = 5;
+  string signature = 6;
 }
 
 message UpdateProfileResponse {

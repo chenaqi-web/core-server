@@ -6,6 +6,7 @@ import (
 	"core-server/internal/infras/clog"
 	"core-server/internal/model/dto"
 	"core-server/internal/model/entity"
+	"core-server/internal/model/enum"
 	"core-server/internal/utils"
 	"errors"
 
@@ -54,7 +55,7 @@ func (s *UserService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 	}
 
 	// 3.判断用户是否被拉黑
-	if user.Status != entity.StatusApproved {
+	if user.Status != enum.StatusApproved {
 		return nil, ErrUserBlocked
 	}
 	return dto.ToLoginResponse(user), nil
@@ -71,7 +72,7 @@ func (s *UserService) EmailLogin(ctx context.Context, req *dto.EmailLoginRequest
 		return nil, ErrUserNotFound
 	}
 
-	if user.Status != entity.StatusApproved {
+	if user.Status != enum.StatusApproved {
 		return nil, ErrUserBlocked
 	}
 	return dto.ToLoginResponse(user), nil
@@ -91,8 +92,8 @@ func (s *UserService) Register(ctx context.Context, req *dto.RegisterRequest) er
 		Name:     req.Username,
 		Email:    req.Email,
 		Password: utils.Bcrypt(req.Password),
-		Role:     entity.UserRoleUser,
-		Status:   entity.StatusApproved,
+		Role:     enum.UserRoleUser,
+		Status:   enum.StatusApproved,
 	}
 
 	if err := s.repo.CreateUser(ctx, user); err != nil {
@@ -159,6 +160,7 @@ func (s *UserService) UpdateProfile(ctx context.Context, req *dto.UpdateProfileR
 	user.Name = req.Username
 	user.Phone = req.Phone
 	user.Sex = req.Sex
+	user.Signature = req.Signature
 	user.Birthday = req.Birthday
 	if err := s.repo.UpdateProfile(ctx, user); err != nil {
 		s.log.Error("UpdateProfile error", zap.Error(err))

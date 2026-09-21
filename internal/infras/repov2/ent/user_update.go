@@ -126,13 +126,13 @@ func (_u *UserUpdate) SetNillableEmail(v *string) *UserUpdate {
 }
 
 // SetRole sets the "role" field.
-func (_u *UserUpdate) SetRole(v string) *UserUpdate {
+func (_u *UserUpdate) SetRole(v user.Role) *UserUpdate {
 	_u.mutation.SetRole(v)
 	return _u
 }
 
 // SetNillableRole sets the "role" field if the given value is not nil.
-func (_u *UserUpdate) SetNillableRole(v *string) *UserUpdate {
+func (_u *UserUpdate) SetNillableRole(v *user.Role) *UserUpdate {
 	if v != nil {
 		_u.SetRole(*v)
 	}
@@ -140,13 +140,13 @@ func (_u *UserUpdate) SetNillableRole(v *string) *UserUpdate {
 }
 
 // SetSex sets the "sex" field.
-func (_u *UserUpdate) SetSex(v string) *UserUpdate {
+func (_u *UserUpdate) SetSex(v user.Sex) *UserUpdate {
 	_u.mutation.SetSex(v)
 	return _u
 }
 
 // SetNillableSex sets the "sex" field if the given value is not nil.
-func (_u *UserUpdate) SetNillableSex(v *string) *UserUpdate {
+func (_u *UserUpdate) SetNillableSex(v *user.Sex) *UserUpdate {
 	if v != nil {
 		_u.SetSex(*v)
 	}
@@ -173,14 +173,28 @@ func (_u *UserUpdate) ClearBirthday() *UserUpdate {
 	return _u
 }
 
+// SetSignature sets the "signature" field.
+func (_u *UserUpdate) SetSignature(v string) *UserUpdate {
+	_u.mutation.SetSignature(v)
+	return _u
+}
+
+// SetNillableSignature sets the "signature" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableSignature(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetSignature(*v)
+	}
+	return _u
+}
+
 // SetStatus sets the "status" field.
-func (_u *UserUpdate) SetStatus(v string) *UserUpdate {
+func (_u *UserUpdate) SetStatus(v user.Status) *UserUpdate {
 	_u.mutation.SetStatus(v)
 	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (_u *UserUpdate) SetNillableStatus(v *string) *UserUpdate {
+func (_u *UserUpdate) SetNillableStatus(v *user.Status) *UserUpdate {
 	if v != nil {
 		_u.SetStatus(*v)
 	}
@@ -285,6 +299,11 @@ func (_u *UserUpdate) check() error {
 			return &ValidationError{Name: "sex", err: fmt.Errorf(`ent: validator failed for field "User.sex": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Signature(); ok {
+		if err := user.SignatureValidator(v); err != nil {
+			return &ValidationError{Name: "signature", err: fmt.Errorf(`ent: validator failed for field "User.signature": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Status(); ok {
 		if err := user.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "User.status": %w`, err)}
@@ -330,10 +349,10 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Role(); ok {
-		_spec.SetField(user.FieldRole, field.TypeString, value)
+		_spec.SetField(user.FieldRole, field.TypeEnum, value)
 	}
 	if value, ok := _u.mutation.Sex(); ok {
-		_spec.SetField(user.FieldSex, field.TypeString, value)
+		_spec.SetField(user.FieldSex, field.TypeEnum, value)
 	}
 	if value, ok := _u.mutation.Birthday(); ok {
 		_spec.SetField(user.FieldBirthday, field.TypeTime, value)
@@ -341,8 +360,11 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.BirthdayCleared() {
 		_spec.ClearField(user.FieldBirthday, field.TypeTime)
 	}
+	if value, ok := _u.mutation.Signature(); ok {
+		_spec.SetField(user.FieldSignature, field.TypeString, value)
+	}
 	if value, ok := _u.mutation.Status(); ok {
-		_spec.SetField(user.FieldStatus, field.TypeString, value)
+		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
 	}
 	if _u.mutation.StatCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -490,13 +512,13 @@ func (_u *UserUpdateOne) SetNillableEmail(v *string) *UserUpdateOne {
 }
 
 // SetRole sets the "role" field.
-func (_u *UserUpdateOne) SetRole(v string) *UserUpdateOne {
+func (_u *UserUpdateOne) SetRole(v user.Role) *UserUpdateOne {
 	_u.mutation.SetRole(v)
 	return _u
 }
 
 // SetNillableRole sets the "role" field if the given value is not nil.
-func (_u *UserUpdateOne) SetNillableRole(v *string) *UserUpdateOne {
+func (_u *UserUpdateOne) SetNillableRole(v *user.Role) *UserUpdateOne {
 	if v != nil {
 		_u.SetRole(*v)
 	}
@@ -504,13 +526,13 @@ func (_u *UserUpdateOne) SetNillableRole(v *string) *UserUpdateOne {
 }
 
 // SetSex sets the "sex" field.
-func (_u *UserUpdateOne) SetSex(v string) *UserUpdateOne {
+func (_u *UserUpdateOne) SetSex(v user.Sex) *UserUpdateOne {
 	_u.mutation.SetSex(v)
 	return _u
 }
 
 // SetNillableSex sets the "sex" field if the given value is not nil.
-func (_u *UserUpdateOne) SetNillableSex(v *string) *UserUpdateOne {
+func (_u *UserUpdateOne) SetNillableSex(v *user.Sex) *UserUpdateOne {
 	if v != nil {
 		_u.SetSex(*v)
 	}
@@ -537,14 +559,28 @@ func (_u *UserUpdateOne) ClearBirthday() *UserUpdateOne {
 	return _u
 }
 
+// SetSignature sets the "signature" field.
+func (_u *UserUpdateOne) SetSignature(v string) *UserUpdateOne {
+	_u.mutation.SetSignature(v)
+	return _u
+}
+
+// SetNillableSignature sets the "signature" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableSignature(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetSignature(*v)
+	}
+	return _u
+}
+
 // SetStatus sets the "status" field.
-func (_u *UserUpdateOne) SetStatus(v string) *UserUpdateOne {
+func (_u *UserUpdateOne) SetStatus(v user.Status) *UserUpdateOne {
 	_u.mutation.SetStatus(v)
 	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (_u *UserUpdateOne) SetNillableStatus(v *string) *UserUpdateOne {
+func (_u *UserUpdateOne) SetNillableStatus(v *user.Status) *UserUpdateOne {
 	if v != nil {
 		_u.SetStatus(*v)
 	}
@@ -662,6 +698,11 @@ func (_u *UserUpdateOne) check() error {
 			return &ValidationError{Name: "sex", err: fmt.Errorf(`ent: validator failed for field "User.sex": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Signature(); ok {
+		if err := user.SignatureValidator(v); err != nil {
+			return &ValidationError{Name: "signature", err: fmt.Errorf(`ent: validator failed for field "User.signature": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.Status(); ok {
 		if err := user.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "User.status": %w`, err)}
@@ -724,10 +765,10 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Role(); ok {
-		_spec.SetField(user.FieldRole, field.TypeString, value)
+		_spec.SetField(user.FieldRole, field.TypeEnum, value)
 	}
 	if value, ok := _u.mutation.Sex(); ok {
-		_spec.SetField(user.FieldSex, field.TypeString, value)
+		_spec.SetField(user.FieldSex, field.TypeEnum, value)
 	}
 	if value, ok := _u.mutation.Birthday(); ok {
 		_spec.SetField(user.FieldBirthday, field.TypeTime, value)
@@ -735,8 +776,11 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	if _u.mutation.BirthdayCleared() {
 		_spec.ClearField(user.FieldBirthday, field.TypeTime)
 	}
+	if value, ok := _u.mutation.Signature(); ok {
+		_spec.SetField(user.FieldSignature, field.TypeString, value)
+	}
 	if value, ok := _u.mutation.Status(); ok {
-		_spec.SetField(user.FieldStatus, field.TypeString, value)
+		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
 	}
 	if _u.mutation.StatCleared() {
 		edge := &sqlgraph.EdgeSpec{

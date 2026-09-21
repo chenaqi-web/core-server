@@ -575,10 +575,11 @@ type UserMutation struct {
 	phone         *string
 	avatar        *string
 	email         *string
-	role          *string
-	sex           *string
+	role          *user.Role
+	sex           *user.Sex
 	birthday      *time.Time
-	status        *string
+	signature     *string
+	status        *user.Status
 	clearedFields map[string]struct{}
 	stat          *int
 	clearedstat   bool
@@ -993,12 +994,12 @@ func (m *UserMutation) ResetEmail() {
 }
 
 // SetRole sets the "role" field.
-func (m *UserMutation) SetRole(s string) {
-	m.role = &s
+func (m *UserMutation) SetRole(u user.Role) {
+	m.role = &u
 }
 
 // Role returns the value of the "role" field in the mutation.
-func (m *UserMutation) Role() (r string, exists bool) {
+func (m *UserMutation) Role() (r user.Role, exists bool) {
 	v := m.role
 	if v == nil {
 		return
@@ -1009,7 +1010,7 @@ func (m *UserMutation) Role() (r string, exists bool) {
 // OldRole returns the old "role" field's value of the User entity.
 // If the User object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UserMutation) OldRole(ctx context.Context) (v string, err error) {
+func (m *UserMutation) OldRole(ctx context.Context) (v user.Role, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldRole is only allowed on UpdateOne operations")
 	}
@@ -1029,12 +1030,12 @@ func (m *UserMutation) ResetRole() {
 }
 
 // SetSex sets the "sex" field.
-func (m *UserMutation) SetSex(s string) {
-	m.sex = &s
+func (m *UserMutation) SetSex(u user.Sex) {
+	m.sex = &u
 }
 
 // Sex returns the value of the "sex" field in the mutation.
-func (m *UserMutation) Sex() (r string, exists bool) {
+func (m *UserMutation) Sex() (r user.Sex, exists bool) {
 	v := m.sex
 	if v == nil {
 		return
@@ -1045,7 +1046,7 @@ func (m *UserMutation) Sex() (r string, exists bool) {
 // OldSex returns the old "sex" field's value of the User entity.
 // If the User object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UserMutation) OldSex(ctx context.Context) (v string, err error) {
+func (m *UserMutation) OldSex(ctx context.Context) (v user.Sex, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldSex is only allowed on UpdateOne operations")
 	}
@@ -1113,13 +1114,49 @@ func (m *UserMutation) ResetBirthday() {
 	delete(m.clearedFields, user.FieldBirthday)
 }
 
+// SetSignature sets the "signature" field.
+func (m *UserMutation) SetSignature(s string) {
+	m.signature = &s
+}
+
+// Signature returns the value of the "signature" field in the mutation.
+func (m *UserMutation) Signature() (r string, exists bool) {
+	v := m.signature
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSignature returns the old "signature" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldSignature(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSignature is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSignature requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSignature: %w", err)
+	}
+	return oldValue.Signature, nil
+}
+
+// ResetSignature resets all changes to the "signature" field.
+func (m *UserMutation) ResetSignature() {
+	m.signature = nil
+}
+
 // SetStatus sets the "status" field.
-func (m *UserMutation) SetStatus(s string) {
-	m.status = &s
+func (m *UserMutation) SetStatus(u user.Status) {
+	m.status = &u
 }
 
 // Status returns the value of the "status" field in the mutation.
-func (m *UserMutation) Status() (r string, exists bool) {
+func (m *UserMutation) Status() (r user.Status, exists bool) {
 	v := m.status
 	if v == nil {
 		return
@@ -1130,7 +1167,7 @@ func (m *UserMutation) Status() (r string, exists bool) {
 // OldStatus returns the old "status" field's value of the User entity.
 // If the User object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UserMutation) OldStatus(ctx context.Context) (v string, err error) {
+func (m *UserMutation) OldStatus(ctx context.Context) (v user.Status, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
 	}
@@ -1222,7 +1259,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 12)
+	fields := make([]string, 0, 13)
 	if m.created_at != nil {
 		fields = append(fields, user.FieldCreatedAt)
 	}
@@ -1255,6 +1292,9 @@ func (m *UserMutation) Fields() []string {
 	}
 	if m.birthday != nil {
 		fields = append(fields, user.FieldBirthday)
+	}
+	if m.signature != nil {
+		fields = append(fields, user.FieldSignature)
 	}
 	if m.status != nil {
 		fields = append(fields, user.FieldStatus)
@@ -1289,6 +1329,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.Sex()
 	case user.FieldBirthday:
 		return m.Birthday()
+	case user.FieldSignature:
+		return m.Signature()
 	case user.FieldStatus:
 		return m.Status()
 	}
@@ -1322,6 +1364,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldSex(ctx)
 	case user.FieldBirthday:
 		return m.OldBirthday(ctx)
+	case user.FieldSignature:
+		return m.OldSignature(ctx)
 	case user.FieldStatus:
 		return m.OldStatus(ctx)
 	}
@@ -1390,14 +1434,14 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 		m.SetEmail(v)
 		return nil
 	case user.FieldRole:
-		v, ok := value.(string)
+		v, ok := value.(user.Role)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetRole(v)
 		return nil
 	case user.FieldSex:
-		v, ok := value.(string)
+		v, ok := value.(user.Sex)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -1410,8 +1454,15 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetBirthday(v)
 		return nil
-	case user.FieldStatus:
+	case user.FieldSignature:
 		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSignature(v)
+		return nil
+	case user.FieldStatus:
+		v, ok := value.(user.Status)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -1513,6 +1564,9 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldBirthday:
 		m.ResetBirthday()
+		return nil
+	case user.FieldSignature:
+		m.ResetSignature()
 		return nil
 	case user.FieldStatus:
 		m.ResetStatus()

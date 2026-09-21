@@ -68,24 +68,12 @@ func init() {
 	user.DefaultEmail = userDescEmail.Default.(string)
 	// user.EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	user.EmailValidator = userDescEmail.Validators[0].(func(string) error)
-	// userDescRole is the schema descriptor for role field.
-	userDescRole := userFields[9].Descriptor()
-	// user.DefaultRole holds the default value on creation for the role field.
-	user.DefaultRole = userDescRole.Default.(string)
-	// user.RoleValidator is a validator for the "role" field. It is called by the builders before save.
-	user.RoleValidator = userDescRole.Validators[0].(func(string) error)
-	// userDescSex is the schema descriptor for sex field.
-	userDescSex := userFields[10].Descriptor()
-	// user.DefaultSex holds the default value on creation for the sex field.
-	user.DefaultSex = userDescSex.Default.(string)
-	// user.SexValidator is a validator for the "sex" field. It is called by the builders before save.
-	user.SexValidator = userDescSex.Validators[0].(func(string) error)
-	// userDescStatus is the schema descriptor for status field.
-	userDescStatus := userFields[12].Descriptor()
-	// user.DefaultStatus holds the default value on creation for the status field.
-	user.DefaultStatus = userDescStatus.Default.(string)
-	// user.StatusValidator is a validator for the "status" field. It is called by the builders before save.
-	user.StatusValidator = userDescStatus.Validators[0].(func(string) error)
+	// userDescSignature is the schema descriptor for signature field.
+	userDescSignature := userFields[12].Descriptor()
+	// user.DefaultSignature holds the default value on creation for the signature field.
+	user.DefaultSignature = userDescSignature.Default.(string)
+	// user.SignatureValidator is a validator for the "signature" field. It is called by the builders before save.
+	user.SignatureValidator = userDescSignature.Validators[0].(func(string) error)
 	userstatFields := schema.UserStat{}.Fields()
 	_ = userstatFields
 	// userstatDescCreatedAt is the schema descriptor for created_at field.

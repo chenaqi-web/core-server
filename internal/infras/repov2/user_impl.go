@@ -6,6 +6,7 @@ import (
 	"core-server/internal/infras/repov2/ent/user"
 	"core-server/internal/model/aggregate"
 	"core-server/internal/model/entity"
+	"core-server/internal/model/enum"
 	"errors"
 )
 
@@ -61,8 +62,9 @@ func (r *UserRepo) CreateUser(ctx context.Context, value *entity.User) error {
 			SetName(value.Name).
 			SetPassword(value.Password).
 			SetEmail(value.Email).
-			SetRole(value.Role).
-			SetStatus(value.Status).
+			SetRole(user.Role(value.Role.String())).
+			SetStatus(user.Status(value.Status.String())).
+			SetSignature(value.Signature).
 			Save(ctx)
 		if err != nil {
 			return err
@@ -181,8 +183,9 @@ func (r *UserRepo) UpdateProfile(ctx context.Context, value *entity.User) error 
 		Where(user.IDEQ(value.ID), user.DeletedAtIsNil()).
 		SetName(value.Name).
 		SetPhone(value.Phone).
-		SetSex(value.Sex).
+		SetSex(value.Sex.String()).
 		SetBirthday(value.Birthday).
+		SetSignature(value.Signature).
 		Save(ctx)
 	return err
 }
@@ -203,10 +206,10 @@ func (r *UserRepo) UpdatePassword(ctx context.Context, userID uint64, password s
 	return err
 }
 
-func (r *UserRepo) UpdateStatus(ctx context.Context, userID uint64, status string) error {
+func (r *UserRepo) UpdateStatus(ctx context.Context, userID uint64, status enum.UserStatus) error {
 	err := r.db.User.UpdateOneID(userID).
 		Where(user.DeletedAtIsNil()).
-		SetStatus(status).
+		SetStatus(user.Status(status.String())).
 		Exec(ctx)
 	return err
 }

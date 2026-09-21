@@ -37,14 +37,15 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "name", Type: field.TypeString},
-		{Name: "password", Type: field.TypeString, Size: 255},
+		{Name: "password", Type: field.TypeString, Size: 20},
 		{Name: "phone", Type: field.TypeString, Size: 20, Default: ""},
-		{Name: "avatar", Type: field.TypeString, Size: 500, Default: ""},
-		{Name: "email", Type: field.TypeString, Size: 100, Default: ""},
-		{Name: "role", Type: field.TypeString, Size: 20, Default: "user"},
-		{Name: "sex", Type: field.TypeString, Size: 6, Default: ""},
+		{Name: "avatar", Type: field.TypeString, Size: 255, Default: ""},
+		{Name: "email", Type: field.TypeString, Size: 50, Default: ""},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "user"}, Default: "user"},
+		{Name: "sex", Type: field.TypeEnum, Enums: []string{"male", "female", "secret"}, Default: "secret"},
 		{Name: "birthday", Type: field.TypeTime, Nullable: true},
-		{Name: "status", Type: field.TypeString, Size: 20, Default: "active"},
+		{Name: "signature", Type: field.TypeString, Size: 255, Default: ""},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"approved", "blocked"}, Default: "approved"},
 	}
 	// UserTable holds the schema information for the "user" table.
 	UserTable = &schema.Table{

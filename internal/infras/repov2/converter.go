@@ -3,6 +3,7 @@ package repov2
 import (
 	"core-server/internal/infras/repov2/ent"
 	"core-server/internal/model/entity"
+	"core-server/internal/model/enum"
 	"database/sql"
 )
 
@@ -19,9 +20,10 @@ func toEntityUser(node *ent.User) *entity.User {
 		Phone:     node.Phone,
 		Avatar:    node.Avatar,
 		Email:     node.Email,
-		Role:      node.Role,
-		Sex:       node.Sex,
-		Status:    node.Status,
+		Role:      enum.ParseUserRole(node.Role.String()),
+		Sex:       enum.ParseUserSex(node.Sex),
+		Status:    enum.ParseUserStatus(node.Status.String()),
+		Signature: node.Signature,
 	}
 	if node.Birthday != nil {
 		value.Birthday = *node.Birthday

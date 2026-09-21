@@ -16,6 +16,14 @@ func NewLikeRPC(likeService *application.LikeService) *LikeRPC {
 	return &LikeRPC{LikeService: likeService}
 }
 
+func (l *LikeRPC) HasLike(ctx context.Context, request *likepb.HasArticleLikeRequest) (*likepb.HasArticleLikeResponse, error) {
+	isLiked, err := l.LikeService.HasThumbUp(ctx, request.GetUserID(), request.GetObjectType(), request.GetObjectID())
+	if err != nil {
+		return nil, err
+	}
+	return &likepb.HasArticleLikeResponse{IsLiked: isLiked}, nil
+}
+
 func (l *LikeRPC) ThumbUp(ctx context.Context, request *likepb.ThumbUpRequest) (*likepb.ThumbUpResponse, error) {
 	if err := l.LikeService.ThumbUp(
 		ctx,
@@ -53,27 +61,4 @@ func (l *LikeRPC) PageQueryUserLikeList(ctx context.Context, request *likepb.Pag
 		items = append(items, toArticlePB(article))
 	}
 	return &likepb.PageQueryUserLikeListResponse{Articles: items, Total: total}, nil
-}
-
-func (l *LikeRPC) HasLike(ctx context.Context, request *likepb.HasArticleLikeRequest) (*likepb.HasArticleLikeResponse, error) {
-	isLiked, err := l.LikeService.HasThumbUp(ctx, request.GetUserID(), request.GetObjectType(), request.GetObjectID())
-	if err != nil {
-		return nil, err
-	}
-	return &likepb.HasArticleLikeResponse{IsLiked: isLiked}, nil
-}
-
-func (l *LikeRPC) BatchLikeStatus(ctx context.Context, request *likepb.BatchCommentLikeStatusRequest) (*likepb.BatchLikeStatusResponse, error) {
-	statuses, err := l.LikeService.BatchHasThumbUp(ctx, request.GetUserID(), request.GetObjectType(), request.GetObjectIDs())
-	if err != nil {
-		return nil, err
-	}
-	items := make([]*likepb.LikeStatus, 0, len(statuses))
-	for _, objectId := range request.GetObjectIDs() {
-		items = append(items, &likepb.LikeStatus{
-			ObjectID: objectId,
-			IsLiked:  statuses[objectId],
-		})
-	}
-	return &likepb.BatchLikeStatusResponse{Items: items}, nil
 }

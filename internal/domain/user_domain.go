@@ -4,6 +4,7 @@ import (
 	"context"
 	"core-server/internal/model/aggregate"
 	"core-server/internal/model/entity"
+	"core-server/internal/model/enum"
 )
 
 type UserRepo interface {
@@ -33,7 +34,7 @@ type UserRepo interface {
 	UpdateProfile(ctx context.Context, user *entity.User) error
 	UpdateAvatar(ctx context.Context, userID uint64, avatar string) error
 	UpdatePassword(ctx context.Context, userID uint64, password string) error
-	UpdateStatus(ctx context.Context, userID uint64, status string) error
+	UpdateStatus(ctx context.Context, userID uint64, status enum.UserStatus) error
 }
 
 type UserRepoDomain interface {

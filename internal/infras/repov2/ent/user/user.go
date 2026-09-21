@@ -3,6 +3,7 @@
 package user
 
 import (
+	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -36,6 +37,8 @@ const (
 	FieldSex = "sex"
 	// FieldBirthday holds the string denoting the birthday field in the database.
 	FieldBirthday = "birthday"
+	// FieldSignature holds the string denoting the signature field in the database.
+	FieldSignature = "signature"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// EdgeStat holds the string denoting the stat edge name in mutations.
@@ -65,6 +68,7 @@ var Columns = []string{
 	FieldRole,
 	FieldSex,
 	FieldBirthday,
+	FieldSignature,
 	FieldStatus,
 }
 
@@ -99,19 +103,90 @@ var (
 	DefaultEmail string
 	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	EmailValidator func(string) error
-	// DefaultRole holds the default value on creation for the "role" field.
-	DefaultRole string
-	// RoleValidator is a validator for the "role" field. It is called by the builders before save.
-	RoleValidator func(string) error
-	// DefaultSex holds the default value on creation for the "sex" field.
-	DefaultSex string
-	// SexValidator is a validator for the "sex" field. It is called by the builders before save.
-	SexValidator func(string) error
-	// DefaultStatus holds the default value on creation for the "status" field.
-	DefaultStatus string
-	// StatusValidator is a validator for the "status" field. It is called by the builders before save.
-	StatusValidator func(string) error
+	// DefaultSignature holds the default value on creation for the "signature" field.
+	DefaultSignature string
+	// SignatureValidator is a validator for the "signature" field. It is called by the builders before save.
+	SignatureValidator func(string) error
 )
+
+// Role defines the type for the "role" enum field.
+type Role string
+
+// RoleUser is the default value of the Role enum.
+const DefaultRole = RoleUser
+
+// Role values.
+const (
+	RoleAdmin Role = "admin"
+	RoleUser  Role = "user"
+)
+
+func (r Role) String() string {
+	return string(r)
+}
+
+// RoleValidator is a validator for the "role" field enum values. It is called by the builders before save.
+func RoleValidator(r Role) error {
+	switch r {
+	case RoleAdmin, RoleUser:
+		return nil
+	default:
+		return fmt.Errorf("user: invalid enum value for role field: %q", r)
+	}
+}
+
+// Sex defines the type for the "sex" enum field.
+type Sex string
+
+// SexSecret is the default value of the Sex enum.
+const DefaultSex = SexSecret
+
+// Sex values.
+const (
+	SexMale   Sex = "male"
+	SexFemale Sex = "female"
+	SexSecret Sex = "secret"
+)
+
+func (s Sex) String() string {
+	return string(s)
+}
+
+// SexValidator is a validator for the "sex" field enum values. It is called by the builders before save.
+func SexValidator(s Sex) error {
+	switch s {
+	case SexMale, SexFemale, SexSecret:
+		return nil
+	default:
+		return fmt.Errorf("user: invalid enum value for sex field: %q", s)
+	}
+}
+
+// Status defines the type for the "status" enum field.
+type Status string
+
+// StatusApproved is the default value of the Status enum.
+const DefaultStatus = StatusApproved
+
+// Status values.
+const (
+	StatusApproved Status = "approved"
+	StatusBlocked  Status = "blocked"
+)
+
+func (s Status) String() string {
+	return string(s)
+}
+
+// StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
+func StatusValidator(s Status) error {
+	switch s {
+	case StatusApproved, StatusBlocked:
+		return nil
+	default:
+		return fmt.Errorf("user: invalid enum value for status field: %q", s)
+	}
+}
 
 // OrderOption defines the ordering options for the User queries.
 type OrderOption func(*sql.Selector)
@@ -174,6 +249,11 @@ func BySex(opts ...sql.OrderTermOption) OrderOption {
 // ByBirthday orders the results by the birthday field.
 func ByBirthday(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldBirthday, opts...).ToFunc()
+}
+
+// BySignature orders the results by the signature field.
+func BySignature(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSignature, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.

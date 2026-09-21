@@ -2,6 +2,7 @@ package dto
 
 import (
 	"core-server/internal/model/entity"
+	"core-server/internal/model/enum"
 	"time"
 )
 
@@ -16,8 +17,8 @@ type LoginResponse struct {
 	Id     uint64
 	Name   string
 	Avatar string
-	Status string
-	Role   string
+	Status enum.UserStatus
+	Role   enum.UserRole
 }
 
 type RegisterRequest struct {
@@ -36,15 +37,16 @@ type GetProfileRequest struct {
 	UserID uint64
 }
 type GetProfileResponse struct {
-	ID       uint64
-	Username string
-	Email    string
-	Phone    string
-	Avatar   string
-	Sex      string
-	Birthday time.Time
-	Role     string
-	Status   string
+	ID        uint64
+	Username  string
+	Email     string
+	Phone     string
+	Avatar    string
+	Sex       enum.UserSex
+	Signature string
+	Birthday  time.Time
+	Role      enum.UserRole
+	Status    enum.UserStatus
 
 	ArticleCount      uint64
 	FollowersCount    uint64
@@ -56,9 +58,10 @@ type GetProfileResponse struct {
 }
 
 type UpdateProfileRequest struct {
-	UserID               uint64
-	Username, Phone, Sex string
-	Birthday             time.Time
+	UserID                     uint64
+	Username, Phone, Signature string
+	Sex                        enum.UserSex
+	Birthday                   time.Time
 }
 
 type UpdateAvatarRequest struct {
@@ -74,7 +77,7 @@ type UserAvatarResponse struct {
 
 type UpdateUserStatusRequest struct {
 	UserID uint64
-	Status string
+	Status enum.UserStatus
 }
 
 type ListUsersRequest struct {
@@ -82,15 +85,16 @@ type ListUsersRequest struct {
 }
 
 type UserInfo struct {
-	ID       uint64
-	Username string
-	Email    string
-	Phone    string
-	Avatar   string
-	Sex      string
-	Birthday time.Time
-	Role     string
-	Status   string
+	ID        uint64
+	Username  string
+	Email     string
+	Phone     string
+	Avatar    string
+	Sex       enum.UserSex
+	Signature string
+	Birthday  time.Time
+	Role      enum.UserRole
+	Status    enum.UserStatus
 }
 
 type ListUsersResponse struct {
@@ -118,6 +122,7 @@ func ToGetProfileResponse(user *entity.User, stat *entity.UserStat) *GetProfileR
 		Phone:             user.Phone,
 		Avatar:            user.Avatar,
 		Sex:               user.Sex,
+		Signature:         user.Signature,
 		Birthday:          user.Birthday,
 		Role:              user.Role,
 		Status:            user.Status,

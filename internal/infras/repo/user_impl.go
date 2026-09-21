@@ -8,9 +8,10 @@ import (
 	"github.com/jmoiron/sqlx"
 
 	"core-server/internal/model/entity"
+	"core-server/internal/model/enum"
 )
 
-const userListColumns = `id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, sex, birthday, like_count, receive_like_count, status`
+const userListColumns = `id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, sex, birthday, signature, like_count, receive_like_count, status`
 
 type UserRepo struct {
 	*DBClient
@@ -23,7 +24,7 @@ func NewUserRepo(client *DBClient) *UserRepo {
 func (r *UserRepo) GetByID(ctx context.Context, id uint64) (*entity.User, error) {
 	var u entity.User
 	const query = `
-SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, status, sex, birthday, like_count, receive_like_count
+SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, status, sex, birthday, signature, like_count, receive_like_count
 FROM user
 WHERE id = ? AND deleted_at IS NULL
 LIMIT 1`
@@ -38,7 +39,7 @@ LIMIT 1`
 func (r *UserRepo) GetByName(ctx context.Context, name string) (*entity.User, error) {
 	var u entity.User
 	const query = `
-SELECT id, created_at, updated_at, deleted_at, name, password, phone, avatar, email, role, status, sex, birthday
+SELECT id, created_at, updated_at, deleted_at, name, password, phone, avatar, email, role, status, sex, birthday, signature
 FROM user
 WHERE name = ? AND deleted_at IS NULL
 LIMIT 1`
@@ -53,7 +54,7 @@ LIMIT 1`
 func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*entity.User, error) {
 	var u entity.User
 	const query = `
-SELECT id, created_at, updated_at, deleted_at, name, password, phone, avatar, email, role, status, sex, birthday
+SELECT id, created_at, updated_at, deleted_at, name, password, phone, avatar, email, role, status, sex, birthday, signature
 FROM user
 WHERE email = ? AND deleted_at IS NULL
 LIMIT 1`
@@ -67,9 +68,9 @@ LIMIT 1`
 
 func (r *UserRepo) Create(ctx context.Context, user *entity.User) error {
 	const query = `
-INSERT INTO user (name, password, email, role, status)
-VALUES (?, ?, ?, ?, ?)`
-	result, err := r.db(ctx).ExecContext(ctx, query, user.Name, user.Password, user.Email, user.Role, user.Status)
+INSERT INTO user (name, password, email, role, status, signature)
+VALUES (?, ?, ?, ?, ?, ?)`
+	result, err := r.db(ctx).ExecContext(ctx, query, user.Name, user.Password, user.Email, user.Role.String(), user.Status.String(), user.Signature)
 	if err != nil {
 		return err
 	}
@@ -87,7 +88,7 @@ func (r *UserRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User,
 	}
 
 	const baseQuery = `
-SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, sex, birthday, like_count, receive_like_count, status
+SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, sex, birthday, signature, like_count, receive_like_count, status
 FROM user
 WHERE id IN (?) AND deleted_at IS NULL`
 
@@ -184,10 +185,10 @@ WHERE id = ? AND deleted_at IS NULL`
 func (r *UserRepo) UpdateProfile(ctx context.Context, user *entity.User) error {
 	const query = `
 UPDATE user
-SET name = ?, phone = ?, sex = ?, birthday = ?, updated_at = NOW(3)
+SET name = ?, phone = ?, sex = ?, birthday = ?, signature = ?, updated_at = NOW(3)
 WHERE id = ? AND deleted_at IS NULL`
 
-	_, err := r.db(ctx).ExecContext(ctx, query, user.Name, user.Phone, user.Sex, user.Birthday, user.ID)
+	_, err := r.db(ctx).ExecContext(ctx, query, user.Name, user.Phone, user.Sex.String(), user.Birthday, user.Signature, user.ID)
 	return err
 }
 
@@ -224,11 +225,11 @@ WHERE id = ?`
 	return nil
 }
 
-func (r *UserRepo) UpdateStatus(ctx context.Context, userID uint64, status string) error {
+func (r *UserRepo) UpdateStatus(ctx context.Context, userID uint64, status enum.UserStatus) error {
 	result, err := r.db(ctx).ExecContext(ctx, `
 UPDATE user
 SET status = ?, updated_at = NOW(3)
-WHERE id = ? AND deleted_at IS NULL`, status, userID)
+	WHERE id = ? AND deleted_at IS NULL`, status.String(), userID)
 	if err != nil {
 		return err
 	}

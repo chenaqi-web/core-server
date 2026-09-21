@@ -118,13 +118,13 @@ func (_c *UserCreate) SetNillableEmail(v *string) *UserCreate {
 }
 
 // SetRole sets the "role" field.
-func (_c *UserCreate) SetRole(v string) *UserCreate {
+func (_c *UserCreate) SetRole(v user.Role) *UserCreate {
 	_c.mutation.SetRole(v)
 	return _c
 }
 
 // SetNillableRole sets the "role" field if the given value is not nil.
-func (_c *UserCreate) SetNillableRole(v *string) *UserCreate {
+func (_c *UserCreate) SetNillableRole(v *user.Role) *UserCreate {
 	if v != nil {
 		_c.SetRole(*v)
 	}
@@ -132,13 +132,13 @@ func (_c *UserCreate) SetNillableRole(v *string) *UserCreate {
 }
 
 // SetSex sets the "sex" field.
-func (_c *UserCreate) SetSex(v string) *UserCreate {
+func (_c *UserCreate) SetSex(v user.Sex) *UserCreate {
 	_c.mutation.SetSex(v)
 	return _c
 }
 
 // SetNillableSex sets the "sex" field if the given value is not nil.
-func (_c *UserCreate) SetNillableSex(v *string) *UserCreate {
+func (_c *UserCreate) SetNillableSex(v *user.Sex) *UserCreate {
 	if v != nil {
 		_c.SetSex(*v)
 	}
@@ -159,14 +159,28 @@ func (_c *UserCreate) SetNillableBirthday(v *time.Time) *UserCreate {
 	return _c
 }
 
+// SetSignature sets the "signature" field.
+func (_c *UserCreate) SetSignature(v string) *UserCreate {
+	_c.mutation.SetSignature(v)
+	return _c
+}
+
+// SetNillableSignature sets the "signature" field if the given value is not nil.
+func (_c *UserCreate) SetNillableSignature(v *string) *UserCreate {
+	if v != nil {
+		_c.SetSignature(*v)
+	}
+	return _c
+}
+
 // SetStatus sets the "status" field.
-func (_c *UserCreate) SetStatus(v string) *UserCreate {
+func (_c *UserCreate) SetStatus(v user.Status) *UserCreate {
 	_c.mutation.SetStatus(v)
 	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (_c *UserCreate) SetNillableStatus(v *string) *UserCreate {
+func (_c *UserCreate) SetNillableStatus(v *user.Status) *UserCreate {
 	if v != nil {
 		_c.SetStatus(*v)
 	}
@@ -261,6 +275,10 @@ func (_c *UserCreate) defaults() {
 		v := user.DefaultSex
 		_c.mutation.SetSex(v)
 	}
+	if _, ok := _c.mutation.Signature(); !ok {
+		v := user.DefaultSignature
+		_c.mutation.SetSignature(v)
+	}
 	if _, ok := _c.mutation.Status(); !ok {
 		v := user.DefaultStatus
 		_c.mutation.SetStatus(v)
@@ -324,6 +342,14 @@ func (_c *UserCreate) check() error {
 	if v, ok := _c.mutation.Sex(); ok {
 		if err := user.SexValidator(v); err != nil {
 			return &ValidationError{Name: "sex", err: fmt.Errorf(`ent: validator failed for field "User.sex": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.Signature(); !ok {
+		return &ValidationError{Name: "signature", err: errors.New(`ent: missing required field "User.signature"`)}
+	}
+	if v, ok := _c.mutation.Signature(); ok {
+		if err := user.SignatureValidator(v); err != nil {
+			return &ValidationError{Name: "signature", err: fmt.Errorf(`ent: validator failed for field "User.signature": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.Status(); !ok {
@@ -399,19 +425,23 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_node.Email = value
 	}
 	if value, ok := _c.mutation.Role(); ok {
-		_spec.SetField(user.FieldRole, field.TypeString, value)
+		_spec.SetField(user.FieldRole, field.TypeEnum, value)
 		_node.Role = value
 	}
 	if value, ok := _c.mutation.Sex(); ok {
-		_spec.SetField(user.FieldSex, field.TypeString, value)
+		_spec.SetField(user.FieldSex, field.TypeEnum, value)
 		_node.Sex = value
 	}
 	if value, ok := _c.mutation.Birthday(); ok {
 		_spec.SetField(user.FieldBirthday, field.TypeTime, value)
 		_node.Birthday = &value
 	}
+	if value, ok := _c.mutation.Signature(); ok {
+		_spec.SetField(user.FieldSignature, field.TypeString, value)
+		_node.Signature = value
+	}
 	if value, ok := _c.mutation.Status(); ok {
-		_spec.SetField(user.FieldStatus, field.TypeString, value)
+		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
 		_node.Status = value
 	}
 	if nodes := _c.mutation.StatIDs(); len(nodes) > 0 {
