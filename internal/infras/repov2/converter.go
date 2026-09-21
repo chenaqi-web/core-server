@@ -21,7 +21,7 @@ func toEntityUser(node *ent.User) *entity.User {
 		Avatar:    node.Avatar,
 		Email:     node.Email,
 		Role:      enum.ParseUserRole(node.Role.String()),
-		Sex:       enum.ParseUserSex(node.Sex),
+		Sex:       enum.ParseUserSex(node.Sex.String()),
 		Status:    enum.ParseUserStatus(node.Status.String()),
 		Signature: node.Signature,
 	}

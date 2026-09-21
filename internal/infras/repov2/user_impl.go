@@ -183,7 +183,7 @@ func (r *UserRepo) UpdateProfile(ctx context.Context, value *entity.User) error 
 		Where(user.IDEQ(value.ID), user.DeletedAtIsNil()).
 		SetName(value.Name).
 		SetPhone(value.Phone).
-		SetSex(value.Sex.String()).
+		SetSex(user.Sex(value.Sex)).
 		SetBirthday(value.Birthday).
 		SetSignature(value.Signature).
 		Save(ctx)

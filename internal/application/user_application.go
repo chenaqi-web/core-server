@@ -62,8 +62,7 @@ func (s *UserService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 }
 
 func (s *UserService) EmailLogin(ctx context.Context, req *dto.EmailLoginRequest) (*dto.LoginResponse, error) {
-	email := req.Email
-	user, err := s.repo.GetByEmail(ctx, email)
+	user, err := s.repo.GetByEmail(ctx, req.Email)
 	if err != nil {
 		s.log.Error("UserService/EmailLogin error:", zap.Error(err))
 		return nil, err
@@ -94,6 +93,7 @@ func (s *UserService) Register(ctx context.Context, req *dto.RegisterRequest) er
 		Password: utils.Bcrypt(req.Password),
 		Role:     enum.UserRoleUser,
 		Status:   enum.StatusApproved,
+		Sex:      enum.UserUnknown,
 	}
 
 	if err := s.repo.CreateUser(ctx, user); err != nil {

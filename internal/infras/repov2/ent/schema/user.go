@@ -1,12 +1,13 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/entsql"
 	entschema "entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"time"
 )
 
 // User holds the schema definition for the User entity.
@@ -28,7 +29,7 @@ func (User) Fields() []ent.Field {
 		field.String("avatar").MaxLen(255).Default(""),
 		field.String("email").MaxLen(50).Default(""),
 		field.Enum("role").Values("admin", "user").Default("user"),
-		field.Enum("sex").Values("male", "female", "secret").Default("secret"),
+		field.Enum("sex").Values("male", "female", "secret", "unknown").Default("unknown"),
 		field.Time("birthday").Optional().Nillable(),
 		field.String("signature").MaxLen(255).Default(""),
 		field.Enum("status").Values("approved", "blocked").Default("approved"),

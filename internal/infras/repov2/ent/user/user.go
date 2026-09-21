@@ -138,14 +138,15 @@ func RoleValidator(r Role) error {
 // Sex defines the type for the "sex" enum field.
 type Sex string
 
-// SexSecret is the default value of the Sex enum.
-const DefaultSex = SexSecret
+// SexUnknown is the default value of the Sex enum.
+const DefaultSex = SexUnknown
 
 // Sex values.
 const (
-	SexMale   Sex = "male"
-	SexFemale Sex = "female"
-	SexSecret Sex = "secret"
+	SexMale    Sex = "male"
+	SexFemale  Sex = "female"
+	SexSecret  Sex = "secret"
+	SexUnknown Sex = "unknown"
 )
 
 func (s Sex) String() string {
@@ -155,7 +156,7 @@ func (s Sex) String() string {
 // SexValidator is a validator for the "sex" field enum values. It is called by the builders before save.
 func SexValidator(s Sex) error {
 	switch s {
-	case SexMale, SexFemale, SexSecret:
+	case SexMale, SexFemale, SexSecret, SexUnknown:
 		return nil
 	default:
 		return fmt.Errorf("user: invalid enum value for sex field: %q", s)

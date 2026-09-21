@@ -7,7 +7,7 @@ CREATE TABLE `user` (
         `email` VARCHAR(50) DEFAULT '' COMMENT '邮箱',
         `role` ENUM('admin', 'user','unknown') NOT NULL DEFAULT 'user' COMMENT '角色：admin/user',
         `status` ENUM('approved', 'blocked','unknown') NOT NULL DEFAULT 'approved' COMMENT '用户状态：approved-已通过, blocked-已拉黑',
-        `sex` ENUM('male', 'female', 'secret') NOT NULL DEFAULT 'secret' COMMENT '性别：male/female/secret',
+        `sex` ENUM('male', 'female', 'secret', 'unknown') NOT NULL DEFAULT 'unknown' COMMENT '性别：male/female/secret',
         `birthday` DATE DEFAULT NULL COMMENT '生日',
         `signature` VARCHAR(255) DEFAULT '' COMMENT '主页个性签名',
         `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

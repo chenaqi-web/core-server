@@ -4,6 +4,7 @@ const (
 	UserSexMale   UserSex = "male"
 	UserSexFemale UserSex = "female"
 	UserSexSecret UserSex = "secret"
+	UserUnknown   UserSex = "unknown"
 )
 
 type UserSex string
@@ -19,6 +20,6 @@ func ParseUserSex(v string) UserSex {
 	case "secret":
 		return UserSexSecret
 	default:
-		return UserSexSecret
+		return UserUnknown
 	}
 }

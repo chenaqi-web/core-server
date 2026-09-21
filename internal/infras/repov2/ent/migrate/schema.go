@@ -42,7 +42,7 @@ var (
 		{Name: "avatar", Type: field.TypeString, Size: 255, Default: ""},
 		{Name: "email", Type: field.TypeString, Size: 50, Default: ""},
 		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "user"}, Default: "user"},
-		{Name: "sex", Type: field.TypeEnum, Enums: []string{"male", "female", "secret"}, Default: "secret"},
+		{Name: "sex", Type: field.TypeEnum, Enums: []string{"male", "female", "secret", "unknown"}, Default: "unknown"},
 		{Name: "birthday", Type: field.TypeTime, Nullable: true},
 		{Name: "signature", Type: field.TypeString, Size: 255, Default: ""},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"approved", "blocked"}, Default: "approved"},
