@@ -579,8 +579,8 @@ func (x *UpdateAvatarResponse) GetUrl() string {
 
 type ListUsersRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Page          uint32                 `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
-	PageSize      uint32                 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	Page          int32                  `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
+	PageSize      int32                  `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -615,14 +615,14 @@ func (*ListUsersRequest) Descriptor() ([]byte, []int) {
 	return file_user_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *ListUsersRequest) GetPage() uint32 {
+func (x *ListUsersRequest) GetPage() int32 {
 	if x != nil {
 		return x.Page
 	}
 	return 0
 }
 
-func (x *ListUsersRequest) GetPageSize() uint32 {
+func (x *ListUsersRequest) GetPageSize() int32 {
 	if x != nil {
 		return x.PageSize
 	}
@@ -684,8 +684,8 @@ func (x *ListUsersResponse) GetTotal() uint64 {
 type SearchUsersRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Keyword       string                 `protobuf:"bytes,1,opt,name=keyword,proto3" json:"keyword,omitempty"`
-	Page          uint32                 `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
-	PageSize      uint32                 `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
+	PageSize      int32                  `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -727,14 +727,14 @@ func (x *SearchUsersRequest) GetKeyword() string {
 	return ""
 }
 
-func (x *SearchUsersRequest) GetPage() uint32 {
+func (x *SearchUsersRequest) GetPage() int32 {
 	if x != nil {
 		return x.Page
 	}
 	return 0
 }
 
-func (x *SearchUsersRequest) GetPageSize() uint32 {
+func (x *SearchUsersRequest) GetPageSize() int32 {
 	if x != nil {
 		return x.PageSize
 	}
@@ -945,15 +945,15 @@ const file_user_proto_rawDesc = "" +
 	"\x14UpdateAvatarResponse\x12\x10\n" +
 	"\x03url\x18\x01 \x01(\tR\x03url\"C\n" +
 	"\x10ListUsersRequest\x12\x12\n" +
-	"\x04page\x18\x01 \x01(\rR\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x02 \x01(\rR\bpageSize\"O\n" +
+	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x1b\n" +
+	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\"O\n" +
 	"\x11ListUsersResponse\x12$\n" +
 	"\x05users\x18\x01 \x03(\v2\x0e.user.UserInfoR\x05users\x12\x14\n" +
 	"\x05total\x18\x02 \x01(\x04R\x05total\"_\n" +
 	"\x12SearchUsersRequest\x12\x18\n" +
 	"\akeyword\x18\x01 \x01(\tR\akeyword\x12\x12\n" +
-	"\x04page\x18\x02 \x01(\rR\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x03 \x01(\rR\bpageSize\"Q\n" +
+	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x1b\n" +
+	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\"Q\n" +
 	"\x13SearchUsersResponse\x12$\n" +
 	"\x05users\x18\x01 \x03(\v2\x0e.user.UserInfoR\x05users\x12\x14\n" +
 	"\x05total\x18\x02 \x01(\x04R\x05total\"J\n" +

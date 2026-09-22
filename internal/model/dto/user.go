@@ -81,7 +81,7 @@ type UpdateUserStatusRequest struct {
 }
 
 type ListUsersRequest struct {
-	Page, PageSize uint32
+	Page, PageSize int32
 }
 
 type UserInfo struct {
@@ -104,7 +104,7 @@ type ListUsersResponse struct {
 
 type SearchUsersRequest struct {
 	Keyword        string
-	Page, PageSize uint32
+	Page, PageSize int32
 }
 
 type SearchUsersResponse struct {

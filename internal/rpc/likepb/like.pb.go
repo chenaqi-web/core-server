@@ -456,163 +456,6 @@ func (x *HasArticleLikeResponse) GetIsLiked() bool {
 	return false
 }
 
-// 批量查询用户是否点过赞
-type BatchCommentLikeStatusRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserID        uint64                 `protobuf:"varint,1,opt,name=userID,proto3" json:"userID,omitempty"`
-	ObjectType    string                 `protobuf:"bytes,2,opt,name=objectType,proto3" json:"objectType,omitempty"`
-	ObjectIDs     []uint64               `protobuf:"varint,3,rep,packed,name=objectIDs,proto3" json:"objectIDs,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *BatchCommentLikeStatusRequest) Reset() {
-	*x = BatchCommentLikeStatusRequest{}
-	mi := &file_like_proto_msgTypes[8]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *BatchCommentLikeStatusRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*BatchCommentLikeStatusRequest) ProtoMessage() {}
-
-func (x *BatchCommentLikeStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_like_proto_msgTypes[8]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use BatchCommentLikeStatusRequest.ProtoReflect.Descriptor instead.
-func (*BatchCommentLikeStatusRequest) Descriptor() ([]byte, []int) {
-	return file_like_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *BatchCommentLikeStatusRequest) GetUserID() uint64 {
-	if x != nil {
-		return x.UserID
-	}
-	return 0
-}
-
-func (x *BatchCommentLikeStatusRequest) GetObjectType() string {
-	if x != nil {
-		return x.ObjectType
-	}
-	return ""
-}
-
-func (x *BatchCommentLikeStatusRequest) GetObjectIDs() []uint64 {
-	if x != nil {
-		return x.ObjectIDs
-	}
-	return nil
-}
-
-type LikeStatus struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ObjectID      uint64                 `protobuf:"varint,1,opt,name=objectID,proto3" json:"objectID,omitempty"`
-	IsLiked       bool                   `protobuf:"varint,2,opt,name=isLiked,proto3" json:"isLiked,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *LikeStatus) Reset() {
-	*x = LikeStatus{}
-	mi := &file_like_proto_msgTypes[9]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *LikeStatus) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*LikeStatus) ProtoMessage() {}
-
-func (x *LikeStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_like_proto_msgTypes[9]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use LikeStatus.ProtoReflect.Descriptor instead.
-func (*LikeStatus) Descriptor() ([]byte, []int) {
-	return file_like_proto_rawDescGZIP(), []int{9}
-}
-
-func (x *LikeStatus) GetObjectID() uint64 {
-	if x != nil {
-		return x.ObjectID
-	}
-	return 0
-}
-
-func (x *LikeStatus) GetIsLiked() bool {
-	if x != nil {
-		return x.IsLiked
-	}
-	return false
-}
-
-type BatchLikeStatusResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Items         []*LikeStatus          `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *BatchLikeStatusResponse) Reset() {
-	*x = BatchLikeStatusResponse{}
-	mi := &file_like_proto_msgTypes[10]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *BatchLikeStatusResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*BatchLikeStatusResponse) ProtoMessage() {}
-
-func (x *BatchLikeStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_like_proto_msgTypes[10]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use BatchLikeStatusResponse.ProtoReflect.Descriptor instead.
-func (*BatchLikeStatusResponse) Descriptor() ([]byte, []int) {
-	return file_like_proto_rawDescGZIP(), []int{10}
-}
-
-func (x *BatchLikeStatusResponse) GetItems() []*LikeStatus {
-	if x != nil {
-		return x.Items
-	}
-	return nil
-}
-
 var File_like_proto protoreflect.FileDescriptor
 
 const file_like_proto_rawDesc = "" +
@@ -652,25 +495,12 @@ const file_like_proto_rawDesc = "" +
 	"objectType\x12\x1a\n" +
 	"\bobjectID\x18\x03 \x01(\x04R\bobjectID\"2\n" +
 	"\x16HasArticleLikeResponse\x12\x18\n" +
-	"\aisLiked\x18\x01 \x01(\bR\aisLiked\"u\n" +
-	"\x1dBatchCommentLikeStatusRequest\x12\x16\n" +
-	"\x06userID\x18\x01 \x01(\x04R\x06userID\x12\x1e\n" +
-	"\n" +
-	"objectType\x18\x02 \x01(\tR\n" +
-	"objectType\x12\x1c\n" +
-	"\tobjectIDs\x18\x03 \x03(\x04R\tobjectIDs\"B\n" +
-	"\n" +
-	"LikeStatus\x12\x1a\n" +
-	"\bobjectID\x18\x01 \x01(\x04R\bobjectID\x12\x18\n" +
-	"\aisLiked\x18\x02 \x01(\bR\aisLiked\"A\n" +
-	"\x17BatchLikeStatusResponse\x12&\n" +
-	"\x05items\x18\x01 \x03(\v2\x10.like.LikeStatusR\x05items2\x98\x03\n" +
+	"\aisLiked\x18\x01 \x01(\bR\aisLiked2\xbf\x02\n" +
 	"\vLikeService\x128\n" +
 	"\aThumbUp\x12\x14.like.ThumbUpRequest\x1a\x15.like.ThumbUpResponse\"\x00\x12J\n" +
 	"\rCancelThumbUp\x12\x1a.like.CancelThumbUpRequest\x1a\x1b.like.CancelThumbUpResponse\"\x00\x12b\n" +
 	"\x15PageQueryUserLikeList\x12\".like.PageQueryUserLikeListRequest\x1a#.like.PageQueryUserLikeListResponse\"\x00\x12F\n" +
-	"\aHasLike\x12\x1b.like.HasArticleLikeRequest\x1a\x1c.like.HasArticleLikeResponse\"\x00\x12W\n" +
-	"\x0fBatchLikeStatus\x12#.like.BatchCommentLikeStatusRequest\x1a\x1d.like.BatchLikeStatusResponse\"\x00B(Z&core-server/internal/rpc/likepb;likepbb\x06proto3"
+	"\aHasLike\x12\x1b.like.HasArticleLikeRequest\x1a\x1c.like.HasArticleLikeResponse\"\x00B(Z&core-server/internal/rpc/likepb;likepbb\x06proto3"
 
 var (
 	file_like_proto_rawDescOnce sync.Once
@@ -684,7 +514,7 @@ func file_like_proto_rawDescGZIP() []byte {
 	return file_like_proto_rawDescData
 }
 
-var file_like_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_like_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_like_proto_goTypes = []any{
 	(*ThumbUpRequest)(nil),                // 0: like.ThumbUpRequest
 	(*ThumbUpResponse)(nil),               // 1: like.ThumbUpResponse
@@ -694,29 +524,23 @@ var file_like_proto_goTypes = []any{
 	(*PageQueryUserLikeListResponse)(nil), // 5: like.PageQueryUserLikeListResponse
 	(*HasArticleLikeRequest)(nil),         // 6: like.HasArticleLikeRequest
 	(*HasArticleLikeResponse)(nil),        // 7: like.HasArticleLikeResponse
-	(*BatchCommentLikeStatusRequest)(nil), // 8: like.BatchCommentLikeStatusRequest
-	(*LikeStatus)(nil),                    // 9: like.LikeStatus
-	(*BatchLikeStatusResponse)(nil),       // 10: like.BatchLikeStatusResponse
-	(*articlepb.Article)(nil),             // 11: article.Article
+	(*articlepb.Article)(nil),             // 8: article.Article
 }
 var file_like_proto_depIdxs = []int32{
-	11, // 0: like.PageQueryUserLikeListResponse.articles:type_name -> article.Article
-	9,  // 1: like.BatchLikeStatusResponse.items:type_name -> like.LikeStatus
-	0,  // 2: like.LikeService.ThumbUp:input_type -> like.ThumbUpRequest
-	2,  // 3: like.LikeService.CancelThumbUp:input_type -> like.CancelThumbUpRequest
-	4,  // 4: like.LikeService.PageQueryUserLikeList:input_type -> like.PageQueryUserLikeListRequest
-	6,  // 5: like.LikeService.HasLike:input_type -> like.HasArticleLikeRequest
-	8,  // 6: like.LikeService.BatchLikeStatus:input_type -> like.BatchCommentLikeStatusRequest
-	1,  // 7: like.LikeService.ThumbUp:output_type -> like.ThumbUpResponse
-	3,  // 8: like.LikeService.CancelThumbUp:output_type -> like.CancelThumbUpResponse
-	5,  // 9: like.LikeService.PageQueryUserLikeList:output_type -> like.PageQueryUserLikeListResponse
-	7,  // 10: like.LikeService.HasLike:output_type -> like.HasArticleLikeResponse
-	10, // 11: like.LikeService.BatchLikeStatus:output_type -> like.BatchLikeStatusResponse
-	7,  // [7:12] is the sub-list for method output_type
-	2,  // [2:7] is the sub-list for method input_type
-	2,  // [2:2] is the sub-list for extension type_name
-	2,  // [2:2] is the sub-list for extension extendee
-	0,  // [0:2] is the sub-list for field type_name
+	8, // 0: like.PageQueryUserLikeListResponse.articles:type_name -> article.Article
+	0, // 1: like.LikeService.ThumbUp:input_type -> like.ThumbUpRequest
+	2, // 2: like.LikeService.CancelThumbUp:input_type -> like.CancelThumbUpRequest
+	4, // 3: like.LikeService.PageQueryUserLikeList:input_type -> like.PageQueryUserLikeListRequest
+	6, // 4: like.LikeService.HasLike:input_type -> like.HasArticleLikeRequest
+	1, // 5: like.LikeService.ThumbUp:output_type -> like.ThumbUpResponse
+	3, // 6: like.LikeService.CancelThumbUp:output_type -> like.CancelThumbUpResponse
+	5, // 7: like.LikeService.PageQueryUserLikeList:output_type -> like.PageQueryUserLikeListResponse
+	7, // 8: like.LikeService.HasLike:output_type -> like.HasArticleLikeResponse
+	5, // [5:9] is the sub-list for method output_type
+	1, // [1:5] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_like_proto_init() }
@@ -730,7 +554,7 @@ func file_like_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_like_proto_rawDesc), len(file_like_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

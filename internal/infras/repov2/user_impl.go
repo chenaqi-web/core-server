@@ -109,7 +109,7 @@ func (r *UserRepo) GetUserMsgByID(ctx context.Context, id uint64) (*aggregate.Us
 	}, err
 }
 
-func (r *UserRepo) Search(ctx context.Context, keyword string, limit, offset uint32) ([]*entity.User, uint64, error) {
+func (r *UserRepo) Search(ctx context.Context, keyword string, limit, offset int32) ([]*entity.User, uint64, error) {
 	query := r.db.User.Query().Where(
 		user.DeletedAtIsNil(),
 		user.Or(user.NameContains(keyword), user.EmailContains(keyword)),
@@ -126,7 +126,7 @@ func (r *UserRepo) Search(ctx context.Context, keyword string, limit, offset uin
 	return toEntityUsers(nodes), uint64(total), nil
 }
 
-func (r *UserRepo) List(ctx context.Context, limit, offset uint32) ([]*entity.User, uint64, error) {
+func (r *UserRepo) List(ctx context.Context, limit, offset int32) ([]*entity.User, uint64, error) {
 	query := r.db.User.Query().Where(user.DeletedAtIsNil())
 	total, err := query.Clone().Count(ctx)
 	if err != nil {

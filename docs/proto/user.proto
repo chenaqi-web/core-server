@@ -66,8 +66,8 @@ message UpdateAvatarResponse {
 }
 
 message ListUsersRequest {
-  uint32 page = 1;
-  uint32 page_size = 2;
+  int32 page = 1;
+  int32 page_size = 2;
 }
 
 message ListUsersResponse {
@@ -77,8 +77,8 @@ message ListUsersResponse {
 
 message SearchUsersRequest {
   string keyword = 1;
-  uint32 page = 2;
-  uint32 page_size = 3;
+  int32 page = 2;
+  int32 page_size = 3;
 }
 
 message SearchUsersResponse {

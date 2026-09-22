@@ -31,7 +31,7 @@ func (u *UserRPC) GetProfile(ctx context.Context, request *userpb.GetProfileRequ
 		Avatar:            res.Avatar,
 		Sex:               res.Sex.String(),
 		Signature:         res.Signature,
-		Birthday:          formatBirthday(res.Birthday),
+		Birthday:          res.Birthday.Format("2006-01-02"),
 		Role:              res.Role.String(),
 		Status:            res.Status.String(),
 		FollowersCount:    res.FollowersCount,
@@ -121,7 +121,7 @@ func ConvertToUserInfo(res *dto.UserInfo) *userpb.UserInfo {
 		Phone:     res.Phone,
 		Avatar:    res.Avatar,
 		Sex:       res.Sex.String(),
-		Birthday:  formatBirthday(res.Birthday),
+		Birthday:  res.Birthday.Format("2006-01-02"),
 		Signature: res.Signature,
 		Role:      res.Role.String(),
 		Status:    res.Status.String(),
@@ -137,11 +137,4 @@ func parseBirthday(value string) time.Time {
 		parsed, _ = time.Parse(time.RFC3339, value)
 	}
 	return parsed
-}
-
-func formatBirthday(value time.Time) string {
-	if value.IsZero() {
-		return ""
-	}
-	return value.Format("2006-01-02")
 }
