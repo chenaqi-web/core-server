@@ -15,21 +15,22 @@ var RepoProviderSet = wire.NewSet(
 	repo.NewDBClient,
 	repo.NewLikeRepo,
 	repo.NewCountRepo,
-	repo.NewUserRepo,
-	repo.NewArticleRepo,
+	//repo.NewUserRepo,
+	//repo.NewArticleRepo,
 	repo.NewCommentRepo,
 
 	// v2 ent 版本
 	repov2.NewEntClient,
 	repov2.NewUserRepo,
 	repov2.NewCategoryRepo,
+	repov2.NewArticleRepo,
 	// todo 新操作
 
 	wire.Bind(new(domain.LikeRepoDomain), new(*repo.LikeRepo)),
 	wire.Bind(new(domain.CountRepoDomain), new(*repo.CountRepo)),
 	wire.Bind(new(domain.UserRepoDomain), new(*repov2.UserRepo)),
 	wire.Bind(new(domain.CategoryRepoDomain), new(*repov2.CategoryRepo)),
-	wire.Bind(new(domain.ArticleRepoDomain), new(*repo.ArticleRepo)),
+	wire.Bind(new(domain.ArticleRepoDomain), new(*repov2.ArticleRepo)),
 	wire.Bind(new(domain.CommentRepoDomain), new(*repo.CommentRepo)),
 )
 

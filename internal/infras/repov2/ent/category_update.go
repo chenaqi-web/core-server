@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"core-server/internal/infras/repov2/ent/article"
 	"core-server/internal/infras/repov2/ent/category"
 	"core-server/internal/infras/repov2/ent/predicate"
 	"errors"
@@ -83,9 +84,34 @@ func (_u *CategoryUpdate) SetNillableName(v *string) *CategoryUpdate {
 	return _u
 }
 
+// SetArticlesID sets the "articles" edge to the Article entity by ID.
+func (_u *CategoryUpdate) SetArticlesID(id uint64) *CategoryUpdate {
+	_u.mutation.SetArticlesID(id)
+	return _u
+}
+
+// SetNillableArticlesID sets the "articles" edge to the Article entity by ID if the given value is not nil.
+func (_u *CategoryUpdate) SetNillableArticlesID(id *uint64) *CategoryUpdate {
+	if id != nil {
+		_u = _u.SetArticlesID(*id)
+	}
+	return _u
+}
+
+// SetArticles sets the "articles" edge to the Article entity.
+func (_u *CategoryUpdate) SetArticles(v *Article) *CategoryUpdate {
+	return _u.SetArticlesID(v.ID)
+}
+
 // Mutation returns the CategoryMutation object of the builder.
 func (_u *CategoryUpdate) Mutation() *CategoryMutation {
 	return _u.mutation
+}
+
+// ClearArticles clears the "articles" edge to the Article entity.
+func (_u *CategoryUpdate) ClearArticles() *CategoryUpdate {
+	_u.mutation.ClearArticles()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -160,6 +186,35 @@ func (_u *CategoryUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(category.FieldName, field.TypeString, value)
+	}
+	if _u.mutation.ArticlesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   category.ArticlesTable,
+			Columns: []string{category.ArticlesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(article.FieldID, field.TypeUint64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ArticlesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   category.ArticlesTable,
+			Columns: []string{category.ArticlesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(article.FieldID, field.TypeUint64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -236,9 +291,34 @@ func (_u *CategoryUpdateOne) SetNillableName(v *string) *CategoryUpdateOne {
 	return _u
 }
 
+// SetArticlesID sets the "articles" edge to the Article entity by ID.
+func (_u *CategoryUpdateOne) SetArticlesID(id uint64) *CategoryUpdateOne {
+	_u.mutation.SetArticlesID(id)
+	return _u
+}
+
+// SetNillableArticlesID sets the "articles" edge to the Article entity by ID if the given value is not nil.
+func (_u *CategoryUpdateOne) SetNillableArticlesID(id *uint64) *CategoryUpdateOne {
+	if id != nil {
+		_u = _u.SetArticlesID(*id)
+	}
+	return _u
+}
+
+// SetArticles sets the "articles" edge to the Article entity.
+func (_u *CategoryUpdateOne) SetArticles(v *Article) *CategoryUpdateOne {
+	return _u.SetArticlesID(v.ID)
+}
+
 // Mutation returns the CategoryMutation object of the builder.
 func (_u *CategoryUpdateOne) Mutation() *CategoryMutation {
 	return _u.mutation
+}
+
+// ClearArticles clears the "articles" edge to the Article entity.
+func (_u *CategoryUpdateOne) ClearArticles() *CategoryUpdateOne {
+	_u.mutation.ClearArticles()
+	return _u
 }
 
 // Where appends a list predicates to the CategoryUpdate builder.
@@ -343,6 +423,35 @@ func (_u *CategoryUpdateOne) sqlSave(ctx context.Context) (_node *Category, err 
 	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(category.FieldName, field.TypeString, value)
+	}
+	if _u.mutation.ArticlesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   category.ArticlesTable,
+			Columns: []string{category.ArticlesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(article.FieldID, field.TypeUint64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ArticlesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   category.ArticlesTable,
+			Columns: []string{category.ArticlesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(article.FieldID, field.TypeUint64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Category{config: _u.config}
 	_spec.Assign = _node.assignValues

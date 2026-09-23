@@ -9,6 +9,46 @@ import (
 )
 
 var (
+	// BlogArticleColumns holds the columns for the "blog_article" table.
+	BlogArticleColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUint64, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "published_at", Type: field.TypeTime, Nullable: true},
+		{Name: "title", Type: field.TypeString},
+		{Name: "summary", Type: field.TypeString, Default: ""},
+		{Name: "content", Type: field.TypeString},
+		{Name: "cover_image", Type: field.TypeString, Default: ""},
+		{Name: "is_top", Type: field.TypeBool, Default: false},
+		{Name: "is_published", Type: field.TypeBool, Default: true},
+		{Name: "visibility", Type: field.TypeInt, Default: 1},
+		{Name: "view_count", Type: field.TypeInt, Default: 0},
+		{Name: "like_count", Type: field.TypeInt, Default: 0},
+		{Name: "comment_count", Type: field.TypeInt, Default: 0},
+		{Name: "category_id", Type: field.TypeUint64, Unique: true},
+		{Name: "author_id", Type: field.TypeUint64, Unique: true},
+	}
+	// BlogArticleTable holds the schema information for the "blog_article" table.
+	BlogArticleTable = &schema.Table{
+		Name:       "blog_article",
+		Columns:    BlogArticleColumns,
+		PrimaryKey: []*schema.Column{BlogArticleColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "blog_article_category_articles",
+				Columns:    []*schema.Column{BlogArticleColumns[15]},
+				RefColumns: []*schema.Column{CategoryColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "blog_article_user_articles",
+				Columns:    []*schema.Column{BlogArticleColumns[16]},
+				RefColumns: []*schema.Column{UserColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// CategoryColumns holds the columns for the "category" table.
 	CategoryColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUint64, Increment: true},
@@ -27,6 +67,29 @@ var (
 				Name:    "category_parent_id_name",
 				Unique:  true,
 				Columns: []*schema.Column{CategoryColumns[3], CategoryColumns[4]},
+			},
+		},
+	}
+	// InteractionCountColumns holds the columns for the "interaction_count" table.
+	InteractionCountColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUint64, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "object_id", Type: field.TypeUint64},
+		{Name: "object_type", Type: field.TypeEnum, Enums: []string{"article"}},
+		{Name: "interaction_type", Type: field.TypeEnum, Enums: []string{"like", "view", "favor"}},
+		{Name: "count", Type: field.TypeInt, Default: 0},
+	}
+	// InteractionCountTable holds the schema information for the "interaction_count" table.
+	InteractionCountTable = &schema.Table{
+		Name:       "interaction_count",
+		Columns:    InteractionCountColumns,
+		PrimaryKey: []*schema.Column{InteractionCountColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "uk_object",
+				Unique:  true,
+				Columns: []*schema.Column{InteractionCountColumns[3], InteractionCountColumns[4], InteractionCountColumns[5]},
 			},
 		},
 	}
@@ -83,15 +146,25 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		BlogArticleTable,
 		CategoryTable,
+		InteractionCountTable,
 		UserTable,
 		UserStatTable,
 	}
 )
 
 func init() {
+	BlogArticleTable.ForeignKeys[0].RefTable = CategoryTable
+	BlogArticleTable.ForeignKeys[1].RefTable = UserTable
+	BlogArticleTable.Annotation = &entsql.Annotation{
+		Table: "blog_article",
+	}
 	CategoryTable.Annotation = &entsql.Annotation{
 		Table: "category",
+	}
+	InteractionCountTable.Annotation = &entsql.Annotation{
+		Table: "interaction_count",
 	}
 	UserTable.Annotation = &entsql.Annotation{
 		Table: "user",

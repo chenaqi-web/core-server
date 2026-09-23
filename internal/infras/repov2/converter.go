@@ -77,3 +77,41 @@ func toEntityCategories(nodes []*ent.Category) []*entity.Category {
 	}
 	return items
 }
+
+func toEntityArticle(node *ent.Article) *entity.Article {
+	if node == nil {
+		return nil
+	}
+	value := &entity.Article{
+		ID:           node.ID,
+		CreatedAt:    node.CreatedAt,
+		UpdatedAt:    node.UpdatedAt,
+		Title:        node.Title,
+		Summary:      node.Summary,
+		Content:      node.Content,
+		CoverImage:   node.CoverImage,
+		AuthorID:     node.AuthorID,
+		CategoryID:   node.CategoryID,
+		IsTop:        node.IsTop,
+		IsPublished:  node.IsPublished,
+		Visibility:   uint32(node.Visibility),
+		ViewCount:    uint64(node.ViewCount),
+		LikeCount:    uint64(node.LikeCount),
+		CommentCount: uint64(node.CommentCount),
+	}
+	if node.DeletedAt != nil {
+		value.DeletedAt = sql.NullTime{Time: *node.DeletedAt, Valid: true}
+	}
+	if node.PublishedAt != nil {
+		value.PublishedAt = sql.NullTime{Time: *node.PublishedAt, Valid: true}
+	}
+	return value
+}
+
+func toEntityArticles(nodes []*ent.Article) []*entity.Article {
+	items := make([]*entity.Article, 0, len(nodes))
+	for _, node := range nodes {
+		items = append(items, toEntityArticle(node))
+	}
+	return items
+}

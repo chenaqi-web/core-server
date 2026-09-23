@@ -6,8 +6,14 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Article is the predicate function for article builders.
+type Article func(*sql.Selector)
+
 // Category is the predicate function for category builders.
 type Category func(*sql.Selector)
+
+// InteractionCount is the predicate function for interactioncount builders.
+type InteractionCount func(*sql.Selector)
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)

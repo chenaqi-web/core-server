@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/entsql"
 	entschema "entgo.io/ent/schema"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 )
@@ -32,5 +33,12 @@ func (Category) Fields() []ent.Field {
 func (Category) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("parent_id", "name").Unique(),
+	}
+}
+
+func (Category) Edges() []ent.Edge {
+	return []ent.Edge{
+		edge.To("articles", Article.Type).
+			Unique(),
 	}
 }

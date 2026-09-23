@@ -25,6 +25,17 @@ func (a *ArticleRPC) CreateArticle(ctx context.Context, req *articlepb.CreateArt
 	return &articlepb.CreateArticleResponse{Success: true}, nil
 }
 
+func (a *ArticleRPC) EditorArticle(ctx context.Context, req *articlepb.EditorArticleRequest) (*articlepb.EditorArticleResponse, error) {
+	err := a.ArticleService.EditorArticle(ctx, req, req.GetAuthorID())
+	if err != nil {
+		return nil, err
+	}
+	return &articlepb.EditorArticleResponse{
+		Success:   true,
+		ArticleID: req.GetId(),
+	}, nil
+}
+
 func (a *ArticleRPC) GetArticle(ctx context.Context, req *articlepb.GetArticleRequest) (*articlepb.GetArticleResponse, error) {
 	agg, err := a.ArticleService.GetArticle(ctx, req.GetId())
 	if err != nil {
@@ -100,11 +111,14 @@ func toArticlePB(agg *aggregate.ArticleAggregate) *articlepb.Article {
 		CategoryID:   a.CategoryID,
 		IsTop:        a.IsTop,
 		CoverImage:   a.CoverImage,
+		Visibility:   a.Visibility,
+		IsPublished:  a.IsPublished,
 		ViewCount:    agg.Stats.ViewCount,
 		LikeCount:    agg.Stats.LikeCount,
 		CommentCount: agg.Stats.CommentCount,
 		CreatedAt:    uint64(a.CreatedAt.Unix()),
 		UpdatedAt:    uint64(a.UpdatedAt.Unix()),
+		PublishedAt:  uint64(a.PublishedAt.Time.Unix()),
 	}
 	if agg.Author != nil {
 		pb.AuthorName = agg.Author.Name

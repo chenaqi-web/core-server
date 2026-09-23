@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"core-server/internal/infras/repov2/ent/article"
 	"core-server/internal/infras/repov2/ent/predicate"
 	"core-server/internal/infras/repov2/ent/user"
 	"core-server/internal/infras/repov2/ent/userstat"
@@ -206,6 +207,25 @@ func (_u *UserUpdate) SetStat(v *UserStat) *UserUpdate {
 	return _u.SetStatID(v.ID)
 }
 
+// SetArticlesID sets the "articles" edge to the Article entity by ID.
+func (_u *UserUpdate) SetArticlesID(id uint64) *UserUpdate {
+	_u.mutation.SetArticlesID(id)
+	return _u
+}
+
+// SetNillableArticlesID sets the "articles" edge to the Article entity by ID if the given value is not nil.
+func (_u *UserUpdate) SetNillableArticlesID(id *uint64) *UserUpdate {
+	if id != nil {
+		_u = _u.SetArticlesID(*id)
+	}
+	return _u
+}
+
+// SetArticles sets the "articles" edge to the Article entity.
+func (_u *UserUpdate) SetArticles(v *Article) *UserUpdate {
+	return _u.SetArticlesID(v.ID)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdate) Mutation() *UserMutation {
 	return _u.mutation
@@ -214,6 +234,12 @@ func (_u *UserUpdate) Mutation() *UserMutation {
 // ClearStat clears the "stat" edge to the UserStat entity.
 func (_u *UserUpdate) ClearStat() *UserUpdate {
 	_u.mutation.ClearStat()
+	return _u
+}
+
+// ClearArticles clears the "articles" edge to the Article entity.
+func (_u *UserUpdate) ClearArticles() *UserUpdate {
+	_u.mutation.ClearArticles()
 	return _u
 }
 
@@ -366,6 +392,35 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(userstat.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ArticlesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   user.ArticlesTable,
+			Columns: []string{user.ArticlesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(article.FieldID, field.TypeUint64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ArticlesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   user.ArticlesTable,
+			Columns: []string{user.ArticlesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(article.FieldID, field.TypeUint64),
 			},
 		}
 		for _, k := range nodes {
@@ -570,6 +625,25 @@ func (_u *UserUpdateOne) SetStat(v *UserStat) *UserUpdateOne {
 	return _u.SetStatID(v.ID)
 }
 
+// SetArticlesID sets the "articles" edge to the Article entity by ID.
+func (_u *UserUpdateOne) SetArticlesID(id uint64) *UserUpdateOne {
+	_u.mutation.SetArticlesID(id)
+	return _u
+}
+
+// SetNillableArticlesID sets the "articles" edge to the Article entity by ID if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableArticlesID(id *uint64) *UserUpdateOne {
+	if id != nil {
+		_u = _u.SetArticlesID(*id)
+	}
+	return _u
+}
+
+// SetArticles sets the "articles" edge to the Article entity.
+func (_u *UserUpdateOne) SetArticles(v *Article) *UserUpdateOne {
+	return _u.SetArticlesID(v.ID)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdateOne) Mutation() *UserMutation {
 	return _u.mutation
@@ -578,6 +652,12 @@ func (_u *UserUpdateOne) Mutation() *UserMutation {
 // ClearStat clears the "stat" edge to the UserStat entity.
 func (_u *UserUpdateOne) ClearStat() *UserUpdateOne {
 	_u.mutation.ClearStat()
+	return _u
+}
+
+// ClearArticles clears the "articles" edge to the Article entity.
+func (_u *UserUpdateOne) ClearArticles() *UserUpdateOne {
+	_u.mutation.ClearArticles()
 	return _u
 }
 
@@ -760,6 +840,35 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(userstat.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ArticlesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   user.ArticlesTable,
+			Columns: []string{user.ArticlesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(article.FieldID, field.TypeUint64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ArticlesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   user.ArticlesTable,
+			Columns: []string{user.ArticlesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(article.FieldID, field.TypeUint64),
 			},
 		}
 		for _, k := range nodes {

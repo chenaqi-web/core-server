@@ -4,7 +4,9 @@ package ent
 
 import (
 	"context"
+	"core-server/internal/infras/repov2/ent/article"
 	"core-server/internal/infras/repov2/ent/category"
+	"core-server/internal/infras/repov2/ent/interactioncount"
 	"core-server/internal/infras/repov2/ent/predicate"
 	"core-server/internal/infras/repov2/ent/user"
 	"core-server/internal/infras/repov2/ent/userstat"
@@ -26,26 +28,1461 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeCategory = "Category"
-	TypeUser     = "User"
-	TypeUserStat = "UserStat"
+	TypeArticle          = "Article"
+	TypeCategory         = "Category"
+	TypeInteractionCount = "InteractionCount"
+	TypeUser             = "User"
+	TypeUserStat         = "UserStat"
 )
+
+// ArticleMutation represents an operation that mutates the Article nodes in the graph.
+type ArticleMutation struct {
+	config
+	op               Op
+	typ              string
+	id               *uint64
+	created_at       *time.Time
+	updated_at       *time.Time
+	deleted_at       *time.Time
+	published_at     *time.Time
+	title            *string
+	summary          *string
+	content          *string
+	cover_image      *string
+	is_top           *bool
+	is_published     *bool
+	visibility       *int
+	addvisibility    *int
+	view_count       *int
+	addview_count    *int
+	like_count       *int
+	addlike_count    *int
+	comment_count    *int
+	addcomment_count *int
+	clearedFields    map[string]struct{}
+	user             *uint64
+	cleareduser      bool
+	category         *uint64
+	clearedcategory  bool
+	done             bool
+	oldValue         func(context.Context) (*Article, error)
+	predicates       []predicate.Article
+}
+
+var _ ent.Mutation = (*ArticleMutation)(nil)
+
+// articleOption allows management of the mutation configuration using functional options.
+type articleOption func(*ArticleMutation)
+
+// newArticleMutation creates new mutation for the Article entity.
+func newArticleMutation(c config, op Op, opts ...articleOption) *ArticleMutation {
+	m := &ArticleMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeArticle,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withArticleID sets the ID field of the mutation.
+func withArticleID(id uint64) articleOption {
+	return func(m *ArticleMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Article
+		)
+		m.oldValue = func(ctx context.Context) (*Article, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Article.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withArticle sets the old Article of the mutation.
+func withArticle(node *Article) articleOption {
+	return func(m *ArticleMutation) {
+		m.oldValue = func(context.Context) (*Article, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ArticleMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ArticleMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Article entities.
+func (m *ArticleMutation) SetID(id uint64) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ArticleMutation) ID() (id uint64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ArticleMutation) IDs(ctx context.Context) ([]uint64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uint64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Article.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ArticleMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ArticleMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Article entity.
+// If the Article object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ArticleMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ArticleMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ArticleMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ArticleMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the Article entity.
+// If the Article object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ArticleMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ArticleMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *ArticleMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *ArticleMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the Article entity.
+// If the Article object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ArticleMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *ArticleMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[article.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *ArticleMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[article.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *ArticleMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, article.FieldDeletedAt)
+}
+
+// SetPublishedAt sets the "published_at" field.
+func (m *ArticleMutation) SetPublishedAt(t time.Time) {
+	m.published_at = &t
+}
+
+// PublishedAt returns the value of the "published_at" field in the mutation.
+func (m *ArticleMutation) PublishedAt() (r time.Time, exists bool) {
+	v := m.published_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublishedAt returns the old "published_at" field's value of the Article entity.
+// If the Article object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ArticleMutation) OldPublishedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublishedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublishedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublishedAt: %w", err)
+	}
+	return oldValue.PublishedAt, nil
+}
+
+// ClearPublishedAt clears the value of the "published_at" field.
+func (m *ArticleMutation) ClearPublishedAt() {
+	m.published_at = nil
+	m.clearedFields[article.FieldPublishedAt] = struct{}{}
+}
+
+// PublishedAtCleared returns if the "published_at" field was cleared in this mutation.
+func (m *ArticleMutation) PublishedAtCleared() bool {
+	_, ok := m.clearedFields[article.FieldPublishedAt]
+	return ok
+}
+
+// ResetPublishedAt resets all changes to the "published_at" field.
+func (m *ArticleMutation) ResetPublishedAt() {
+	m.published_at = nil
+	delete(m.clearedFields, article.FieldPublishedAt)
+}
+
+// SetTitle sets the "title" field.
+func (m *ArticleMutation) SetTitle(s string) {
+	m.title = &s
+}
+
+// Title returns the value of the "title" field in the mutation.
+func (m *ArticleMutation) Title() (r string, exists bool) {
+	v := m.title
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTitle returns the old "title" field's value of the Article entity.
+// If the Article object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ArticleMutation) OldTitle(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTitle is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTitle requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTitle: %w", err)
+	}
+	return oldValue.Title, nil
+}
+
+// ResetTitle resets all changes to the "title" field.
+func (m *ArticleMutation) ResetTitle() {
+	m.title = nil
+}
+
+// SetSummary sets the "summary" field.
+func (m *ArticleMutation) SetSummary(s string) {
+	m.summary = &s
+}
+
+// Summary returns the value of the "summary" field in the mutation.
+func (m *ArticleMutation) Summary() (r string, exists bool) {
+	v := m.summary
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSummary returns the old "summary" field's value of the Article entity.
+// If the Article object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ArticleMutation) OldSummary(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSummary is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSummary requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSummary: %w", err)
+	}
+	return oldValue.Summary, nil
+}
+
+// ResetSummary resets all changes to the "summary" field.
+func (m *ArticleMutation) ResetSummary() {
+	m.summary = nil
+}
+
+// SetContent sets the "content" field.
+func (m *ArticleMutation) SetContent(s string) {
+	m.content = &s
+}
+
+// Content returns the value of the "content" field in the mutation.
+func (m *ArticleMutation) Content() (r string, exists bool) {
+	v := m.content
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldContent returns the old "content" field's value of the Article entity.
+// If the Article object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ArticleMutation) OldContent(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldContent is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldContent requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldContent: %w", err)
+	}
+	return oldValue.Content, nil
+}
+
+// ResetContent resets all changes to the "content" field.
+func (m *ArticleMutation) ResetContent() {
+	m.content = nil
+}
+
+// SetCoverImage sets the "cover_image" field.
+func (m *ArticleMutation) SetCoverImage(s string) {
+	m.cover_image = &s
+}
+
+// CoverImage returns the value of the "cover_image" field in the mutation.
+func (m *ArticleMutation) CoverImage() (r string, exists bool) {
+	v := m.cover_image
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCoverImage returns the old "cover_image" field's value of the Article entity.
+// If the Article object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ArticleMutation) OldCoverImage(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCoverImage is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCoverImage requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCoverImage: %w", err)
+	}
+	return oldValue.CoverImage, nil
+}
+
+// ResetCoverImage resets all changes to the "cover_image" field.
+func (m *ArticleMutation) ResetCoverImage() {
+	m.cover_image = nil
+}
+
+// SetAuthorID sets the "author_id" field.
+func (m *ArticleMutation) SetAuthorID(u uint64) {
+	m.user = &u
+}
+
+// AuthorID returns the value of the "author_id" field in the mutation.
+func (m *ArticleMutation) AuthorID() (r uint64, exists bool) {
+	v := m.user
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAuthorID returns the old "author_id" field's value of the Article entity.
+// If the Article object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ArticleMutation) OldAuthorID(ctx context.Context) (v uint64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAuthorID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAuthorID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAuthorID: %w", err)
+	}
+	return oldValue.AuthorID, nil
+}
+
+// ResetAuthorID resets all changes to the "author_id" field.
+func (m *ArticleMutation) ResetAuthorID() {
+	m.user = nil
+}
+
+// SetCategoryID sets the "category_id" field.
+func (m *ArticleMutation) SetCategoryID(u uint64) {
+	m.category = &u
+}
+
+// CategoryID returns the value of the "category_id" field in the mutation.
+func (m *ArticleMutation) CategoryID() (r uint64, exists bool) {
+	v := m.category
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCategoryID returns the old "category_id" field's value of the Article entity.
+// If the Article object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ArticleMutation) OldCategoryID(ctx context.Context) (v uint64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCategoryID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCategoryID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCategoryID: %w", err)
+	}
+	return oldValue.CategoryID, nil
+}
+
+// ResetCategoryID resets all changes to the "category_id" field.
+func (m *ArticleMutation) ResetCategoryID() {
+	m.category = nil
+}
+
+// SetIsTop sets the "is_top" field.
+func (m *ArticleMutation) SetIsTop(b bool) {
+	m.is_top = &b
+}
+
+// IsTop returns the value of the "is_top" field in the mutation.
+func (m *ArticleMutation) IsTop() (r bool, exists bool) {
+	v := m.is_top
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsTop returns the old "is_top" field's value of the Article entity.
+// If the Article object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ArticleMutation) OldIsTop(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsTop is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsTop requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsTop: %w", err)
+	}
+	return oldValue.IsTop, nil
+}
+
+// ResetIsTop resets all changes to the "is_top" field.
+func (m *ArticleMutation) ResetIsTop() {
+	m.is_top = nil
+}
+
+// SetIsPublished sets the "is_published" field.
+func (m *ArticleMutation) SetIsPublished(b bool) {
+	m.is_published = &b
+}
+
+// IsPublished returns the value of the "is_published" field in the mutation.
+func (m *ArticleMutation) IsPublished() (r bool, exists bool) {
+	v := m.is_published
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsPublished returns the old "is_published" field's value of the Article entity.
+// If the Article object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ArticleMutation) OldIsPublished(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsPublished is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsPublished requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsPublished: %w", err)
+	}
+	return oldValue.IsPublished, nil
+}
+
+// ResetIsPublished resets all changes to the "is_published" field.
+func (m *ArticleMutation) ResetIsPublished() {
+	m.is_published = nil
+}
+
+// SetVisibility sets the "visibility" field.
+func (m *ArticleMutation) SetVisibility(i int) {
+	m.visibility = &i
+	m.addvisibility = nil
+}
+
+// Visibility returns the value of the "visibility" field in the mutation.
+func (m *ArticleMutation) Visibility() (r int, exists bool) {
+	v := m.visibility
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVisibility returns the old "visibility" field's value of the Article entity.
+// If the Article object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ArticleMutation) OldVisibility(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVisibility is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVisibility requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVisibility: %w", err)
+	}
+	return oldValue.Visibility, nil
+}
+
+// AddVisibility adds i to the "visibility" field.
+func (m *ArticleMutation) AddVisibility(i int) {
+	if m.addvisibility != nil {
+		*m.addvisibility += i
+	} else {
+		m.addvisibility = &i
+	}
+}
+
+// AddedVisibility returns the value that was added to the "visibility" field in this mutation.
+func (m *ArticleMutation) AddedVisibility() (r int, exists bool) {
+	v := m.addvisibility
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVisibility resets all changes to the "visibility" field.
+func (m *ArticleMutation) ResetVisibility() {
+	m.visibility = nil
+	m.addvisibility = nil
+}
+
+// SetViewCount sets the "view_count" field.
+func (m *ArticleMutation) SetViewCount(i int) {
+	m.view_count = &i
+	m.addview_count = nil
+}
+
+// ViewCount returns the value of the "view_count" field in the mutation.
+func (m *ArticleMutation) ViewCount() (r int, exists bool) {
+	v := m.view_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldViewCount returns the old "view_count" field's value of the Article entity.
+// If the Article object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ArticleMutation) OldViewCount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldViewCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldViewCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldViewCount: %w", err)
+	}
+	return oldValue.ViewCount, nil
+}
+
+// AddViewCount adds i to the "view_count" field.
+func (m *ArticleMutation) AddViewCount(i int) {
+	if m.addview_count != nil {
+		*m.addview_count += i
+	} else {
+		m.addview_count = &i
+	}
+}
+
+// AddedViewCount returns the value that was added to the "view_count" field in this mutation.
+func (m *ArticleMutation) AddedViewCount() (r int, exists bool) {
+	v := m.addview_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetViewCount resets all changes to the "view_count" field.
+func (m *ArticleMutation) ResetViewCount() {
+	m.view_count = nil
+	m.addview_count = nil
+}
+
+// SetLikeCount sets the "like_count" field.
+func (m *ArticleMutation) SetLikeCount(i int) {
+	m.like_count = &i
+	m.addlike_count = nil
+}
+
+// LikeCount returns the value of the "like_count" field in the mutation.
+func (m *ArticleMutation) LikeCount() (r int, exists bool) {
+	v := m.like_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLikeCount returns the old "like_count" field's value of the Article entity.
+// If the Article object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ArticleMutation) OldLikeCount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLikeCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLikeCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLikeCount: %w", err)
+	}
+	return oldValue.LikeCount, nil
+}
+
+// AddLikeCount adds i to the "like_count" field.
+func (m *ArticleMutation) AddLikeCount(i int) {
+	if m.addlike_count != nil {
+		*m.addlike_count += i
+	} else {
+		m.addlike_count = &i
+	}
+}
+
+// AddedLikeCount returns the value that was added to the "like_count" field in this mutation.
+func (m *ArticleMutation) AddedLikeCount() (r int, exists bool) {
+	v := m.addlike_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetLikeCount resets all changes to the "like_count" field.
+func (m *ArticleMutation) ResetLikeCount() {
+	m.like_count = nil
+	m.addlike_count = nil
+}
+
+// SetCommentCount sets the "comment_count" field.
+func (m *ArticleMutation) SetCommentCount(i int) {
+	m.comment_count = &i
+	m.addcomment_count = nil
+}
+
+// CommentCount returns the value of the "comment_count" field in the mutation.
+func (m *ArticleMutation) CommentCount() (r int, exists bool) {
+	v := m.comment_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCommentCount returns the old "comment_count" field's value of the Article entity.
+// If the Article object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ArticleMutation) OldCommentCount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCommentCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCommentCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCommentCount: %w", err)
+	}
+	return oldValue.CommentCount, nil
+}
+
+// AddCommentCount adds i to the "comment_count" field.
+func (m *ArticleMutation) AddCommentCount(i int) {
+	if m.addcomment_count != nil {
+		*m.addcomment_count += i
+	} else {
+		m.addcomment_count = &i
+	}
+}
+
+// AddedCommentCount returns the value that was added to the "comment_count" field in this mutation.
+func (m *ArticleMutation) AddedCommentCount() (r int, exists bool) {
+	v := m.addcomment_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetCommentCount resets all changes to the "comment_count" field.
+func (m *ArticleMutation) ResetCommentCount() {
+	m.comment_count = nil
+	m.addcomment_count = nil
+}
+
+// SetUserID sets the "user" edge to the User entity by id.
+func (m *ArticleMutation) SetUserID(id uint64) {
+	m.user = &id
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (m *ArticleMutation) ClearUser() {
+	m.cleareduser = true
+	m.clearedFields[article.FieldAuthorID] = struct{}{}
+}
+
+// UserCleared reports if the "user" edge to the User entity was cleared.
+func (m *ArticleMutation) UserCleared() bool {
+	return m.cleareduser
+}
+
+// UserID returns the "user" edge ID in the mutation.
+func (m *ArticleMutation) UserID() (id uint64, exists bool) {
+	if m.user != nil {
+		return *m.user, true
+	}
+	return
+}
+
+// UserIDs returns the "user" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UserID instead. It exists only for internal usage by the builders.
+func (m *ArticleMutation) UserIDs() (ids []uint64) {
+	if id := m.user; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUser resets all changes to the "user" edge.
+func (m *ArticleMutation) ResetUser() {
+	m.user = nil
+	m.cleareduser = false
+}
+
+// ClearCategory clears the "category" edge to the Category entity.
+func (m *ArticleMutation) ClearCategory() {
+	m.clearedcategory = true
+	m.clearedFields[article.FieldCategoryID] = struct{}{}
+}
+
+// CategoryCleared reports if the "category" edge to the Category entity was cleared.
+func (m *ArticleMutation) CategoryCleared() bool {
+	return m.clearedcategory
+}
+
+// CategoryIDs returns the "category" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// CategoryID instead. It exists only for internal usage by the builders.
+func (m *ArticleMutation) CategoryIDs() (ids []uint64) {
+	if id := m.category; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetCategory resets all changes to the "category" edge.
+func (m *ArticleMutation) ResetCategory() {
+	m.category = nil
+	m.clearedcategory = false
+}
+
+// Where appends a list predicates to the ArticleMutation builder.
+func (m *ArticleMutation) Where(ps ...predicate.Article) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ArticleMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ArticleMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Article, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ArticleMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ArticleMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Article).
+func (m *ArticleMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ArticleMutation) Fields() []string {
+	fields := make([]string, 0, 16)
+	if m.created_at != nil {
+		fields = append(fields, article.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, article.FieldUpdatedAt)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, article.FieldDeletedAt)
+	}
+	if m.published_at != nil {
+		fields = append(fields, article.FieldPublishedAt)
+	}
+	if m.title != nil {
+		fields = append(fields, article.FieldTitle)
+	}
+	if m.summary != nil {
+		fields = append(fields, article.FieldSummary)
+	}
+	if m.content != nil {
+		fields = append(fields, article.FieldContent)
+	}
+	if m.cover_image != nil {
+		fields = append(fields, article.FieldCoverImage)
+	}
+	if m.user != nil {
+		fields = append(fields, article.FieldAuthorID)
+	}
+	if m.category != nil {
+		fields = append(fields, article.FieldCategoryID)
+	}
+	if m.is_top != nil {
+		fields = append(fields, article.FieldIsTop)
+	}
+	if m.is_published != nil {
+		fields = append(fields, article.FieldIsPublished)
+	}
+	if m.visibility != nil {
+		fields = append(fields, article.FieldVisibility)
+	}
+	if m.view_count != nil {
+		fields = append(fields, article.FieldViewCount)
+	}
+	if m.like_count != nil {
+		fields = append(fields, article.FieldLikeCount)
+	}
+	if m.comment_count != nil {
+		fields = append(fields, article.FieldCommentCount)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ArticleMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case article.FieldCreatedAt:
+		return m.CreatedAt()
+	case article.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case article.FieldDeletedAt:
+		return m.DeletedAt()
+	case article.FieldPublishedAt:
+		return m.PublishedAt()
+	case article.FieldTitle:
+		return m.Title()
+	case article.FieldSummary:
+		return m.Summary()
+	case article.FieldContent:
+		return m.Content()
+	case article.FieldCoverImage:
+		return m.CoverImage()
+	case article.FieldAuthorID:
+		return m.AuthorID()
+	case article.FieldCategoryID:
+		return m.CategoryID()
+	case article.FieldIsTop:
+		return m.IsTop()
+	case article.FieldIsPublished:
+		return m.IsPublished()
+	case article.FieldVisibility:
+		return m.Visibility()
+	case article.FieldViewCount:
+		return m.ViewCount()
+	case article.FieldLikeCount:
+		return m.LikeCount()
+	case article.FieldCommentCount:
+		return m.CommentCount()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ArticleMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case article.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case article.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case article.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	case article.FieldPublishedAt:
+		return m.OldPublishedAt(ctx)
+	case article.FieldTitle:
+		return m.OldTitle(ctx)
+	case article.FieldSummary:
+		return m.OldSummary(ctx)
+	case article.FieldContent:
+		return m.OldContent(ctx)
+	case article.FieldCoverImage:
+		return m.OldCoverImage(ctx)
+	case article.FieldAuthorID:
+		return m.OldAuthorID(ctx)
+	case article.FieldCategoryID:
+		return m.OldCategoryID(ctx)
+	case article.FieldIsTop:
+		return m.OldIsTop(ctx)
+	case article.FieldIsPublished:
+		return m.OldIsPublished(ctx)
+	case article.FieldVisibility:
+		return m.OldVisibility(ctx)
+	case article.FieldViewCount:
+		return m.OldViewCount(ctx)
+	case article.FieldLikeCount:
+		return m.OldLikeCount(ctx)
+	case article.FieldCommentCount:
+		return m.OldCommentCount(ctx)
+	}
+	return nil, fmt.Errorf("unknown Article field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ArticleMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case article.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case article.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case article.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	case article.FieldPublishedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublishedAt(v)
+		return nil
+	case article.FieldTitle:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTitle(v)
+		return nil
+	case article.FieldSummary:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSummary(v)
+		return nil
+	case article.FieldContent:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetContent(v)
+		return nil
+	case article.FieldCoverImage:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCoverImage(v)
+		return nil
+	case article.FieldAuthorID:
+		v, ok := value.(uint64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAuthorID(v)
+		return nil
+	case article.FieldCategoryID:
+		v, ok := value.(uint64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCategoryID(v)
+		return nil
+	case article.FieldIsTop:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsTop(v)
+		return nil
+	case article.FieldIsPublished:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsPublished(v)
+		return nil
+	case article.FieldVisibility:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVisibility(v)
+		return nil
+	case article.FieldViewCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetViewCount(v)
+		return nil
+	case article.FieldLikeCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLikeCount(v)
+		return nil
+	case article.FieldCommentCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCommentCount(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Article field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ArticleMutation) AddedFields() []string {
+	var fields []string
+	if m.addvisibility != nil {
+		fields = append(fields, article.FieldVisibility)
+	}
+	if m.addview_count != nil {
+		fields = append(fields, article.FieldViewCount)
+	}
+	if m.addlike_count != nil {
+		fields = append(fields, article.FieldLikeCount)
+	}
+	if m.addcomment_count != nil {
+		fields = append(fields, article.FieldCommentCount)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ArticleMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case article.FieldVisibility:
+		return m.AddedVisibility()
+	case article.FieldViewCount:
+		return m.AddedViewCount()
+	case article.FieldLikeCount:
+		return m.AddedLikeCount()
+	case article.FieldCommentCount:
+		return m.AddedCommentCount()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ArticleMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case article.FieldVisibility:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVisibility(v)
+		return nil
+	case article.FieldViewCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddViewCount(v)
+		return nil
+	case article.FieldLikeCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddLikeCount(v)
+		return nil
+	case article.FieldCommentCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCommentCount(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Article numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ArticleMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(article.FieldDeletedAt) {
+		fields = append(fields, article.FieldDeletedAt)
+	}
+	if m.FieldCleared(article.FieldPublishedAt) {
+		fields = append(fields, article.FieldPublishedAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ArticleMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ArticleMutation) ClearField(name string) error {
+	switch name {
+	case article.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	case article.FieldPublishedAt:
+		m.ClearPublishedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown Article nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ArticleMutation) ResetField(name string) error {
+	switch name {
+	case article.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case article.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case article.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	case article.FieldPublishedAt:
+		m.ResetPublishedAt()
+		return nil
+	case article.FieldTitle:
+		m.ResetTitle()
+		return nil
+	case article.FieldSummary:
+		m.ResetSummary()
+		return nil
+	case article.FieldContent:
+		m.ResetContent()
+		return nil
+	case article.FieldCoverImage:
+		m.ResetCoverImage()
+		return nil
+	case article.FieldAuthorID:
+		m.ResetAuthorID()
+		return nil
+	case article.FieldCategoryID:
+		m.ResetCategoryID()
+		return nil
+	case article.FieldIsTop:
+		m.ResetIsTop()
+		return nil
+	case article.FieldIsPublished:
+		m.ResetIsPublished()
+		return nil
+	case article.FieldVisibility:
+		m.ResetVisibility()
+		return nil
+	case article.FieldViewCount:
+		m.ResetViewCount()
+		return nil
+	case article.FieldLikeCount:
+		m.ResetLikeCount()
+		return nil
+	case article.FieldCommentCount:
+		m.ResetCommentCount()
+		return nil
+	}
+	return fmt.Errorf("unknown Article field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ArticleMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.user != nil {
+		edges = append(edges, article.EdgeUser)
+	}
+	if m.category != nil {
+		edges = append(edges, article.EdgeCategory)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ArticleMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case article.EdgeUser:
+		if id := m.user; id != nil {
+			return []ent.Value{*id}
+		}
+	case article.EdgeCategory:
+		if id := m.category; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ArticleMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ArticleMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ArticleMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.cleareduser {
+		edges = append(edges, article.EdgeUser)
+	}
+	if m.clearedcategory {
+		edges = append(edges, article.EdgeCategory)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ArticleMutation) EdgeCleared(name string) bool {
+	switch name {
+	case article.EdgeUser:
+		return m.cleareduser
+	case article.EdgeCategory:
+		return m.clearedcategory
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ArticleMutation) ClearEdge(name string) error {
+	switch name {
+	case article.EdgeUser:
+		m.ClearUser()
+		return nil
+	case article.EdgeCategory:
+		m.ClearCategory()
+		return nil
+	}
+	return fmt.Errorf("unknown Article unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ArticleMutation) ResetEdge(name string) error {
+	switch name {
+	case article.EdgeUser:
+		m.ResetUser()
+		return nil
+	case article.EdgeCategory:
+		m.ResetCategory()
+		return nil
+	}
+	return fmt.Errorf("unknown Article edge %s", name)
+}
 
 // CategoryMutation represents an operation that mutates the Category nodes in the graph.
 type CategoryMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *uint64
-	created_at    *time.Time
-	updated_at    *time.Time
-	parent_id     *uint64
-	addparent_id  *int64
-	name          *string
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*Category, error)
-	predicates    []predicate.Category
+	op              Op
+	typ             string
+	id              *uint64
+	created_at      *time.Time
+	updated_at      *time.Time
+	parent_id       *uint64
+	addparent_id    *int64
+	name            *string
+	clearedFields   map[string]struct{}
+	articles        *uint64
+	clearedarticles bool
+	done            bool
+	oldValue        func(context.Context) (*Category, error)
+	predicates      []predicate.Category
 }
 
 var _ ent.Mutation = (*CategoryMutation)(nil)
@@ -316,6 +1753,45 @@ func (m *CategoryMutation) ResetName() {
 	m.name = nil
 }
 
+// SetArticlesID sets the "articles" edge to the Article entity by id.
+func (m *CategoryMutation) SetArticlesID(id uint64) {
+	m.articles = &id
+}
+
+// ClearArticles clears the "articles" edge to the Article entity.
+func (m *CategoryMutation) ClearArticles() {
+	m.clearedarticles = true
+}
+
+// ArticlesCleared reports if the "articles" edge to the Article entity was cleared.
+func (m *CategoryMutation) ArticlesCleared() bool {
+	return m.clearedarticles
+}
+
+// ArticlesID returns the "articles" edge ID in the mutation.
+func (m *CategoryMutation) ArticlesID() (id uint64, exists bool) {
+	if m.articles != nil {
+		return *m.articles, true
+	}
+	return
+}
+
+// ArticlesIDs returns the "articles" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ArticlesID instead. It exists only for internal usage by the builders.
+func (m *CategoryMutation) ArticlesIDs() (ids []uint64) {
+	if id := m.articles; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetArticles resets all changes to the "articles" edge.
+func (m *CategoryMutation) ResetArticles() {
+	m.articles = nil
+	m.clearedarticles = false
+}
+
 // Where appends a list predicates to the CategoryMutation builder.
 func (m *CategoryMutation) Where(ps ...predicate.Category) {
 	m.predicates = append(m.predicates, ps...)
@@ -515,19 +1991,28 @@ func (m *CategoryMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *CategoryMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.articles != nil {
+		edges = append(edges, category.EdgeArticles)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *CategoryMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case category.EdgeArticles:
+		if id := m.articles; id != nil {
+			return []ent.Value{*id}
+		}
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *CategoryMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
 	return edges
 }
 
@@ -539,52 +2024,742 @@ func (m *CategoryMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *CategoryMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.clearedarticles {
+		edges = append(edges, category.EdgeArticles)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *CategoryMutation) EdgeCleared(name string) bool {
+	switch name {
+	case category.EdgeArticles:
+		return m.clearedarticles
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *CategoryMutation) ClearEdge(name string) error {
+	switch name {
+	case category.EdgeArticles:
+		m.ClearArticles()
+		return nil
+	}
 	return fmt.Errorf("unknown Category unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *CategoryMutation) ResetEdge(name string) error {
+	switch name {
+	case category.EdgeArticles:
+		m.ResetArticles()
+		return nil
+	}
 	return fmt.Errorf("unknown Category edge %s", name)
+}
+
+// InteractionCountMutation represents an operation that mutates the InteractionCount nodes in the graph.
+type InteractionCountMutation struct {
+	config
+	op               Op
+	typ              string
+	id               *uint64
+	created_at       *time.Time
+	updated_at       *time.Time
+	object_id        *uint64
+	addobject_id     *int64
+	object_type      *interactioncount.ObjectType
+	interaction_type *interactioncount.InteractionType
+	count            *int
+	addcount         *int
+	clearedFields    map[string]struct{}
+	done             bool
+	oldValue         func(context.Context) (*InteractionCount, error)
+	predicates       []predicate.InteractionCount
+}
+
+var _ ent.Mutation = (*InteractionCountMutation)(nil)
+
+// interactioncountOption allows management of the mutation configuration using functional options.
+type interactioncountOption func(*InteractionCountMutation)
+
+// newInteractionCountMutation creates new mutation for the InteractionCount entity.
+func newInteractionCountMutation(c config, op Op, opts ...interactioncountOption) *InteractionCountMutation {
+	m := &InteractionCountMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeInteractionCount,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withInteractionCountID sets the ID field of the mutation.
+func withInteractionCountID(id uint64) interactioncountOption {
+	return func(m *InteractionCountMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *InteractionCount
+		)
+		m.oldValue = func(ctx context.Context) (*InteractionCount, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().InteractionCount.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withInteractionCount sets the old InteractionCount of the mutation.
+func withInteractionCount(node *InteractionCount) interactioncountOption {
+	return func(m *InteractionCountMutation) {
+		m.oldValue = func(context.Context) (*InteractionCount, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m InteractionCountMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m InteractionCountMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of InteractionCount entities.
+func (m *InteractionCountMutation) SetID(id uint64) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *InteractionCountMutation) ID() (id uint64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *InteractionCountMutation) IDs(ctx context.Context) ([]uint64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uint64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().InteractionCount.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *InteractionCountMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *InteractionCountMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the InteractionCount entity.
+// If the InteractionCount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InteractionCountMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *InteractionCountMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *InteractionCountMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *InteractionCountMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the InteractionCount entity.
+// If the InteractionCount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InteractionCountMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *InteractionCountMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetObjectID sets the "object_id" field.
+func (m *InteractionCountMutation) SetObjectID(u uint64) {
+	m.object_id = &u
+	m.addobject_id = nil
+}
+
+// ObjectID returns the value of the "object_id" field in the mutation.
+func (m *InteractionCountMutation) ObjectID() (r uint64, exists bool) {
+	v := m.object_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldObjectID returns the old "object_id" field's value of the InteractionCount entity.
+// If the InteractionCount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InteractionCountMutation) OldObjectID(ctx context.Context) (v uint64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldObjectID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldObjectID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldObjectID: %w", err)
+	}
+	return oldValue.ObjectID, nil
+}
+
+// AddObjectID adds u to the "object_id" field.
+func (m *InteractionCountMutation) AddObjectID(u int64) {
+	if m.addobject_id != nil {
+		*m.addobject_id += u
+	} else {
+		m.addobject_id = &u
+	}
+}
+
+// AddedObjectID returns the value that was added to the "object_id" field in this mutation.
+func (m *InteractionCountMutation) AddedObjectID() (r int64, exists bool) {
+	v := m.addobject_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetObjectID resets all changes to the "object_id" field.
+func (m *InteractionCountMutation) ResetObjectID() {
+	m.object_id = nil
+	m.addobject_id = nil
+}
+
+// SetObjectType sets the "object_type" field.
+func (m *InteractionCountMutation) SetObjectType(it interactioncount.ObjectType) {
+	m.object_type = &it
+}
+
+// ObjectType returns the value of the "object_type" field in the mutation.
+func (m *InteractionCountMutation) ObjectType() (r interactioncount.ObjectType, exists bool) {
+	v := m.object_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldObjectType returns the old "object_type" field's value of the InteractionCount entity.
+// If the InteractionCount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InteractionCountMutation) OldObjectType(ctx context.Context) (v interactioncount.ObjectType, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldObjectType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldObjectType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldObjectType: %w", err)
+	}
+	return oldValue.ObjectType, nil
+}
+
+// ResetObjectType resets all changes to the "object_type" field.
+func (m *InteractionCountMutation) ResetObjectType() {
+	m.object_type = nil
+}
+
+// SetInteractionType sets the "interaction_type" field.
+func (m *InteractionCountMutation) SetInteractionType(it interactioncount.InteractionType) {
+	m.interaction_type = &it
+}
+
+// InteractionType returns the value of the "interaction_type" field in the mutation.
+func (m *InteractionCountMutation) InteractionType() (r interactioncount.InteractionType, exists bool) {
+	v := m.interaction_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldInteractionType returns the old "interaction_type" field's value of the InteractionCount entity.
+// If the InteractionCount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InteractionCountMutation) OldInteractionType(ctx context.Context) (v interactioncount.InteractionType, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldInteractionType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldInteractionType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldInteractionType: %w", err)
+	}
+	return oldValue.InteractionType, nil
+}
+
+// ResetInteractionType resets all changes to the "interaction_type" field.
+func (m *InteractionCountMutation) ResetInteractionType() {
+	m.interaction_type = nil
+}
+
+// SetCount sets the "count" field.
+func (m *InteractionCountMutation) SetCount(i int) {
+	m.count = &i
+	m.addcount = nil
+}
+
+// Count returns the value of the "count" field in the mutation.
+func (m *InteractionCountMutation) Count() (r int, exists bool) {
+	v := m.count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCount returns the old "count" field's value of the InteractionCount entity.
+// If the InteractionCount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InteractionCountMutation) OldCount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCount: %w", err)
+	}
+	return oldValue.Count, nil
+}
+
+// AddCount adds i to the "count" field.
+func (m *InteractionCountMutation) AddCount(i int) {
+	if m.addcount != nil {
+		*m.addcount += i
+	} else {
+		m.addcount = &i
+	}
+}
+
+// AddedCount returns the value that was added to the "count" field in this mutation.
+func (m *InteractionCountMutation) AddedCount() (r int, exists bool) {
+	v := m.addcount
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetCount resets all changes to the "count" field.
+func (m *InteractionCountMutation) ResetCount() {
+	m.count = nil
+	m.addcount = nil
+}
+
+// Where appends a list predicates to the InteractionCountMutation builder.
+func (m *InteractionCountMutation) Where(ps ...predicate.InteractionCount) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the InteractionCountMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *InteractionCountMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.InteractionCount, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *InteractionCountMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *InteractionCountMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (InteractionCount).
+func (m *InteractionCountMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *InteractionCountMutation) Fields() []string {
+	fields := make([]string, 0, 6)
+	if m.created_at != nil {
+		fields = append(fields, interactioncount.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, interactioncount.FieldUpdatedAt)
+	}
+	if m.object_id != nil {
+		fields = append(fields, interactioncount.FieldObjectID)
+	}
+	if m.object_type != nil {
+		fields = append(fields, interactioncount.FieldObjectType)
+	}
+	if m.interaction_type != nil {
+		fields = append(fields, interactioncount.FieldInteractionType)
+	}
+	if m.count != nil {
+		fields = append(fields, interactioncount.FieldCount)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *InteractionCountMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case interactioncount.FieldCreatedAt:
+		return m.CreatedAt()
+	case interactioncount.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case interactioncount.FieldObjectID:
+		return m.ObjectID()
+	case interactioncount.FieldObjectType:
+		return m.ObjectType()
+	case interactioncount.FieldInteractionType:
+		return m.InteractionType()
+	case interactioncount.FieldCount:
+		return m.Count()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *InteractionCountMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case interactioncount.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case interactioncount.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case interactioncount.FieldObjectID:
+		return m.OldObjectID(ctx)
+	case interactioncount.FieldObjectType:
+		return m.OldObjectType(ctx)
+	case interactioncount.FieldInteractionType:
+		return m.OldInteractionType(ctx)
+	case interactioncount.FieldCount:
+		return m.OldCount(ctx)
+	}
+	return nil, fmt.Errorf("unknown InteractionCount field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *InteractionCountMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case interactioncount.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case interactioncount.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case interactioncount.FieldObjectID:
+		v, ok := value.(uint64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetObjectID(v)
+		return nil
+	case interactioncount.FieldObjectType:
+		v, ok := value.(interactioncount.ObjectType)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetObjectType(v)
+		return nil
+	case interactioncount.FieldInteractionType:
+		v, ok := value.(interactioncount.InteractionType)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetInteractionType(v)
+		return nil
+	case interactioncount.FieldCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCount(v)
+		return nil
+	}
+	return fmt.Errorf("unknown InteractionCount field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *InteractionCountMutation) AddedFields() []string {
+	var fields []string
+	if m.addobject_id != nil {
+		fields = append(fields, interactioncount.FieldObjectID)
+	}
+	if m.addcount != nil {
+		fields = append(fields, interactioncount.FieldCount)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *InteractionCountMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case interactioncount.FieldObjectID:
+		return m.AddedObjectID()
+	case interactioncount.FieldCount:
+		return m.AddedCount()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *InteractionCountMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case interactioncount.FieldObjectID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddObjectID(v)
+		return nil
+	case interactioncount.FieldCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCount(v)
+		return nil
+	}
+	return fmt.Errorf("unknown InteractionCount numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *InteractionCountMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *InteractionCountMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *InteractionCountMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown InteractionCount nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *InteractionCountMutation) ResetField(name string) error {
+	switch name {
+	case interactioncount.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case interactioncount.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case interactioncount.FieldObjectID:
+		m.ResetObjectID()
+		return nil
+	case interactioncount.FieldObjectType:
+		m.ResetObjectType()
+		return nil
+	case interactioncount.FieldInteractionType:
+		m.ResetInteractionType()
+		return nil
+	case interactioncount.FieldCount:
+		m.ResetCount()
+		return nil
+	}
+	return fmt.Errorf("unknown InteractionCount field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *InteractionCountMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *InteractionCountMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *InteractionCountMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *InteractionCountMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *InteractionCountMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *InteractionCountMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *InteractionCountMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown InteractionCount unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *InteractionCountMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown InteractionCount edge %s", name)
 }
 
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *uint64
-	created_at    *time.Time
-	updated_at    *time.Time
-	deleted_at    *time.Time
-	name          *string
-	password      *string
-	phone         *string
-	avatar        *string
-	email         *string
-	role          *string
-	sex           *string
-	birthday      *time.Time
-	status        *string
-	clearedFields map[string]struct{}
-	stat          *int
-	clearedstat   bool
-	done          bool
-	oldValue      func(context.Context) (*User, error)
-	predicates    []predicate.User
+	op              Op
+	typ             string
+	id              *uint64
+	created_at      *time.Time
+	updated_at      *time.Time
+	deleted_at      *time.Time
+	name            *string
+	password        *string
+	phone           *string
+	avatar          *string
+	email           *string
+	role            *string
+	sex             *string
+	birthday        *time.Time
+	status          *string
+	clearedFields   map[string]struct{}
+	stat            *int
+	clearedstat     bool
+	articles        *uint64
+	clearedarticles bool
+	done            bool
+	oldValue        func(context.Context) (*User, error)
+	predicates      []predicate.User
 }
 
 var _ ent.Mutation = (*UserMutation)(nil)
@@ -1188,6 +3363,45 @@ func (m *UserMutation) ResetStat() {
 	m.clearedstat = false
 }
 
+// SetArticlesID sets the "articles" edge to the Article entity by id.
+func (m *UserMutation) SetArticlesID(id uint64) {
+	m.articles = &id
+}
+
+// ClearArticles clears the "articles" edge to the Article entity.
+func (m *UserMutation) ClearArticles() {
+	m.clearedarticles = true
+}
+
+// ArticlesCleared reports if the "articles" edge to the Article entity was cleared.
+func (m *UserMutation) ArticlesCleared() bool {
+	return m.clearedarticles
+}
+
+// ArticlesID returns the "articles" edge ID in the mutation.
+func (m *UserMutation) ArticlesID() (id uint64, exists bool) {
+	if m.articles != nil {
+		return *m.articles, true
+	}
+	return
+}
+
+// ArticlesIDs returns the "articles" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ArticlesID instead. It exists only for internal usage by the builders.
+func (m *UserMutation) ArticlesIDs() (ids []uint64) {
+	if id := m.articles; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetArticles resets all changes to the "articles" edge.
+func (m *UserMutation) ResetArticles() {
+	m.articles = nil
+	m.clearedarticles = false
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -1523,9 +3737,12 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.stat != nil {
 		edges = append(edges, user.EdgeStat)
+	}
+	if m.articles != nil {
+		edges = append(edges, user.EdgeArticles)
 	}
 	return edges
 }
@@ -1538,13 +3755,17 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 		if id := m.stat; id != nil {
 			return []ent.Value{*id}
 		}
+	case user.EdgeArticles:
+		if id := m.articles; id != nil {
+			return []ent.Value{*id}
+		}
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	return edges
 }
 
@@ -1556,9 +3777,12 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedstat {
 		edges = append(edges, user.EdgeStat)
+	}
+	if m.clearedarticles {
+		edges = append(edges, user.EdgeArticles)
 	}
 	return edges
 }
@@ -1569,6 +3793,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 	switch name {
 	case user.EdgeStat:
 		return m.clearedstat
+	case user.EdgeArticles:
+		return m.clearedarticles
 	}
 	return false
 }
@@ -1580,6 +3806,9 @@ func (m *UserMutation) ClearEdge(name string) error {
 	case user.EdgeStat:
 		m.ClearStat()
 		return nil
+	case user.EdgeArticles:
+		m.ClearArticles()
+		return nil
 	}
 	return fmt.Errorf("unknown User unique edge %s", name)
 }
@@ -1590,6 +3819,9 @@ func (m *UserMutation) ResetEdge(name string) error {
 	switch name {
 	case user.EdgeStat:
 		m.ResetStat()
+		return nil
+	case user.EdgeArticles:
+		m.ResetArticles()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)

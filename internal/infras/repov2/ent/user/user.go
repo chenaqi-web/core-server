@@ -40,6 +40,8 @@ const (
 	FieldStatus = "status"
 	// EdgeStat holds the string denoting the stat edge name in mutations.
 	EdgeStat = "stat"
+	// EdgeArticles holds the string denoting the articles edge name in mutations.
+	EdgeArticles = "articles"
 	// Table holds the table name of the user in the database.
 	Table = "user"
 	// StatTable is the table that holds the stat relation/edge.
@@ -49,6 +51,13 @@ const (
 	StatInverseTable = "user_stat"
 	// StatColumn is the table column denoting the stat relation/edge.
 	StatColumn = "user_id"
+	// ArticlesTable is the table that holds the articles relation/edge.
+	ArticlesTable = "blog_article"
+	// ArticlesInverseTable is the table name for the Article entity.
+	// It exists in this package in order to avoid circular dependency with the "article" package.
+	ArticlesInverseTable = "blog_article"
+	// ArticlesColumn is the table column denoting the articles relation/edge.
+	ArticlesColumn = "author_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -187,10 +196,24 @@ func ByStatField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newStatStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByArticlesField orders the results by articles field.
+func ByArticlesField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newArticlesStep(), sql.OrderByField(field, opts...))
+	}
+}
 func newStatStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(StatInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2O, false, StatTable, StatColumn),
+	)
+}
+func newArticlesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ArticlesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2O, false, ArticlesTable, ArticlesColumn),
 	)
 }

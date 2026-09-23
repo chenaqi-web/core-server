@@ -20,10 +20,13 @@ type ArticleDTO struct {
 	CoverImage   string     `json:"cover_image"`
 	CategoryID   uint64     `json:"category_id"`
 	IsTop        bool       `json:"is_top"`
+	IsPublished  bool       `json:"is_published"`
+	Visibility   uint32     `json:"visibility"`
 	ViewCount    uint64     `json:"view_count"`
 	LikeCount    uint64     `json:"like_count"`
 	CommentCount uint64     `json:"comment_count"`
 	CreatedAt    time.Time  `json:"created_at"`
 	UpdatedAt    time.Time  `json:"updated_at"`
+	PublishedAt  time.Time  `json:"published_at"`
 	Author       *AuthorDTO `json:"author"`
 }

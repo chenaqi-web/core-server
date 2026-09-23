@@ -4,7 +4,9 @@ package ent
 
 import (
 	"context"
+	"core-server/internal/infras/repov2/ent/article"
 	"core-server/internal/infras/repov2/ent/category"
+	"core-server/internal/infras/repov2/ent/interactioncount"
 	"core-server/internal/infras/repov2/ent/user"
 	"core-server/internal/infras/repov2/ent/userstat"
 	"errors"
@@ -75,9 +77,11 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			category.Table: category.ValidColumn,
-			user.Table:     user.ValidColumn,
-			userstat.Table: userstat.ValidColumn,
+			article.Table:          article.ValidColumn,
+			category.Table:         category.ValidColumn,
+			interactioncount.Table: interactioncount.ValidColumn,
+			user.Table:             user.ValidColumn,
+			userstat.Table:         userstat.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)
