@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -21,8 +22,17 @@ const (
 	FieldParentID = "parent_id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
+	// EdgeArticles holds the string denoting the articles edge name in mutations.
+	EdgeArticles = "articles"
 	// Table holds the table name of the category in the database.
 	Table = "category"
+	// ArticlesTable is the table that holds the articles relation/edge.
+	ArticlesTable = "blog_article"
+	// ArticlesInverseTable is the table name for the Article entity.
+	// It exists in this package in order to avoid circular dependency with the "article" package.
+	ArticlesInverseTable = "blog_article"
+	// ArticlesColumn is the table column denoting the articles relation/edge.
+	ArticlesColumn = "category_id"
 )
 
 // Columns holds all SQL columns for category fields.
@@ -83,4 +93,18 @@ func ByParentID(opts ...sql.OrderTermOption) OrderOption {
 // ByName orders the results by the name field.
 func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
+}
+
+// ByArticlesField orders the results by articles field.
+func ByArticlesField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newArticlesStep(), sql.OrderByField(field, opts...))
+	}
+}
+func newArticlesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ArticlesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2O, false, ArticlesTable, ArticlesColumn),
+	)
 }

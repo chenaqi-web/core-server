@@ -2,16 +2,16 @@ package application
 
 import (
 	"context"
-	"core-server/internal/infras/repo"
-	"core-server/internal/rpc/articlepb"
-	"database/sql"
-	"errors"
-
 	"core-server/internal/config"
 	"core-server/internal/domain"
 	"core-server/internal/infras/clog"
+	"core-server/internal/infras/repov2"
 	"core-server/internal/model/aggregate"
 	"core-server/internal/model/entity"
+	"core-server/internal/rpc/articlepb"
+	"database/sql"
+	"errors"
+	"time"
 
 	"go.uber.org/zap"
 )
@@ -42,16 +42,51 @@ func NewArticleService(
 
 func (s *ArticleService) CreateArticle(ctx context.Context, req *articlepb.CreateArticleRequest) error {
 	a := &entity.Article{
+		AuthorID:    req.GetAuthorID(),
+		Title:       req.GetTitle(),
+		Content:     req.GetContent(),
+		Summary:     req.GetSummary(),
+		CategoryID:  req.GetCategoryID(),
+		IsTop:       req.GetIsTop(),
+		IsPublished: req.GetIsPublished(),
+		Visibility:  req.GetVisibility(),
+		CoverImage:  req.GetCoverImage(),
+	}
+
+	if a.IsPublished {
+		a.PublishedAt = sql.NullTime{
+			Valid: true, // 表示当前这个字段有数据
+			Time:  time.Now(),
+		}
+	}
+
+	if err := s.ArtRepo.Create(ctx, a); err != nil {
+		s.log.Error("CreateArticle error", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+func (s *ArticleService) EditorArticle(ctx context.Context, req *articlepb.EditorArticleRequest, authorID uint64) error {
+	if authorID != req.GetAuthorID() {
+		// 说明当前用户不是文章的作者
+		return errors.New("have no right to modify others' articles")
+	}
+	a := &entity.Article{
+		ID:         req.GetId(),
 		AuthorID:   req.GetAuthorID(),
 		Title:      req.GetTitle(),
 		Content:    req.GetContent(),
 		Summary:    req.GetSummary(),
 		CategoryID: req.GetCategoryID(),
 		IsTop:      req.GetIsTop(),
+		Visibility: req.GetVisibility(),
 		CoverImage: req.GetCoverImage(),
 	}
-	if err := s.ArtRepo.Create(ctx, a); err != nil {
-		s.log.Error("CreateArticle error", zap.Error(err))
+	if a.ID == 0 {
+		return errors.New("have no right to modify others' articles")
+	}
+	if err := s.ArtRepo.Edit(ctx, a); err != nil {
 		return err
 	}
 	return nil
@@ -61,7 +96,7 @@ func (s *ArticleService) DeleteArticle(ctx context.Context, id uint64, authorID 
 	// 这个删除是包含管理员删除的
 	// 当其是管理员的时候，传入的authorID是0,在repo下面是不会加上这个authorId = ? 的判断条件
 	if err := s.ArtRepo.DeleteByID(ctx, id, authorID); err != nil {
-		if errors.Is(err, repo.ErrNotFound) {
+		if errors.Is(err, repov2.ErrNotFound) {
 			return ErrArticleNotFound
 		}
 		s.log.Error("DeleteArticle error", zap.Error(err))
@@ -73,7 +108,7 @@ func (s *ArticleService) DeleteArticle(ctx context.Context, id uint64, authorID 
 func (s *ArticleService) GetArticle(ctx context.Context, id uint64) (*aggregate.ArticleAggregate, error) {
 	article, err := s.ArtRepo.GetByID(ctx, id)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, repov2.ErrNotFound) {
 			return nil, nil
 		}
 		s.log.Error("GetArticle info", zap.Error(err))
@@ -85,7 +120,7 @@ func (s *ArticleService) GetArticle(ctx context.Context, id uint64) (*aggregate.
 
 	author, err := s.userRepo.GetByID(ctx, article.AuthorID)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, repov2.ErrNotFound) {
 			return nil, nil
 		}
 		s.log.Error("GetArticle info", zap.Error(err))

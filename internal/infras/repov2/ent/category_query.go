@@ -4,8 +4,10 @@ package ent
 
 import (
 	"context"
+	"core-server/internal/infras/repov2/ent/article"
 	"core-server/internal/infras/repov2/ent/category"
 	"core-server/internal/infras/repov2/ent/predicate"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -18,10 +20,11 @@ import (
 // CategoryQuery is the builder for querying Category entities.
 type CategoryQuery struct {
 	config
-	ctx        *QueryContext
-	order      []category.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Category
+	ctx          *QueryContext
+	order        []category.OrderOption
+	inters       []Interceptor
+	predicates   []predicate.Category
+	withArticles *ArticleQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -56,6 +59,28 @@ func (_q *CategoryQuery) Unique(unique bool) *CategoryQuery {
 func (_q *CategoryQuery) Order(o ...category.OrderOption) *CategoryQuery {
 	_q.order = append(_q.order, o...)
 	return _q
+}
+
+// QueryArticles chains the current query on the "articles" edge.
+func (_q *CategoryQuery) QueryArticles() *ArticleQuery {
+	query := (&ArticleClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(category.Table, category.FieldID, selector),
+			sqlgraph.To(article.Table, article.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, false, category.ArticlesTable, category.ArticlesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first Category entity from the query.
@@ -245,15 +270,27 @@ func (_q *CategoryQuery) Clone() *CategoryQuery {
 		return nil
 	}
 	return &CategoryQuery{
-		config:     _q.config,
-		ctx:        _q.ctx.Clone(),
-		order:      append([]category.OrderOption{}, _q.order...),
-		inters:     append([]Interceptor{}, _q.inters...),
-		predicates: append([]predicate.Category{}, _q.predicates...),
+		config:       _q.config,
+		ctx:          _q.ctx.Clone(),
+		order:        append([]category.OrderOption{}, _q.order...),
+		inters:       append([]Interceptor{}, _q.inters...),
+		predicates:   append([]predicate.Category{}, _q.predicates...),
+		withArticles: _q.withArticles.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
+}
+
+// WithArticles tells the query-builder to eager-load the nodes that are connected to
+// the "articles" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *CategoryQuery) WithArticles(opts ...func(*ArticleQuery)) *CategoryQuery {
+	query := (&ArticleClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withArticles = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -332,8 +369,11 @@ func (_q *CategoryQuery) prepareQuery(ctx context.Context) error {
 
 func (_q *CategoryQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Category, error) {
 	var (
-		nodes = []*Category{}
-		_spec = _q.querySpec()
+		nodes       = []*Category{}
+		_spec       = _q.querySpec()
+		loadedTypes = [1]bool{
+			_q.withArticles != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Category).scanValues(nil, columns)
@@ -341,6 +381,7 @@ func (_q *CategoryQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Cat
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &Category{config: _q.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -352,7 +393,41 @@ func (_q *CategoryQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Cat
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := _q.withArticles; query != nil {
+		if err := _q.loadArticles(ctx, query, nodes, nil,
+			func(n *Category, e *Article) { n.Edges.Articles = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (_q *CategoryQuery) loadArticles(ctx context.Context, query *ArticleQuery, nodes []*Category, init func(*Category), assign func(*Category, *Article)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uint64]*Category)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(article.FieldCategoryID)
+	}
+	query.Where(predicate.Article(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(category.ArticlesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.CategoryID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "category_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
 }
 
 func (_q *CategoryQuery) sqlCount(ctx context.Context) (int, error) {

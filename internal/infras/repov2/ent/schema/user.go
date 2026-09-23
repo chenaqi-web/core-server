@@ -11,15 +11,22 @@ import (
 )
 
 // User holds the schema definition for the User entity.
-type User struct{ ent.Schema }
-
-func (User) Annotations() []entschema.Annotation {
-	return []entschema.Annotation{entsql.Annotation{Table: "user"}}
+type User struct {
+	ent.Schema
 }
 
+// Annotations keeps Ent mapped to the existing table used by the SQLX repository.
+func (User) Annotations() []entschema.Annotation {
+	return []entschema.Annotation{
+		entsql.Annotation{Table: "user"},
+	}
+}
+
+// Fields of the User.
 func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.Uint64("id"),
+
 		field.Time("created_at").Immutable().Default(time.Now),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 		field.Time("deleted_at").Optional().Nillable().Comment("soft delete time"),
@@ -36,6 +43,11 @@ func (User) Fields() []ent.Field {
 	}
 }
 
+// Edges of the User.
 func (User) Edges() []ent.Edge {
-	return []ent.Edge{edge.To("stat", UserStat.Type).Unique()}
+	return []ent.Edge{
+		edge.To("stat", UserStat.Type).Unique(),
+
+		edge.To("articles", Article.Type).Unique(),
+	}
 }

@@ -13,6 +13,11 @@ type ArticleRepo struct {
 	*DBClient
 }
 
+func (r *ArticleRepo) Edit(ctx context.Context, value *entity.Article) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewArticleRepo(client *DBClient) *ArticleRepo {
 	return &ArticleRepo{DBClient: client}
 }

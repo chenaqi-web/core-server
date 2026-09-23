@@ -50,7 +50,7 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 	messageQueueConsumer := jobdbsync.NewMessageQueueConsumer(cfg, log, syncProducer, kafkaManager, cacheClient, likeRepo, countRepo, userRepo, iLikeCache)
 	userService := application.NewUserService(userRepo, log)
 	authRPC := rpc.NewAuthRPC(userService)
-	articleRepo := repo.NewArticleRepo(dbClient)
+	articleRepo := repov2.NewArticleRepo(entClient)
 	countService := application.NewCountService(log, countRepo)
 	likeService, err := application.NewLikeService(log, likeRepo, iLikeCache, syncProducer, articleRepo, userRepo, countService, cfg)
 	if err != nil {

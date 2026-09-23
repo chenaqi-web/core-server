@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"core-server/internal/infras/repov2/ent/article"
 	"core-server/internal/infras/repov2/ent/category"
 	"errors"
 	"fmt"
@@ -72,6 +73,25 @@ func (_c *CategoryCreate) SetName(v string) *CategoryCreate {
 func (_c *CategoryCreate) SetID(v uint64) *CategoryCreate {
 	_c.mutation.SetID(v)
 	return _c
+}
+
+// SetArticlesID sets the "articles" edge to the Article entity by ID.
+func (_c *CategoryCreate) SetArticlesID(id uint64) *CategoryCreate {
+	_c.mutation.SetArticlesID(id)
+	return _c
+}
+
+// SetNillableArticlesID sets the "articles" edge to the Article entity by ID if the given value is not nil.
+func (_c *CategoryCreate) SetNillableArticlesID(id *uint64) *CategoryCreate {
+	if id != nil {
+		_c = _c.SetArticlesID(*id)
+	}
+	return _c
+}
+
+// SetArticles sets the "articles" edge to the Article entity.
+func (_c *CategoryCreate) SetArticles(v *Article) *CategoryCreate {
+	return _c.SetArticlesID(v.ID)
 }
 
 // Mutation returns the CategoryMutation object of the builder.
@@ -189,6 +209,22 @@ func (_c *CategoryCreate) createSpec() (*Category, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(category.FieldName, field.TypeString, value)
 		_node.Name = value
+	}
+	if nodes := _c.mutation.ArticlesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   category.ArticlesTable,
+			Columns: []string{category.ArticlesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(article.FieldID, field.TypeUint64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

@@ -11,7 +11,9 @@ import (
 
 	"core-server/internal/infras/repov2/ent/migrate"
 
+	"core-server/internal/infras/repov2/ent/article"
 	"core-server/internal/infras/repov2/ent/category"
+	"core-server/internal/infras/repov2/ent/interactioncount"
 	"core-server/internal/infras/repov2/ent/user"
 	"core-server/internal/infras/repov2/ent/userstat"
 
@@ -26,8 +28,12 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// Article is the client for interacting with the Article builders.
+	Article *ArticleClient
 	// Category is the client for interacting with the Category builders.
 	Category *CategoryClient
+	// InteractionCount is the client for interacting with the InteractionCount builders.
+	InteractionCount *InteractionCountClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserStat is the client for interacting with the UserStat builders.
@@ -43,7 +49,9 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.Article = NewArticleClient(c.config)
 	c.Category = NewCategoryClient(c.config)
+	c.InteractionCount = NewInteractionCountClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.UserStat = NewUserStatClient(c.config)
 }
@@ -136,11 +144,13 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:      ctx,
-		config:   cfg,
-		Category: NewCategoryClient(cfg),
-		User:     NewUserClient(cfg),
-		UserStat: NewUserStatClient(cfg),
+		ctx:              ctx,
+		config:           cfg,
+		Article:          NewArticleClient(cfg),
+		Category:         NewCategoryClient(cfg),
+		InteractionCount: NewInteractionCountClient(cfg),
+		User:             NewUserClient(cfg),
+		UserStat:         NewUserStatClient(cfg),
 	}, nil
 }
 
@@ -158,18 +168,20 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:      ctx,
-		config:   cfg,
-		Category: NewCategoryClient(cfg),
-		User:     NewUserClient(cfg),
-		UserStat: NewUserStatClient(cfg),
+		ctx:              ctx,
+		config:           cfg,
+		Article:          NewArticleClient(cfg),
+		Category:         NewCategoryClient(cfg),
+		InteractionCount: NewInteractionCountClient(cfg),
+		User:             NewUserClient(cfg),
+		UserStat:         NewUserStatClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Category.
+//		Article.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -191,7 +203,9 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
+	c.Article.Use(hooks...)
 	c.Category.Use(hooks...)
+	c.InteractionCount.Use(hooks...)
 	c.User.Use(hooks...)
 	c.UserStat.Use(hooks...)
 }
@@ -199,7 +213,9 @@ func (c *Client) Use(hooks ...Hook) {
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
+	c.Article.Intercept(interceptors...)
 	c.Category.Intercept(interceptors...)
+	c.InteractionCount.Intercept(interceptors...)
 	c.User.Intercept(interceptors...)
 	c.UserStat.Intercept(interceptors...)
 }
@@ -207,14 +223,183 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *ArticleMutation:
+		return c.Article.mutate(ctx, m)
 	case *CategoryMutation:
 		return c.Category.mutate(ctx, m)
+	case *InteractionCountMutation:
+		return c.InteractionCount.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	case *UserStatMutation:
 		return c.UserStat.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// ArticleClient is a client for the Article schema.
+type ArticleClient struct {
+	config
+}
+
+// NewArticleClient returns a client for the Article from the given config.
+func NewArticleClient(c config) *ArticleClient {
+	return &ArticleClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `article.Hooks(f(g(h())))`.
+func (c *ArticleClient) Use(hooks ...Hook) {
+	c.hooks.Article = append(c.hooks.Article, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `article.Intercept(f(g(h())))`.
+func (c *ArticleClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Article = append(c.inters.Article, interceptors...)
+}
+
+// Create returns a builder for creating a Article entity.
+func (c *ArticleClient) Create() *ArticleCreate {
+	mutation := newArticleMutation(c.config, OpCreate)
+	return &ArticleCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Article entities.
+func (c *ArticleClient) CreateBulk(builders ...*ArticleCreate) *ArticleCreateBulk {
+	return &ArticleCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ArticleClient) MapCreateBulk(slice any, setFunc func(*ArticleCreate, int)) *ArticleCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ArticleCreateBulk{err: fmt.Errorf("calling to ArticleClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ArticleCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ArticleCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Article.
+func (c *ArticleClient) Update() *ArticleUpdate {
+	mutation := newArticleMutation(c.config, OpUpdate)
+	return &ArticleUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ArticleClient) UpdateOne(_m *Article) *ArticleUpdateOne {
+	mutation := newArticleMutation(c.config, OpUpdateOne, withArticle(_m))
+	return &ArticleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ArticleClient) UpdateOneID(id uint64) *ArticleUpdateOne {
+	mutation := newArticleMutation(c.config, OpUpdateOne, withArticleID(id))
+	return &ArticleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Article.
+func (c *ArticleClient) Delete() *ArticleDelete {
+	mutation := newArticleMutation(c.config, OpDelete)
+	return &ArticleDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ArticleClient) DeleteOne(_m *Article) *ArticleDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ArticleClient) DeleteOneID(id uint64) *ArticleDeleteOne {
+	builder := c.Delete().Where(article.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ArticleDeleteOne{builder}
+}
+
+// Query returns a query builder for Article.
+func (c *ArticleClient) Query() *ArticleQuery {
+	return &ArticleQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeArticle},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Article entity by its id.
+func (c *ArticleClient) Get(ctx context.Context, id uint64) (*Article, error) {
+	return c.Query().Where(article.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ArticleClient) GetX(ctx context.Context, id uint64) *Article {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a Article.
+func (c *ArticleClient) QueryUser(_m *Article) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(article.Table, article.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, true, article.UserTable, article.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryCategory queries the category edge of a Article.
+func (c *ArticleClient) QueryCategory(_m *Article) *CategoryQuery {
+	query := (&CategoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(article.Table, article.FieldID, id),
+			sqlgraph.To(category.Table, category.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, true, article.CategoryTable, article.CategoryColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ArticleClient) Hooks() []Hook {
+	return c.hooks.Article
+}
+
+// Interceptors returns the client interceptors.
+func (c *ArticleClient) Interceptors() []Interceptor {
+	return c.inters.Article
+}
+
+func (c *ArticleClient) mutate(ctx context.Context, m *ArticleMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ArticleCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ArticleUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ArticleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ArticleDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Article mutation op: %q", m.Op())
 	}
 }
 
@@ -326,6 +511,22 @@ func (c *CategoryClient) GetX(ctx context.Context, id uint64) *Category {
 	return obj
 }
 
+// QueryArticles queries the articles edge of a Category.
+func (c *CategoryClient) QueryArticles(_m *Category) *ArticleQuery {
+	query := (&ArticleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(category.Table, category.FieldID, id),
+			sqlgraph.To(article.Table, article.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, false, category.ArticlesTable, category.ArticlesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *CategoryClient) Hooks() []Hook {
 	return c.hooks.Category
@@ -348,6 +549,139 @@ func (c *CategoryClient) mutate(ctx context.Context, m *CategoryMutation) (Value
 		return (&CategoryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Category mutation op: %q", m.Op())
+	}
+}
+
+// InteractionCountClient is a client for the InteractionCount schema.
+type InteractionCountClient struct {
+	config
+}
+
+// NewInteractionCountClient returns a client for the InteractionCount from the given config.
+func NewInteractionCountClient(c config) *InteractionCountClient {
+	return &InteractionCountClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `interactioncount.Hooks(f(g(h())))`.
+func (c *InteractionCountClient) Use(hooks ...Hook) {
+	c.hooks.InteractionCount = append(c.hooks.InteractionCount, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `interactioncount.Intercept(f(g(h())))`.
+func (c *InteractionCountClient) Intercept(interceptors ...Interceptor) {
+	c.inters.InteractionCount = append(c.inters.InteractionCount, interceptors...)
+}
+
+// Create returns a builder for creating a InteractionCount entity.
+func (c *InteractionCountClient) Create() *InteractionCountCreate {
+	mutation := newInteractionCountMutation(c.config, OpCreate)
+	return &InteractionCountCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of InteractionCount entities.
+func (c *InteractionCountClient) CreateBulk(builders ...*InteractionCountCreate) *InteractionCountCreateBulk {
+	return &InteractionCountCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *InteractionCountClient) MapCreateBulk(slice any, setFunc func(*InteractionCountCreate, int)) *InteractionCountCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &InteractionCountCreateBulk{err: fmt.Errorf("calling to InteractionCountClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*InteractionCountCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &InteractionCountCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for InteractionCount.
+func (c *InteractionCountClient) Update() *InteractionCountUpdate {
+	mutation := newInteractionCountMutation(c.config, OpUpdate)
+	return &InteractionCountUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *InteractionCountClient) UpdateOne(_m *InteractionCount) *InteractionCountUpdateOne {
+	mutation := newInteractionCountMutation(c.config, OpUpdateOne, withInteractionCount(_m))
+	return &InteractionCountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *InteractionCountClient) UpdateOneID(id uint64) *InteractionCountUpdateOne {
+	mutation := newInteractionCountMutation(c.config, OpUpdateOne, withInteractionCountID(id))
+	return &InteractionCountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for InteractionCount.
+func (c *InteractionCountClient) Delete() *InteractionCountDelete {
+	mutation := newInteractionCountMutation(c.config, OpDelete)
+	return &InteractionCountDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *InteractionCountClient) DeleteOne(_m *InteractionCount) *InteractionCountDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *InteractionCountClient) DeleteOneID(id uint64) *InteractionCountDeleteOne {
+	builder := c.Delete().Where(interactioncount.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &InteractionCountDeleteOne{builder}
+}
+
+// Query returns a query builder for InteractionCount.
+func (c *InteractionCountClient) Query() *InteractionCountQuery {
+	return &InteractionCountQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeInteractionCount},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a InteractionCount entity by its id.
+func (c *InteractionCountClient) Get(ctx context.Context, id uint64) (*InteractionCount, error) {
+	return c.Query().Where(interactioncount.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *InteractionCountClient) GetX(ctx context.Context, id uint64) *InteractionCount {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *InteractionCountClient) Hooks() []Hook {
+	return c.hooks.InteractionCount
+}
+
+// Interceptors returns the client interceptors.
+func (c *InteractionCountClient) Interceptors() []Interceptor {
+	return c.inters.InteractionCount
+}
+
+func (c *InteractionCountClient) mutate(ctx context.Context, m *InteractionCountMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&InteractionCountCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&InteractionCountUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&InteractionCountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&InteractionCountDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown InteractionCount mutation op: %q", m.Op())
 	}
 }
 
@@ -468,6 +802,22 @@ func (c *UserClient) QueryStat(_m *User) *UserStatQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(userstat.Table, userstat.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, false, user.StatTable, user.StatColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryArticles queries the articles edge of a User.
+func (c *UserClient) QueryArticles(_m *User) *ArticleQuery {
+	query := (&ArticleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(article.Table, article.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, false, user.ArticlesTable, user.ArticlesColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -652,9 +1002,9 @@ func (c *UserStatClient) mutate(ctx context.Context, m *UserStatMutation) (Value
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Category, User, UserStat []ent.Hook
+		Article, Category, InteractionCount, User, UserStat []ent.Hook
 	}
 	inters struct {
-		Category, User, UserStat []ent.Interceptor
+		Article, Category, InteractionCount, User, UserStat []ent.Interceptor
 	}
 )

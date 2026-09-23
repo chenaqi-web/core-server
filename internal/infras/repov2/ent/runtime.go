@@ -3,7 +3,9 @@
 package ent
 
 import (
+	"core-server/internal/infras/repov2/ent/article"
 	"core-server/internal/infras/repov2/ent/category"
+	"core-server/internal/infras/repov2/ent/interactioncount"
 	"core-server/internal/infras/repov2/ent/schema"
 	"core-server/internal/infras/repov2/ent/user"
 	"core-server/internal/infras/repov2/ent/userstat"
@@ -14,6 +16,50 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	articleFields := schema.Article{}.Fields()
+	_ = articleFields
+	// articleDescCreatedAt is the schema descriptor for created_at field.
+	articleDescCreatedAt := articleFields[1].Descriptor()
+	// article.DefaultCreatedAt holds the default value on creation for the created_at field.
+	article.DefaultCreatedAt = articleDescCreatedAt.Default.(func() time.Time)
+	// articleDescUpdatedAt is the schema descriptor for updated_at field.
+	articleDescUpdatedAt := articleFields[2].Descriptor()
+	// article.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	article.DefaultUpdatedAt = articleDescUpdatedAt.Default.(func() time.Time)
+	// article.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	article.UpdateDefaultUpdatedAt = articleDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// articleDescSummary is the schema descriptor for summary field.
+	articleDescSummary := articleFields[6].Descriptor()
+	// article.DefaultSummary holds the default value on creation for the summary field.
+	article.DefaultSummary = articleDescSummary.Default.(string)
+	// articleDescCoverImage is the schema descriptor for cover_image field.
+	articleDescCoverImage := articleFields[8].Descriptor()
+	// article.DefaultCoverImage holds the default value on creation for the cover_image field.
+	article.DefaultCoverImage = articleDescCoverImage.Default.(string)
+	// articleDescIsTop is the schema descriptor for is_top field.
+	articleDescIsTop := articleFields[11].Descriptor()
+	// article.DefaultIsTop holds the default value on creation for the is_top field.
+	article.DefaultIsTop = articleDescIsTop.Default.(bool)
+	// articleDescIsPublished is the schema descriptor for is_published field.
+	articleDescIsPublished := articleFields[12].Descriptor()
+	// article.DefaultIsPublished holds the default value on creation for the is_published field.
+	article.DefaultIsPublished = articleDescIsPublished.Default.(bool)
+	// articleDescVisibility is the schema descriptor for visibility field.
+	articleDescVisibility := articleFields[13].Descriptor()
+	// article.DefaultVisibility holds the default value on creation for the visibility field.
+	article.DefaultVisibility = articleDescVisibility.Default.(int)
+	// articleDescViewCount is the schema descriptor for view_count field.
+	articleDescViewCount := articleFields[14].Descriptor()
+	// article.DefaultViewCount holds the default value on creation for the view_count field.
+	article.DefaultViewCount = articleDescViewCount.Default.(int)
+	// articleDescLikeCount is the schema descriptor for like_count field.
+	articleDescLikeCount := articleFields[15].Descriptor()
+	// article.DefaultLikeCount holds the default value on creation for the like_count field.
+	article.DefaultLikeCount = articleDescLikeCount.Default.(int)
+	// articleDescCommentCount is the schema descriptor for comment_count field.
+	articleDescCommentCount := articleFields[16].Descriptor()
+	// article.DefaultCommentCount holds the default value on creation for the comment_count field.
+	article.DefaultCommentCount = articleDescCommentCount.Default.(int)
 	categoryFields := schema.Category{}.Fields()
 	_ = categoryFields
 	// categoryDescCreatedAt is the schema descriptor for created_at field.
@@ -34,6 +80,22 @@ func init() {
 	categoryDescName := categoryFields[4].Descriptor()
 	// category.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	category.NameValidator = categoryDescName.Validators[0].(func(string) error)
+	interactioncountFields := schema.InteractionCount{}.Fields()
+	_ = interactioncountFields
+	// interactioncountDescCreatedAt is the schema descriptor for created_at field.
+	interactioncountDescCreatedAt := interactioncountFields[1].Descriptor()
+	// interactioncount.DefaultCreatedAt holds the default value on creation for the created_at field.
+	interactioncount.DefaultCreatedAt = interactioncountDescCreatedAt.Default.(func() time.Time)
+	// interactioncountDescUpdatedAt is the schema descriptor for updated_at field.
+	interactioncountDescUpdatedAt := interactioncountFields[2].Descriptor()
+	// interactioncount.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	interactioncount.DefaultUpdatedAt = interactioncountDescUpdatedAt.Default.(func() time.Time)
+	// interactioncount.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	interactioncount.UpdateDefaultUpdatedAt = interactioncountDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// interactioncountDescCount is the schema descriptor for count field.
+	interactioncountDescCount := interactioncountFields[6].Descriptor()
+	// interactioncount.DefaultCount holds the default value on creation for the count field.
+	interactioncount.DefaultCount = interactioncountDescCount.Default.(int)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescCreatedAt is the schema descriptor for created_at field.
