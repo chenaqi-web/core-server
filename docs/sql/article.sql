@@ -1,4 +1,4 @@
-create table blog_article
+create table article
 (
     id            bigint unsigned auto_increment primary key comment '文章ID',
     title         varchar(200)                              not null comment '文章标题',
@@ -14,11 +14,10 @@ create table blog_article
     comment_count bigint unsigned default 0                 not null comment '评论数',
     published_at  datetime                                  null comment '发布时间',
     is_published  tinyint(1)      default 1                 not null comment '是否发布：0草稿 1已发布',
-    visibility    int             default 1                 not null comment '可见性：1公开 2私密 3仅粉丝',
     created_at    datetime        default CURRENT_TIMESTAMP not null comment '创建时间',
     updated_at    datetime        default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
     deleted_at    datetime                                  null comment '删除时间（软删除）'
 ) comment '博客文章表';
 
-create index idx_category_id on blog_article (category_id);
-create index idx_user_id on blog_article (author_id);
+create index idx_category_id on article (category_id);
+create index idx_user_id on article (author_id);

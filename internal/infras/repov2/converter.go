@@ -96,7 +96,6 @@ func toEntityArticle(node *ent.Article) *entity.Article {
 		CategoryID:   node.CategoryID,
 		IsTop:        node.IsTop,
 		IsPublished:  node.IsPublished,
-		Visibility:   uint32(node.Visibility),
 		ViewCount:    uint64(node.ViewCount),
 		LikeCount:    uint64(node.LikeCount),
 		FavorCount:   uint64(node.FavorCount),

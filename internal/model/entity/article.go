@@ -23,9 +23,8 @@ type Article struct {
 	CategoryID uint64   `db:"category_id"`
 	Category   Category `db:"category"`
 
-	IsTop       bool   `db:"is_top"`
-	IsPublished bool   `db:"is_published"` // 是否发布 0为草稿箱 1为已发布
-	Visibility  uint32 `db:"visibility"`   // 可见性 0为私密 1为公开 后续可再添加仅关注者和付费可看
+	IsTop       bool `db:"is_top"`
+	IsPublished bool `db:"is_published"` // 是否发布 0为草稿箱 1为已发布
 
 	ViewCount    uint64 `db:"view_count"`
 	LikeCount    uint64 `db:"like_count"`

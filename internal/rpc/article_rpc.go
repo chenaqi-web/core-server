@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"core-server/internal/application"
-	"core-server/internal/model/aggregate"
+	"core-server/internal/model/dto"
 	"core-server/internal/rpc/articlepb"
 )
 
@@ -18,7 +18,16 @@ func NewArticleRPC(articleService *application.ArticleService) *ArticleRPC {
 }
 
 func (a *ArticleRPC) CreateArticle(ctx context.Context, req *articlepb.CreateArticleRequest) (*articlepb.CreateArticleResponse, error) {
-	err := a.ArticleService.CreateArticle(ctx, req)
+	err := a.ArticleService.CreateArticle(ctx, &dto.CreateArticleRequest{
+		AuthorID:    req.GetAuthorID(),
+		Title:       req.GetTitle(),
+		Summary:     req.GetSummary(),
+		Content:     req.GetContent(),
+		CoverImage:  req.GetCoverImage(),
+		CategoryID:  req.GetCategoryID(),
+		IsTop:       req.GetIsTop(),
+		IsPublished: req.GetIsPublished(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +35,17 @@ func (a *ArticleRPC) CreateArticle(ctx context.Context, req *articlepb.CreateArt
 }
 
 func (a *ArticleRPC) EditorArticle(ctx context.Context, req *articlepb.EditorArticleRequest) (*articlepb.EditorArticleResponse, error) {
-	err := a.ArticleService.EditorArticle(ctx, req, req.GetAuthorID())
+	err := a.ArticleService.EditorArticle(ctx, &dto.EditorArticleRequest{
+		ID:          req.GetId(),
+		AuthorID:    req.GetAuthorID(),
+		Title:       req.GetTitle(),
+		Summary:     req.GetSummary(),
+		Content:     req.GetContent(),
+		CoverImage:  req.GetCoverImage(),
+		CategoryID:  req.GetCategoryID(),
+		IsTop:       req.GetIsTop(),
+		IsPublished: req.GetIsPublished(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -37,22 +56,22 @@ func (a *ArticleRPC) EditorArticle(ctx context.Context, req *articlepb.EditorArt
 }
 
 func (a *ArticleRPC) GetArticle(ctx context.Context, req *articlepb.GetArticleRequest) (*articlepb.GetArticleResponse, error) {
-	agg, err := a.ArticleService.GetArticle(ctx, req.GetId())
+	res, err := a.ArticleService.GetArticle(ctx, req.GetId())
 	if err != nil {
 		return nil, err
 	}
-	if agg == nil {
+	if res == nil || res.Article == nil {
 		return &articlepb.GetArticleResponse{}, nil
 	}
-	return &articlepb.GetArticleResponse{Article: toArticlePB(agg)}, nil
+	return &articlepb.GetArticleResponse{Article: toArticlePB(res.Article)}, nil
 }
 
 func (a *ArticleRPC) ListArticles(ctx context.Context, req *articlepb.ListArticlesRequest) (*articlepb.ListArticlesResponse, error) {
-	articles, err := a.ArticleService.ListArticles(ctx, int(req.GetPage()), int(req.GetPageSize()))
+	res, err := a.ArticleService.ListArticles(ctx, &dto.ListArticlesRequest{Page: int(req.GetPage()), PageSize: int(req.GetPageSize())})
 	if err != nil {
 		return nil, err
 	}
-	return &articlepb.ListArticlesResponse{Articles: toArticlePBList(articles)}, nil
+	return &articlepb.ListArticlesResponse{Articles: toArticlePBList(res.Articles)}, nil
 }
 
 func (a *ArticleRPC) DeleteArticle(ctx context.Context, req *articlepb.DeleteArticleRequest) (*articlepb.DeleteArticleResponse, error) {
@@ -63,45 +82,44 @@ func (a *ArticleRPC) DeleteArticle(ctx context.Context, req *articlepb.DeleteArt
 }
 
 func (a *ArticleRPC) ListMyArticles(ctx context.Context, req *articlepb.ListMyArticlesRequest) (*articlepb.ListMyArticlesResponse, error) {
-	articles, err := a.ArticleService.ListMyArticles(ctx, req.GetAuthorID(), int(req.GetPage()), int(req.GetPageSize()))
+	res, err := a.ArticleService.ListMyArticles(ctx, &dto.ListMyArticlesRequest{AuthorID: req.GetAuthorID(), Page: int(req.GetPage()), PageSize: int(req.GetPageSize())})
 	if err != nil {
 		return nil, err
 	}
-	return &articlepb.ListMyArticlesResponse{Articles: toArticlePBList(articles)}, nil
+	return &articlepb.ListMyArticlesResponse{Articles: toArticlePBList(res.Articles)}, nil
 }
 
 func (a *ArticleRPC) ListByCategory(ctx context.Context, req *articlepb.ListByCategoryRequest) (*articlepb.ListByCategoryResponse, error) {
-	articles, err := a.ArticleService.ListArticlesByCategory(ctx, req.GetCategoryID(), int(req.GetPage()), int(req.GetPageSize()))
+	res, err := a.ArticleService.ListArticlesByCategory(ctx, &dto.ListArticlesByCategoryRequest{CategoryID: req.GetCategoryID(), Page: int(req.GetPage()), PageSize: int(req.GetPageSize())})
 	if err != nil {
 		return nil, err
 	}
-	return &articlepb.ListByCategoryResponse{Articles: toArticlePBList(articles)}, nil
+	return &articlepb.ListByCategoryResponse{Articles: toArticlePBList(res.Articles)}, nil
 }
 
 func (a *ArticleRPC) SearchArticles(ctx context.Context, req *articlepb.SearchArticlesRequest) (*articlepb.SearchArticlesResponse, error) {
-	articles, err := a.ArticleService.SearchArticles(ctx, req.GetQ(), int(req.GetPage()), int(req.GetPageSize()))
+	res, err := a.ArticleService.SearchArticles(ctx, &dto.SearchArticlesRequest{Query: req.GetQ(), Page: int(req.GetPage()), PageSize: int(req.GetPageSize())})
 	if err != nil {
 		return nil, err
 	}
-	return &articlepb.SearchArticlesResponse{Articles: toArticlePBList(articles)}, nil
+	return &articlepb.SearchArticlesResponse{Articles: toArticlePBList(res.Articles)}, nil
 }
 
-func toArticlePBList(aggregates []*aggregate.ArticleAggregate) []*articlepb.Article {
+func toArticlePBList(aggregates []*dto.ArticleResponse) []*articlepb.Article {
 	if len(aggregates) == 0 {
 		return nil
 	}
 	items := make([]*articlepb.Article, 0, len(aggregates))
-	for _, agg := range aggregates {
-		items = append(items, toArticlePB(agg))
+	for _, item := range aggregates {
+		items = append(items, toArticlePB(item))
 	}
 	return items
 }
 
-func toArticlePB(agg *aggregate.ArticleAggregate) *articlepb.Article {
-	if agg == nil || agg.Article == nil {
+func toArticlePB(a *dto.ArticleResponse) *articlepb.Article {
+	if a == nil {
 		return nil
 	}
-	a := agg.Article
 	pb := &articlepb.Article{
 		Id:           a.ID,
 		AuthorID:     a.AuthorID,
@@ -111,18 +129,16 @@ func toArticlePB(agg *aggregate.ArticleAggregate) *articlepb.Article {
 		CategoryID:   a.CategoryID,
 		IsTop:        a.IsTop,
 		CoverImage:   a.CoverImage,
-		Visibility:   a.Visibility,
 		IsPublished:  a.IsPublished,
-		ViewCount:    agg.Stats.ViewCount,
-		LikeCount:    agg.Stats.LikeCount,
-		CommentCount: agg.Stats.CommentCount,
+		ViewCount:    a.ViewCount,
+		LikeCount:    a.LikeCount,
+		FavorCount:   a.FavorCount,
+		CommentCount: a.CommentCount,
 		CreatedAt:    uint64(a.CreatedAt.Unix()),
 		UpdatedAt:    uint64(a.UpdatedAt.Unix()),
-		PublishedAt:  uint64(a.PublishedAt.Time.Unix()),
+		PublishedAt:  uint64(a.PublishedAt.Unix()),
 	}
-	if agg.Author != nil {
-		pb.AuthorName = agg.Author.Name
-		pb.AuthorAvatar = agg.Author.Avatar
-	}
+	pb.AuthorName = a.AuthorName
+	pb.AuthorAvatar = a.AuthorAvatar
 	return pb
 }

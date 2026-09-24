@@ -32,7 +32,6 @@ func (r *ArticleRepo) Create(ctx context.Context, value *entity.Article) error {
 		SetCategoryID(value.CategoryID).
 		SetIsTop(value.IsTop).
 		SetIsPublished(value.IsPublished).
-		SetVisibility(int(value.Visibility))
 
 	// 判断作者是否存在用户表里面
 	exists, _ := r.db.User.Query().
@@ -61,7 +60,6 @@ func (r *ArticleRepo) Edit(ctx context.Context, value *entity.Article) error {
 		SetAuthorID(value.AuthorID).
 		SetCategoryID(value.CategoryID).
 		SetIsTop(value.IsTop).
-		SetVisibility(int(value.Visibility)).
 		Where(article.IDEQ(value.ID), article.DeletedAtIsNil())
 
 	_, err := update.Save(ctx)
@@ -122,7 +120,7 @@ func (r *ArticleRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*entity.Ar
 // List 分页查询全部已发布文章，按 ID 倒序
 func (r *ArticleRepo) List(ctx context.Context, page, pagesize int) ([]*entity.Article, error) {
 	nodes, err := r.DB(ctx).Article.Query().
-		Where(article.DeletedAtIsNil(), article.IsPublishedEQ(true), article.VisibilityEQ(1)).
+		Where(article.DeletedAtIsNil(), article.IsPublishedEQ(true)).
 		Order(ent.Desc(article.FieldID)).
 		Offset(page).
 		Limit(pagesize).
@@ -136,7 +134,7 @@ func (r *ArticleRepo) List(ctx context.Context, page, pagesize int) ([]*entity.A
 // ListByAuthor 分页查询某个作者的文章（无法查看草稿和私密文章） 按 ID 倒序
 func (r *ArticleRepo) ListByAuthor(ctx context.Context, authorID uint64, offset, limit int) ([]*entity.Article, error) {
 	nodes, err := r.DB(ctx).Article.Query().
-		Where(article.AuthorIDEQ(authorID), article.DeletedAtIsNil(), article.IsPublishedEQ(true), article.VisibilityEQ(1)).
+		Where(article.AuthorIDEQ(authorID), article.DeletedAtIsNil(), article.IsPublishedEQ(true)).
 		Order(ent.Desc(article.FieldID)).
 		Offset(offset).
 		Limit(limit).

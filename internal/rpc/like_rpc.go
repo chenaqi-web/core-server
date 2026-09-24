@@ -3,6 +3,7 @@ package rpc
 import (
 	"context"
 	"core-server/internal/application"
+	"core-server/internal/model/dto"
 	"core-server/internal/rpc/articlepb"
 	"core-server/internal/rpc/likepb"
 )
@@ -58,7 +59,7 @@ func (l *LikeRPC) PageQueryUserLikeList(ctx context.Context, request *likepb.Pag
 		if article == nil || article.Article == nil {
 			continue
 		}
-		items = append(items, toArticlePB(article))
+		items = append(items, toArticlePB(dto.ToArticleResponse(article)))
 	}
 	return &likepb.PageQueryUserLikeListResponse{Articles: items, Total: total}, nil
 }

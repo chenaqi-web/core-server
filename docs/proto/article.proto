@@ -16,7 +16,6 @@ message Article {
   uint64 categoryID = 7;
   bool isTop = 8;
   bool isPublished = 9;
-  uint32 visibility = 10;
   uint64 viewCount = 11 ;
   uint64 likeCount = 12;
   uint64 commentCount = 13;
@@ -37,7 +36,6 @@ message CreateArticleRequest {
   uint64 categoryID = 6;
   bool isTop = 7;
   bool isPublished = 8;    // 是否发布（true=直接发布, false=存草稿）
-  uint32 visibility = 9;   // 可见性：0=私密, 1=公开, 2=仅关注者
 }
 message CreateArticleResponse {
   bool success = 1;
@@ -60,7 +58,7 @@ message ListArticlesResponse {
 
 message EditorArticleRequest {
   uint64 id = 1;           // 文章ID
-  uint64 authorID = 2;    // 请求者用户ID，用于校验权限
+  uint64 authorID = 2;     // 作者ID，用于校验权限
   string title = 3;        // 标题
   string summary = 4;      // 摘要
   string content = 5;      // 正文内容
@@ -68,7 +66,7 @@ message EditorArticleRequest {
   uint64 categoryID = 7;   // 分类ID
   bool isTop = 8;          // 是否置顶
   bool isPublished = 9;    // 是否发布（true=发布, false=存草稿）
-  uint32 visibility = 10;  // 可见性：0=私密, 1=公开, 2=仅关注者
+  uint64 userID = 10;      // 用户id，当userid = authorID时才可修改
 }
 
 message EditorArticleResponse {

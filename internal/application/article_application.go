@@ -7,8 +7,8 @@ import (
 	"core-server/internal/infras/clog"
 	"core-server/internal/infras/repov2"
 	"core-server/internal/model/aggregate"
+	"core-server/internal/model/dto"
 	"core-server/internal/model/entity"
-	"core-server/internal/rpc/articlepb"
 	"database/sql"
 	"errors"
 	"time"
@@ -40,17 +40,16 @@ func NewArticleService(
 	}, nil
 }
 
-func (s *ArticleService) CreateArticle(ctx context.Context, req *articlepb.CreateArticleRequest) error {
+func (s *ArticleService) CreateArticle(ctx context.Context, req *dto.CreateArticleRequest) error {
 	a := &entity.Article{
-		AuthorID:    req.GetAuthorID(),
-		Title:       req.GetTitle(),
-		Content:     req.GetContent(),
-		Summary:     req.GetSummary(),
-		CategoryID:  req.GetCategoryID(),
-		IsTop:       req.GetIsTop(),
-		IsPublished: req.GetIsPublished(),
-		Visibility:  req.GetVisibility(),
-		CoverImage:  req.GetCoverImage(),
+		AuthorID:    req.AuthorID,
+		Title:       req.Title,
+		Summary:     req.Summary,
+		Content:     req.Content,
+		CoverImage:  req.CoverImage,
+		CategoryID:  req.CategoryID,
+		IsTop:       req.IsTop,
+		IsPublished: req.IsPublished,
 	}
 
 	if a.IsPublished {
@@ -67,21 +66,18 @@ func (s *ArticleService) CreateArticle(ctx context.Context, req *articlepb.Creat
 	return nil
 }
 
-func (s *ArticleService) EditorArticle(ctx context.Context, req *articlepb.EditorArticleRequest, authorID uint64) error {
-	if authorID != req.GetAuthorID() {
-		// 说明当前用户不是文章的作者
-		return errors.New("have no right to modify others' articles")
-	}
+func (s *ArticleService) EditorArticle(ctx context.Context, req *dto.EditorArticleRequest) error {
+	S
 	a := &entity.Article{
-		ID:         req.GetId(),
-		AuthorID:   req.GetAuthorID(),
-		Title:      req.GetTitle(),
-		Content:    req.GetContent(),
-		Summary:    req.GetSummary(),
-		CategoryID: req.GetCategoryID(),
-		IsTop:      req.GetIsTop(),
-		Visibility: req.GetVisibility(),
-		CoverImage: req.GetCoverImage(),
+		ID:          req.ID,
+		AuthorID:    req.AuthorID,
+		Title:       req.Title,
+		Content:     req.Content,
+		Summary:     req.Summary,
+		CategoryID:  req.CategoryID,
+		IsTop:       req.IsTop,
+		IsPublished: req.IsPublished,
+		CoverImage:  req.CoverImage,
 	}
 	if a.ID == 0 {
 		return errors.New("have no right to modify others' articles")
@@ -105,23 +101,23 @@ func (s *ArticleService) DeleteArticle(ctx context.Context, id uint64, authorID 
 	return nil
 }
 
-func (s *ArticleService) GetArticle(ctx context.Context, id uint64) (*aggregate.ArticleAggregate, error) {
+func (s *ArticleService) GetArticle(ctx context.Context, id uint64) (*dto.GetArticleResponse, error) {
 	article, err := s.ArtRepo.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, repov2.ErrNotFound) {
-			return nil, nil
+			return dto.ToGetArticleResponse(nil), nil
 		}
 		s.log.Error("GetArticle info", zap.Error(err))
 		return nil, err
 	}
 	if article == nil {
-		return nil, nil
+		return dto.ToGetArticleResponse(nil), nil
 	}
 
 	author, err := s.userRepo.GetByID(ctx, article.AuthorID)
 	if err != nil {
 		if errors.Is(err, repov2.ErrNotFound) {
-			return nil, nil
+			return dto.ToGetArticleResponse(nil), nil
 		}
 		s.log.Error("GetArticle info", zap.Error(err))
 		return nil, err
@@ -139,15 +135,15 @@ func (s *ArticleService) GetArticle(ctx context.Context, id uint64) (*aggregate.
 		return nil, err
 	}
 
-	return aggregate.NewArticleAggregate(article, author, counts), nil
+	return dto.ToGetArticleResponse(aggregate.NewArticleAggregate(article, author, counts)), nil
 }
 
 // =====================================================================================================================
 // 列表函数
 
-func (s *ArticleService) ListArticles(ctx context.Context, page, pageSize int) ([]*aggregate.ArticleAggregate, error) {
-	page = Page(page)
-	pageSize = Size(pageSize)
+func (s *ArticleService) ListArticles(ctx context.Context, req *dto.ListArticlesRequest) (*dto.ListArticlesResponse, error) {
+	page := Page(req.Page)
+	pageSize := Size(req.PageSize)
 	offset := (page - 1) * pageSize
 
 	articles, err := s.ArtRepo.List(ctx, offset, pageSize)
@@ -156,50 +152,65 @@ func (s *ArticleService) ListArticles(ctx context.Context, page, pageSize int) (
 		return nil, err
 	}
 
-	return s.BuildArticleAggregates(ctx, articles)
+	aggs, err := s.BuildArticleAggregates(ctx, articles)
+	if err != nil {
+		return nil, err
+	}
+	return dto.ToListArticlesResponse(aggs), nil
 }
 
-func (s *ArticleService) ListMyArticles(ctx context.Context, authorID uint64, page, pageSize int) ([]*aggregate.ArticleAggregate, error) {
-	page = Page(page)
-	size := Size(pageSize)
-	offset := (page - 1) * pageSize
+func (s *ArticleService) ListMyArticles(ctx context.Context, req *dto.ListMyArticlesRequest) (*dto.ListMyArticlesResponse, error) {
+	page := Page(req.Page)
+	size := Size(req.PageSize)
+	offset := (page - 1) * size
 
-	articles, err := s.ArtRepo.ListByAuthor(ctx, authorID, offset, size)
+	articles, err := s.ArtRepo.ListByAuthor(ctx, req.AuthorID, offset, size)
 	if err != nil {
 		s.log.Error(err.Error())
 		return nil, err
 	}
 	if len(articles) == 0 {
-		return nil, nil
+		return dto.ToListMyArticlesResponse(nil), nil
 	}
-
-	return s.BuildArticleAggregates(ctx, articles)
+	aggs, err := s.BuildArticleAggregates(ctx, articles)
+	if err != nil {
+		return nil, err
+	}
+	return dto.ToListMyArticlesResponse(aggs), nil
 }
 
-func (s *ArticleService) ListArticlesByCategory(ctx context.Context, categoryID uint64, page, pageSize int) ([]*aggregate.ArticleAggregate, error) {
-	page = Page(page)
-	size := Size(pageSize)
+func (s *ArticleService) ListArticlesByCategory(ctx context.Context, req *dto.ListArticlesByCategoryRequest) (*dto.ListArticlesByCategoryResponse, error) {
+	page := Page(req.Page)
+	size := Size(req.PageSize)
 	offset := (page - 1) * size
 
-	articles, err := s.ArtRepo.ListByCategory(ctx, categoryID, offset, size)
+	articles, err := s.ArtRepo.ListByCategory(ctx, req.CategoryID, offset, size)
 	if err != nil {
 		s.log.Error(err.Error())
 		return nil, err
 	}
-	return s.BuildArticleAggregates(ctx, articles)
+	aggs, err := s.BuildArticleAggregates(ctx, articles)
+	if err != nil {
+		return nil, err
+	}
+	return dto.ToListArticlesByCategoryResponse(aggs), nil
 }
 
-func (s *ArticleService) SearchArticles(ctx context.Context, q string, page, pageSize int) ([]*aggregate.ArticleAggregate, error) {
-	page = Page(page)
-	pageSize = Size(pageSize)
+func (s *ArticleService) SearchArticles(ctx context.Context, req *dto.SearchArticlesRequest) (*dto.SearchArticlesResponse, error) {
+	page := Page(req.Page)
+	pageSize := Size(req.PageSize)
 	offset := (page - 1) * pageSize
 
-	articles, err := s.ArtRepo.Search(ctx, q, offset, pageSize)
+	articles, err := s.ArtRepo.Search(ctx, req.Query, offset, pageSize)
 	if err != nil {
 		s.log.Error(err.Error())
 		return nil, err
 	}
-	return s.BuildArticleAggregates(ctx, articles)
+	aggs, err := s.BuildArticleAggregates(ctx, articles)
+	if err != nil {
+		return nil, err
+	}
+	return dto.ToSearchArticlesResponse(aggs), nil
 }
 
 // =====================================================================================================================
