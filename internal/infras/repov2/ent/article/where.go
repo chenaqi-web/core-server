@@ -130,6 +130,11 @@ func LikeCount(v int) predicate.Article {
 	return predicate.Article(sql.FieldEQ(FieldLikeCount, v))
 }
 
+// FavorCount applies equality check predicate on the "favor_count" field. It's identical to FavorCountEQ.
+func FavorCount(v int) predicate.Article {
+	return predicate.Article(sql.FieldEQ(FieldFavorCount, v))
+}
+
 // CommentCount applies equality check predicate on the "comment_count" field. It's identical to CommentCountEQ.
 func CommentCount(v int) predicate.Article {
 	return predicate.Article(sql.FieldEQ(FieldCommentCount, v))
@@ -753,6 +758,46 @@ func LikeCountLT(v int) predicate.Article {
 // LikeCountLTE applies the LTE predicate on the "like_count" field.
 func LikeCountLTE(v int) predicate.Article {
 	return predicate.Article(sql.FieldLTE(FieldLikeCount, v))
+}
+
+// FavorCountEQ applies the EQ predicate on the "favor_count" field.
+func FavorCountEQ(v int) predicate.Article {
+	return predicate.Article(sql.FieldEQ(FieldFavorCount, v))
+}
+
+// FavorCountNEQ applies the NEQ predicate on the "favor_count" field.
+func FavorCountNEQ(v int) predicate.Article {
+	return predicate.Article(sql.FieldNEQ(FieldFavorCount, v))
+}
+
+// FavorCountIn applies the In predicate on the "favor_count" field.
+func FavorCountIn(vs ...int) predicate.Article {
+	return predicate.Article(sql.FieldIn(FieldFavorCount, vs...))
+}
+
+// FavorCountNotIn applies the NotIn predicate on the "favor_count" field.
+func FavorCountNotIn(vs ...int) predicate.Article {
+	return predicate.Article(sql.FieldNotIn(FieldFavorCount, vs...))
+}
+
+// FavorCountGT applies the GT predicate on the "favor_count" field.
+func FavorCountGT(v int) predicate.Article {
+	return predicate.Article(sql.FieldGT(FieldFavorCount, v))
+}
+
+// FavorCountGTE applies the GTE predicate on the "favor_count" field.
+func FavorCountGTE(v int) predicate.Article {
+	return predicate.Article(sql.FieldGTE(FieldFavorCount, v))
+}
+
+// FavorCountLT applies the LT predicate on the "favor_count" field.
+func FavorCountLT(v int) predicate.Article {
+	return predicate.Article(sql.FieldLT(FieldFavorCount, v))
+}
+
+// FavorCountLTE applies the LTE predicate on the "favor_count" field.
+func FavorCountLTE(v int) predicate.Article {
+	return predicate.Article(sql.FieldLTE(FieldFavorCount, v))
 }
 
 // CommentCountEQ applies the EQ predicate on the "comment_count" field.

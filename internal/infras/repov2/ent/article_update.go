@@ -265,6 +265,27 @@ func (_u *ArticleUpdate) AddLikeCount(v int) *ArticleUpdate {
 	return _u
 }
 
+// SetFavorCount sets the "favor_count" field.
+func (_u *ArticleUpdate) SetFavorCount(v int) *ArticleUpdate {
+	_u.mutation.ResetFavorCount()
+	_u.mutation.SetFavorCount(v)
+	return _u
+}
+
+// SetNillableFavorCount sets the "favor_count" field if the given value is not nil.
+func (_u *ArticleUpdate) SetNillableFavorCount(v *int) *ArticleUpdate {
+	if v != nil {
+		_u.SetFavorCount(*v)
+	}
+	return _u
+}
+
+// AddFavorCount adds value to the "favor_count" field.
+func (_u *ArticleUpdate) AddFavorCount(v int) *ArticleUpdate {
+	_u.mutation.AddFavorCount(v)
+	return _u
+}
+
 // SetCommentCount sets the "comment_count" field.
 func (_u *ArticleUpdate) SetCommentCount(v int) *ArticleUpdate {
 	_u.mutation.ResetCommentCount()
@@ -431,6 +452,12 @@ func (_u *ArticleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.AddedLikeCount(); ok {
 		_spec.AddField(article.FieldLikeCount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.FavorCount(); ok {
+		_spec.SetField(article.FieldFavorCount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedFavorCount(); ok {
+		_spec.AddField(article.FieldFavorCount, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.CommentCount(); ok {
 		_spec.SetField(article.FieldCommentCount, field.TypeInt, value)
@@ -751,6 +778,27 @@ func (_u *ArticleUpdateOne) AddLikeCount(v int) *ArticleUpdateOne {
 	return _u
 }
 
+// SetFavorCount sets the "favor_count" field.
+func (_u *ArticleUpdateOne) SetFavorCount(v int) *ArticleUpdateOne {
+	_u.mutation.ResetFavorCount()
+	_u.mutation.SetFavorCount(v)
+	return _u
+}
+
+// SetNillableFavorCount sets the "favor_count" field if the given value is not nil.
+func (_u *ArticleUpdateOne) SetNillableFavorCount(v *int) *ArticleUpdateOne {
+	if v != nil {
+		_u.SetFavorCount(*v)
+	}
+	return _u
+}
+
+// AddFavorCount adds value to the "favor_count" field.
+func (_u *ArticleUpdateOne) AddFavorCount(v int) *ArticleUpdateOne {
+	_u.mutation.AddFavorCount(v)
+	return _u
+}
+
 // SetCommentCount sets the "comment_count" field.
 func (_u *ArticleUpdateOne) SetCommentCount(v int) *ArticleUpdateOne {
 	_u.mutation.ResetCommentCount()
@@ -947,6 +995,12 @@ func (_u *ArticleUpdateOne) sqlSave(ctx context.Context) (_node *Article, err er
 	}
 	if value, ok := _u.mutation.AddedLikeCount(); ok {
 		_spec.AddField(article.FieldLikeCount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.FavorCount(); ok {
+		_spec.SetField(article.FieldFavorCount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedFavorCount(); ok {
+		_spec.AddField(article.FieldFavorCount, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.CommentCount(); ok {
 		_spec.SetField(article.FieldCommentCount, field.TypeInt, value)

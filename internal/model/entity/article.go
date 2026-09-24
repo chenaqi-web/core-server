@@ -29,6 +29,7 @@ type Article struct {
 
 	ViewCount    uint64 `db:"view_count"`
 	LikeCount    uint64 `db:"like_count"`
+	FavorCount   uint64 `db:"favor_count"`
 	CommentCount uint64 `db:"comment_count"`
 }
 

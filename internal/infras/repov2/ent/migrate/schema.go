@@ -25,6 +25,7 @@ var (
 		{Name: "visibility", Type: field.TypeInt, Default: 1},
 		{Name: "view_count", Type: field.TypeInt, Default: 0},
 		{Name: "like_count", Type: field.TypeInt, Default: 0},
+		{Name: "favor_count", Type: field.TypeInt, Default: 0},
 		{Name: "comment_count", Type: field.TypeInt, Default: 0},
 		{Name: "category_id", Type: field.TypeUint64, Unique: true},
 		{Name: "author_id", Type: field.TypeUint64, Unique: true},
@@ -37,13 +38,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "blog_article_category_articles",
-				Columns:    []*schema.Column{BlogArticleColumns[15]},
+				Columns:    []*schema.Column{BlogArticleColumns[16]},
 				RefColumns: []*schema.Column{CategoryColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "blog_article_user_articles",
-				Columns:    []*schema.Column{BlogArticleColumns[16]},
+				Columns:    []*schema.Column{BlogArticleColumns[17]},
 				RefColumns: []*schema.Column{UserColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

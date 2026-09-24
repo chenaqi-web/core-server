@@ -1,4 +1,4 @@
-syntax = "proto3";
+﻿syntax = "proto3";
 
 // article service
 // 与数据库表 `blog_posts` 字段对应的文章 proto 定义
@@ -25,6 +25,7 @@ message Article {
   uint64 publishedAt = 16;
   string authorName = 17; // 作者昵称，来自 user.name
   string authorAvatar = 18; // 作者头像，来自 user.avatar
+  uint64 favorCount = 19;
 }
 
 message CreateArticleRequest {
@@ -124,6 +125,8 @@ service ArticleService {
   rpc SearchArticles(SearchArticlesRequest) returns (SearchArticlesResponse) {};
   rpc DeleteArticle(DeleteArticleRequest) returns (DeleteArticleResponse) {};
 }
+
+
 
 
 

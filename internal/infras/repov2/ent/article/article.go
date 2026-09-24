@@ -44,6 +44,8 @@ const (
 	FieldViewCount = "view_count"
 	// FieldLikeCount holds the string denoting the like_count field in the database.
 	FieldLikeCount = "like_count"
+	// FieldFavorCount holds the string denoting the favor_count field in the database.
+	FieldFavorCount = "favor_count"
 	// FieldCommentCount holds the string denoting the comment_count field in the database.
 	FieldCommentCount = "comment_count"
 	// EdgeUser holds the string denoting the user edge name in mutations.
@@ -86,6 +88,7 @@ var Columns = []string{
 	FieldVisibility,
 	FieldViewCount,
 	FieldLikeCount,
+	FieldFavorCount,
 	FieldCommentCount,
 }
 
@@ -120,6 +123,8 @@ var (
 	DefaultViewCount int
 	// DefaultLikeCount holds the default value on creation for the "like_count" field.
 	DefaultLikeCount int
+	// DefaultFavorCount holds the default value on creation for the "favor_count" field.
+	DefaultFavorCount int
 	// DefaultCommentCount holds the default value on creation for the "comment_count" field.
 	DefaultCommentCount int
 )
@@ -205,6 +210,11 @@ func ByViewCount(opts ...sql.OrderTermOption) OrderOption {
 // ByLikeCount orders the results by the like_count field.
 func ByLikeCount(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLikeCount, opts...).ToFunc()
+}
+
+// ByFavorCount orders the results by the favor_count field.
+func ByFavorCount(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldFavorCount, opts...).ToFunc()
 }
 
 // ByCommentCount orders the results by the comment_count field.

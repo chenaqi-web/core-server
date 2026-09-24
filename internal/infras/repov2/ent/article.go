@@ -49,6 +49,8 @@ type Article struct {
 	ViewCount int `json:"view_count,omitempty"`
 	// 点赞量
 	LikeCount int `json:"like_count,omitempty"`
+	// 收藏量
+	FavorCount int `json:"favor_count,omitempty"`
 	// 评论量
 	CommentCount int `json:"comment_count,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -97,7 +99,7 @@ func (*Article) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case article.FieldIsTop, article.FieldIsPublished:
 			values[i] = new(sql.NullBool)
-		case article.FieldID, article.FieldAuthorID, article.FieldCategoryID, article.FieldVisibility, article.FieldViewCount, article.FieldLikeCount, article.FieldCommentCount:
+		case article.FieldID, article.FieldAuthorID, article.FieldCategoryID, article.FieldVisibility, article.FieldViewCount, article.FieldLikeCount, article.FieldFavorCount, article.FieldCommentCount:
 			values[i] = new(sql.NullInt64)
 		case article.FieldTitle, article.FieldSummary, article.FieldContent, article.FieldCoverImage:
 			values[i] = new(sql.NullString)
@@ -216,6 +218,12 @@ func (_m *Article) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.LikeCount = int(value.Int64)
 			}
+		case article.FieldFavorCount:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field favor_count", values[i])
+			} else if value.Valid {
+				_m.FavorCount = int(value.Int64)
+			}
 		case article.FieldCommentCount:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field comment_count", values[i])
@@ -316,6 +324,9 @@ func (_m *Article) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("like_count=")
 	builder.WriteString(fmt.Sprintf("%v", _m.LikeCount))
+	builder.WriteString(", ")
+	builder.WriteString("favor_count=")
+	builder.WriteString(fmt.Sprintf("%v", _m.FavorCount))
 	builder.WriteString(", ")
 	builder.WriteString("comment_count=")
 	builder.WriteString(fmt.Sprintf("%v", _m.CommentCount))

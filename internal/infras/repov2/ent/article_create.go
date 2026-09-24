@@ -200,6 +200,20 @@ func (_c *ArticleCreate) SetNillableLikeCount(v *int) *ArticleCreate {
 	return _c
 }
 
+// SetFavorCount sets the "favor_count" field.
+func (_c *ArticleCreate) SetFavorCount(v int) *ArticleCreate {
+	_c.mutation.SetFavorCount(v)
+	return _c
+}
+
+// SetNillableFavorCount sets the "favor_count" field if the given value is not nil.
+func (_c *ArticleCreate) SetNillableFavorCount(v *int) *ArticleCreate {
+	if v != nil {
+		_c.SetFavorCount(*v)
+	}
+	return _c
+}
+
 // SetCommentCount sets the "comment_count" field.
 func (_c *ArticleCreate) SetCommentCount(v int) *ArticleCreate {
 	_c.mutation.SetCommentCount(v)
@@ -307,6 +321,10 @@ func (_c *ArticleCreate) defaults() {
 		v := article.DefaultLikeCount
 		_c.mutation.SetLikeCount(v)
 	}
+	if _, ok := _c.mutation.FavorCount(); !ok {
+		v := article.DefaultFavorCount
+		_c.mutation.SetFavorCount(v)
+	}
 	if _, ok := _c.mutation.CommentCount(); !ok {
 		v := article.DefaultCommentCount
 		_c.mutation.SetCommentCount(v)
@@ -353,6 +371,9 @@ func (_c *ArticleCreate) check() error {
 	}
 	if _, ok := _c.mutation.LikeCount(); !ok {
 		return &ValidationError{Name: "like_count", err: errors.New(`ent: missing required field "Article.like_count"`)}
+	}
+	if _, ok := _c.mutation.FavorCount(); !ok {
+		return &ValidationError{Name: "favor_count", err: errors.New(`ent: missing required field "Article.favor_count"`)}
 	}
 	if _, ok := _c.mutation.CommentCount(); !ok {
 		return &ValidationError{Name: "comment_count", err: errors.New(`ent: missing required field "Article.comment_count"`)}
@@ -446,6 +467,10 @@ func (_c *ArticleCreate) createSpec() (*Article, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.LikeCount(); ok {
 		_spec.SetField(article.FieldLikeCount, field.TypeInt, value)
 		_node.LikeCount = value
+	}
+	if value, ok := _c.mutation.FavorCount(); ok {
+		_spec.SetField(article.FieldFavorCount, field.TypeInt, value)
+		_node.FavorCount = value
 	}
 	if value, ok := _c.mutation.CommentCount(); ok {
 		_spec.SetField(article.FieldCommentCount, field.TypeInt, value)

@@ -56,8 +56,12 @@ func init() {
 	articleDescLikeCount := articleFields[15].Descriptor()
 	// article.DefaultLikeCount holds the default value on creation for the like_count field.
 	article.DefaultLikeCount = articleDescLikeCount.Default.(int)
+	// articleDescFavorCount is the schema descriptor for favor_count field.
+	articleDescFavorCount := articleFields[16].Descriptor()
+	// article.DefaultFavorCount holds the default value on creation for the favor_count field.
+	article.DefaultFavorCount = articleDescFavorCount.Default.(int)
 	// articleDescCommentCount is the schema descriptor for comment_count field.
-	articleDescCommentCount := articleFields[16].Descriptor()
+	articleDescCommentCount := articleFields[17].Descriptor()
 	// article.DefaultCommentCount holds the default value on creation for the comment_count field.
 	article.DefaultCommentCount = articleDescCommentCount.Default.(int)
 	categoryFields := schema.Category{}.Fields()

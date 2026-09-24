@@ -99,6 +99,7 @@ func toEntityArticle(node *ent.Article) *entity.Article {
 		Visibility:   uint32(node.Visibility),
 		ViewCount:    uint64(node.ViewCount),
 		LikeCount:    uint64(node.LikeCount),
+		FavorCount:   uint64(node.FavorCount),
 		CommentCount: uint64(node.CommentCount),
 	}
 	if node.DeletedAt != nil {

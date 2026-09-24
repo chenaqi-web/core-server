@@ -57,6 +57,8 @@ type ArticleMutation struct {
 	addview_count    *int
 	like_count       *int
 	addlike_count    *int
+	favor_count      *int
+	addfavor_count   *int
 	comment_count    *int
 	addcomment_count *int
 	clearedFields    map[string]struct{}
@@ -799,6 +801,62 @@ func (m *ArticleMutation) ResetLikeCount() {
 	m.addlike_count = nil
 }
 
+// SetFavorCount sets the "favor_count" field.
+func (m *ArticleMutation) SetFavorCount(i int) {
+	m.favor_count = &i
+	m.addfavor_count = nil
+}
+
+// FavorCount returns the value of the "favor_count" field in the mutation.
+func (m *ArticleMutation) FavorCount() (r int, exists bool) {
+	v := m.favor_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFavorCount returns the old "favor_count" field's value of the Article entity.
+// If the Article object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ArticleMutation) OldFavorCount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFavorCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFavorCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFavorCount: %w", err)
+	}
+	return oldValue.FavorCount, nil
+}
+
+// AddFavorCount adds i to the "favor_count" field.
+func (m *ArticleMutation) AddFavorCount(i int) {
+	if m.addfavor_count != nil {
+		*m.addfavor_count += i
+	} else {
+		m.addfavor_count = &i
+	}
+}
+
+// AddedFavorCount returns the value that was added to the "favor_count" field in this mutation.
+func (m *ArticleMutation) AddedFavorCount() (r int, exists bool) {
+	v := m.addfavor_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetFavorCount resets all changes to the "favor_count" field.
+func (m *ArticleMutation) ResetFavorCount() {
+	m.favor_count = nil
+	m.addfavor_count = nil
+}
+
 // SetCommentCount sets the "comment_count" field.
 func (m *ArticleMutation) SetCommentCount(i int) {
 	m.comment_count = &i
@@ -956,7 +1014,7 @@ func (m *ArticleMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ArticleMutation) Fields() []string {
-	fields := make([]string, 0, 16)
+	fields := make([]string, 0, 17)
 	if m.created_at != nil {
 		fields = append(fields, article.FieldCreatedAt)
 	}
@@ -1002,6 +1060,9 @@ func (m *ArticleMutation) Fields() []string {
 	if m.like_count != nil {
 		fields = append(fields, article.FieldLikeCount)
 	}
+	if m.favor_count != nil {
+		fields = append(fields, article.FieldFavorCount)
+	}
 	if m.comment_count != nil {
 		fields = append(fields, article.FieldCommentCount)
 	}
@@ -1043,6 +1104,8 @@ func (m *ArticleMutation) Field(name string) (ent.Value, bool) {
 		return m.ViewCount()
 	case article.FieldLikeCount:
 		return m.LikeCount()
+	case article.FieldFavorCount:
+		return m.FavorCount()
 	case article.FieldCommentCount:
 		return m.CommentCount()
 	}
@@ -1084,6 +1147,8 @@ func (m *ArticleMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldViewCount(ctx)
 	case article.FieldLikeCount:
 		return m.OldLikeCount(ctx)
+	case article.FieldFavorCount:
+		return m.OldFavorCount(ctx)
 	case article.FieldCommentCount:
 		return m.OldCommentCount(ctx)
 	}
@@ -1200,6 +1265,13 @@ func (m *ArticleMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetLikeCount(v)
 		return nil
+	case article.FieldFavorCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFavorCount(v)
+		return nil
 	case article.FieldCommentCount:
 		v, ok := value.(int)
 		if !ok {
@@ -1224,6 +1296,9 @@ func (m *ArticleMutation) AddedFields() []string {
 	if m.addlike_count != nil {
 		fields = append(fields, article.FieldLikeCount)
 	}
+	if m.addfavor_count != nil {
+		fields = append(fields, article.FieldFavorCount)
+	}
 	if m.addcomment_count != nil {
 		fields = append(fields, article.FieldCommentCount)
 	}
@@ -1241,6 +1316,8 @@ func (m *ArticleMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedViewCount()
 	case article.FieldLikeCount:
 		return m.AddedLikeCount()
+	case article.FieldFavorCount:
+		return m.AddedFavorCount()
 	case article.FieldCommentCount:
 		return m.AddedCommentCount()
 	}
@@ -1272,6 +1349,13 @@ func (m *ArticleMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddLikeCount(v)
+		return nil
+	case article.FieldFavorCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddFavorCount(v)
 		return nil
 	case article.FieldCommentCount:
 		v, ok := value.(int)
@@ -1366,6 +1450,9 @@ func (m *ArticleMutation) ResetField(name string) error {
 		return nil
 	case article.FieldLikeCount:
 		m.ResetLikeCount()
+		return nil
+	case article.FieldFavorCount:
+		m.ResetFavorCount()
 		return nil
 	case article.FieldCommentCount:
 		m.ResetCommentCount()
