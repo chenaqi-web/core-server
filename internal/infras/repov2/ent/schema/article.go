@@ -41,6 +41,7 @@ func (Article) Fields() []ent.Field {
 		field.Int("visibility").Default(1).Comment("可见性 0为私密 1为公开 默认为公开 后续可加入仅关注可看与付费等等"),
 		field.Int("view_count").Default(0).Comment("浏览量"),
 		field.Int("like_count").Default(0).Comment("点赞量"),
+		field.Int("favor_count").Default(0).Comment("收藏量"),
 		field.Int("comment_count").Default(0).Comment("评论量"),
 	}
 }

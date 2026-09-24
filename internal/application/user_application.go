@@ -183,7 +183,7 @@ func (s *UserService) UpdateAvatar(ctx context.Context, req *dto.UpdateAvatarReq
 		s.log.Error("UpdateAvatar error", zap.Error(err))
 		return nil, err
 	}
-	user.Avatar = req.Avatar
+	// 返回旧url
 	return dto.ToUserAvatarResponse(user.Avatar), nil
 }
 

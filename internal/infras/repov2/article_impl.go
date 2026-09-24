@@ -33,6 +33,7 @@ func (r *ArticleRepo) Create(ctx context.Context, value *entity.Article) error {
 		SetIsTop(value.IsTop).
 		SetIsPublished(value.IsPublished).
 		SetVisibility(int(value.Visibility))
+
 	// 判断作者是否存在用户表里面
 	exists, _ := r.db.User.Query().
 		Where(user.IDEQ(value.AuthorID)).
