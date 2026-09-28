@@ -16,6 +16,7 @@ type UserRepo interface {
 
 	CreateUser(ctx context.Context, user *entity.User) error
 	GetUserMsgByID(ctx context.Context, id uint64) (*aggregate.UserAggregate, error)
+	GetUserStat(ctx context.Context, userID uint64) (*entity.UserStat, error)
 
 	Search(ctx context.Context, keyword string, limit, offset int32) ([]*entity.User, uint64, error)
 	List(ctx context.Context, limit, offset int32) ([]*entity.User, uint64, error)

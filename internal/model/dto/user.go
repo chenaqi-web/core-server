@@ -115,6 +115,12 @@ type SearchUsersResponse struct {
 // =====================================================================================================================
 
 func ToGetProfileResponse(user *entity.User, stat *entity.UserStat) *GetProfileResponse {
+	if user == nil {
+		return nil
+	}
+	if stat == nil {
+		stat = &entity.UserStat{UserID: user.ID}
+	}
 	return &GetProfileResponse{
 		ID:                user.ID,
 		Username:          user.Name,

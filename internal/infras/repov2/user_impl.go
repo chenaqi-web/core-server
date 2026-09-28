@@ -4,6 +4,7 @@ import (
 	"context"
 	"core-server/internal/infras/repov2/ent"
 	"core-server/internal/infras/repov2/ent/user"
+	"core-server/internal/infras/repov2/ent/userstat"
 	"core-server/internal/model/aggregate"
 	"core-server/internal/model/entity"
 	"core-server/internal/model/enum"
@@ -109,6 +110,19 @@ func (r *UserRepo) GetUserMsgByID(ctx context.Context, id uint64) (*aggregate.Us
 	}, err
 }
 
+func (r *UserRepo) GetUserStat(ctx context.Context, userID uint64) (*entity.UserStat, error) {
+	stat, err := r.db.UserStat.Query().
+		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil()).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return toEntityUserStat(stat), nil
+}
+
 func (r *UserRepo) Search(ctx context.Context, keyword string, limit, offset int32) ([]*entity.User, uint64, error) {
 	query := r.db.User.Query().Where(
 		user.DeletedAtIsNil(),
@@ -157,23 +171,43 @@ func (r *UserRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User,
 // =====================================================================================================================
 
 func (r *UserRepo) GetLikeCount(ctx context.Context, userID uint64) (int64, error) {
-	return 0, nil
+	stat, err := r.GetUserStat(ctx, userID)
+	if err != nil || stat == nil {
+		return 0, err
+	}
+	return int64(stat.LikeCount), nil
 }
 
 func (r *UserRepo) GetReceiveLikeCount(ctx context.Context, userID uint64) (int64, error) {
-	return 0, nil
+	stat, err := r.GetUserStat(ctx, userID)
+	if err != nil || stat == nil {
+		return 0, err
+	}
+	return int64(stat.ReceiveLikeCount), nil
 }
 
 func (r *UserRepo) IncrementLikeCount(ctx context.Context, userID uint64) error {
-	return nil
+	return r.db.UserStat.Update().
+		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil()).
+		AddLikeCount(1).
+		Exec(ctx)
 }
 
 func (r *UserRepo) DecrementLikeCount(ctx context.Context, userID uint64) error {
-	return nil
+	return r.db.UserStat.Update().
+		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil(), userstat.LikeCountGT(0)).
+		AddLikeCount(-1).
+		Exec(ctx)
 }
 
 func (r *UserRepo) SetReceiveLikeCount(ctx context.Context, userID uint64, count int64) error {
-	return nil
+	if count < 0 {
+		count = 0
+	}
+	return r.db.UserStat.Update().
+		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil()).
+		SetReceiveLikeCount(uint64(count)).
+		Exec(ctx)
 }
 
 // =====================================================================================================================

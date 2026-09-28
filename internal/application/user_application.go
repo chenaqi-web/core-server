@@ -191,8 +191,16 @@ func (s *UserService) UpdateAvatar(ctx context.Context, req *dto.UpdateAvatarReq
 
 // 个人主页方面
 
-func (s *UserService) GetUserStat(ctx context.Context) {
-
+func (s *UserService) GetUserStat(ctx context.Context, userID uint64) (*entity.UserStat, error) {
+	stat, err := s.repo.GetUserStat(ctx, userID)
+	if err != nil {
+		s.log.Error("UserService/GetUserStat error", zap.Error(err), zap.Uint64("user_id", userID))
+		return nil, err
+	}
+	if stat == nil {
+		return nil, ErrUserNotFound
+	}
+	return stat, nil
 }
 
 // =====================================================================================================================
