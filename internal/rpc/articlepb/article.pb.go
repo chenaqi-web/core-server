@@ -5,7 +5,7 @@
 // source: article.proto
 
 // article service
-// 涓庢暟鎹簱琛?`blog_posts` 瀛楁瀵瑰簲鐨勬枃绔?proto 瀹氫箟
+// 与数据库表 `blog_posts` 字段对应的文章 proto 定义
 
 package articlepb
 
@@ -35,15 +35,14 @@ type Article struct {
 	CategoryID    uint64                 `protobuf:"varint,7,opt,name=categoryID,proto3" json:"categoryID,omitempty"`
 	IsTop         bool                   `protobuf:"varint,8,opt,name=isTop,proto3" json:"isTop,omitempty"`
 	IsPublished   bool                   `protobuf:"varint,9,opt,name=isPublished,proto3" json:"isPublished,omitempty"`
-	Visibility    uint32                 `protobuf:"varint,10,opt,name=visibility,proto3" json:"visibility,omitempty"`
 	ViewCount     uint64                 `protobuf:"varint,11,opt,name=viewCount,proto3" json:"viewCount,omitempty"`
 	LikeCount     uint64                 `protobuf:"varint,12,opt,name=likeCount,proto3" json:"likeCount,omitempty"`
 	CommentCount  uint64                 `protobuf:"varint,13,opt,name=commentCount,proto3" json:"commentCount,omitempty"`
 	CreatedAt     uint64                 `protobuf:"varint,14,opt,name=createdAt,proto3" json:"createdAt,omitempty"` // unix timestamp (seconds)
 	UpdatedAt     uint64                 `protobuf:"varint,15,opt,name=updatedAt,proto3" json:"updatedAt,omitempty"` // unix timestamp (seconds)
 	PublishedAt   uint64                 `protobuf:"varint,16,opt,name=publishedAt,proto3" json:"publishedAt,omitempty"`
-	AuthorName    string                 `protobuf:"bytes,17,opt,name=authorName,proto3" json:"authorName,omitempty"`     // 浣滆€呮樀绉帮紝鏉ヨ嚜 user.name
-	AuthorAvatar  string                 `protobuf:"bytes,18,opt,name=authorAvatar,proto3" json:"authorAvatar,omitempty"` // 浣滆€呭ご鍍忥紝鏉ヨ嚜 user.avatar
+	AuthorName    string                 `protobuf:"bytes,17,opt,name=authorName,proto3" json:"authorName,omitempty"`     // 作者昵称，来自 user.name
+	AuthorAvatar  string                 `protobuf:"bytes,18,opt,name=authorAvatar,proto3" json:"authorAvatar,omitempty"` // 作者头像，来自 user.avatar
 	FavorCount    uint64                 `protobuf:"varint,19,opt,name=favorCount,proto3" json:"favorCount,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -142,13 +141,6 @@ func (x *Article) GetIsPublished() bool {
 	return false
 }
 
-func (x *Article) GetVisibility() uint32 {
-	if x != nil {
-		return x.Visibility
-	}
-	return 0
-}
-
 func (x *Article) GetViewCount() uint64 {
 	if x != nil {
 		return x.ViewCount
@@ -221,8 +213,7 @@ type CreateArticleRequest struct {
 	CoverImage    string                 `protobuf:"bytes,5,opt,name=coverImage,proto3" json:"coverImage,omitempty"`
 	CategoryID    uint64                 `protobuf:"varint,6,opt,name=categoryID,proto3" json:"categoryID,omitempty"`
 	IsTop         bool                   `protobuf:"varint,7,opt,name=isTop,proto3" json:"isTop,omitempty"`
-	IsPublished   bool                   `protobuf:"varint,8,opt,name=isPublished,proto3" json:"isPublished,omitempty"` // 鏄惁鍙戝竷锛坱rue=鐩存帴鍙戝竷, false=瀛樿崏绋匡級
-	Visibility    uint32                 `protobuf:"varint,9,opt,name=visibility,proto3" json:"visibility,omitempty"`   // 鍙鎬э細0=绉佸瘑, 1=鍏紑, 2=浠呭叧娉ㄨ€?
+	IsPublished   bool                   `protobuf:"varint,8,opt,name=isPublished,proto3" json:"isPublished,omitempty"` // 是否发布（true=直接发布, false=存草稿）
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -311,13 +302,6 @@ func (x *CreateArticleRequest) GetIsPublished() bool {
 		return x.IsPublished
 	}
 	return false
-}
-
-func (x *CreateArticleRequest) GetVisibility() uint32 {
-	if x != nil {
-		return x.Visibility
-	}
-	return 0
 }
 
 type CreateArticleResponse struct {
@@ -454,7 +438,7 @@ func (x *GetArticleResponse) GetArticle() *Article {
 
 type ListArticlesRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Page          uint32                 `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"` // 浠?1 寮€濮?
+	Page          uint32                 `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"` // 从 1 开始
 	PageSize      uint32                 `protobuf:"varint,2,opt,name=pageSize,proto3" json:"pageSize,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -550,16 +534,15 @@ func (x *ListArticlesResponse) GetArticles() []*Article {
 
 type EditorArticleRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`                   // 鏂囩珷ID
-	AuthorID      uint64                 `protobuf:"varint,2,opt,name=authorID,proto3" json:"authorID,omitempty"`       // 璇锋眰鑰呯敤鎴稩D锛岀敤浜庢牎楠屾潈闄?
-	Title         string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`              // 鏍囬
-	Summary       string                 `protobuf:"bytes,4,opt,name=summary,proto3" json:"summary,omitempty"`          // 鎽樿
-	Content       string                 `protobuf:"bytes,5,opt,name=content,proto3" json:"content,omitempty"`          // 姝ｆ枃鍐呭
-	CoverImage    string                 `protobuf:"bytes,6,opt,name=coverImage,proto3" json:"coverImage,omitempty"`    // 灏侀潰鍥?
-	CategoryID    uint64                 `protobuf:"varint,7,opt,name=categoryID,proto3" json:"categoryID,omitempty"`   // 鍒嗙被ID
-	IsTop         bool                   `protobuf:"varint,8,opt,name=isTop,proto3" json:"isTop,omitempty"`             // 鏄惁缃《
-	IsPublished   bool                   `protobuf:"varint,9,opt,name=isPublished,proto3" json:"isPublished,omitempty"` // 鏄惁鍙戝竷锛坱rue=鍙戝竷, false=瀛樿崏绋匡級
-	Visibility    uint32                 `protobuf:"varint,10,opt,name=visibility,proto3" json:"visibility,omitempty"`  // 鍙鎬э細0=绉佸瘑, 1=鍏紑, 2=浠呭叧娉ㄨ€?
+	Id            uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`                   // 文章ID
+	AuthorID      uint64                 `protobuf:"varint,2,opt,name=authorID,proto3" json:"authorID,omitempty"`       // 作者ID，用于校验权限
+	Title         string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`              // 标题
+	Summary       string                 `protobuf:"bytes,4,opt,name=summary,proto3" json:"summary,omitempty"`          // 摘要
+	Content       string                 `protobuf:"bytes,5,opt,name=content,proto3" json:"content,omitempty"`          // 正文内容
+	CoverImage    string                 `protobuf:"bytes,6,opt,name=coverImage,proto3" json:"coverImage,omitempty"`    // 封面图
+	CategoryID    uint64                 `protobuf:"varint,7,opt,name=categoryID,proto3" json:"categoryID,omitempty"`   // 分类ID
+	IsTop         bool                   `protobuf:"varint,8,opt,name=isTop,proto3" json:"isTop,omitempty"`             // 是否置顶
+	IsPublished   bool                   `protobuf:"varint,9,opt,name=isPublished,proto3" json:"isPublished,omitempty"` // 是否发布（true=发布, false=存草稿）
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -657,17 +640,10 @@ func (x *EditorArticleRequest) GetIsPublished() bool {
 	return false
 }
 
-func (x *EditorArticleRequest) GetVisibility() uint32 {
-	if x != nil {
-		return x.Visibility
-	}
-	return 0
-}
-
 type EditorArticleResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	ArticleID     uint64                 `protobuf:"varint,2,opt,name=articleID,proto3" json:"articleID,omitempty"` // 鏂囩珷ID
+	ArticleID     uint64                 `protobuf:"varint,2,opt,name=articleID,proto3" json:"articleID,omitempty"` // 文章ID
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -719,7 +695,8 @@ func (x *EditorArticleResponse) GetArticleID() uint64 {
 type DeleteArticleRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	AuthorID      uint64                 `protobuf:"varint,2,opt,name=authorID,proto3" json:"authorID,omitempty"` // 璇锋眰鑰呯敤鎴稩D锛岀敤浜庢牎楠屾槸鍚︽湁鏉冮檺鍒犻櫎
+	UserID        uint64                 `protobuf:"varint,2,opt,name=UserID,proto3" json:"UserID,omitempty"` // 请求者用户ID，用于校验是否有权限删除
+	Role          string                 `protobuf:"bytes,3,opt,name=Role,proto3" json:"Role,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -761,11 +738,18 @@ func (x *DeleteArticleRequest) GetId() uint64 {
 	return 0
 }
 
-func (x *DeleteArticleRequest) GetAuthorID() uint64 {
+func (x *DeleteArticleRequest) GetUserID() uint64 {
 	if x != nil {
-		return x.AuthorID
+		return x.UserID
 	}
 	return 0
+}
+
+func (x *DeleteArticleRequest) GetRole() string {
+	if x != nil {
+		return x.Role
+	}
+	return ""
 }
 
 type DeleteArticleResponse struct {
@@ -817,7 +801,7 @@ type ListMyArticlesRequest struct {
 	AuthorID      uint64                 `protobuf:"varint,1,opt,name=authorID,proto3" json:"authorID,omitempty"`
 	Page          uint32                 `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
 	PageSize      uint32                 `protobuf:"varint,3,opt,name=pageSize,proto3" json:"pageSize,omitempty"`
-	IsPublished   *bool                  `protobuf:"varint,4,opt,name=isPublished,proto3,oneof" json:"isPublished,omitempty"` // 涓嶄紶=鍏ㄩ儴, true=鍙湅宸插彂甯? false=鍙湅鑽夌
+	IsPublished   *bool                  `protobuf:"varint,4,opt,name=isPublished,proto3,oneof" json:"isPublished,omitempty"` // 不传=全部, true=只看已发布, false=只看草稿
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1136,7 +1120,7 @@ var File_article_proto protoreflect.FileDescriptor
 
 const file_article_proto_rawDesc = "" +
 	"\n" +
-	"\rarticle.proto\x12\aarticle\"\xb9\x04\n" +
+	"\rarticle.proto\x12\aarticle\"\x99\x04\n" +
 	"\aArticle\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x18\n" +
@@ -1150,11 +1134,7 @@ const file_article_proto_rawDesc = "" +
 	"categoryID\x18\a \x01(\x04R\n" +
 	"categoryID\x12\x14\n" +
 	"\x05isTop\x18\b \x01(\bR\x05isTop\x12 \n" +
-	"\visPublished\x18\t \x01(\bR\visPublished\x12\x1e\n" +
-	"\n" +
-	"visibility\x18\n" +
-	" \x01(\rR\n" +
-	"visibility\x12\x1c\n" +
+	"\visPublished\x18\t \x01(\bR\visPublished\x12\x1c\n" +
 	"\tviewCount\x18\v \x01(\x04R\tviewCount\x12\x1c\n" +
 	"\tlikeCount\x18\f \x01(\x04R\tlikeCount\x12\"\n" +
 	"\fcommentCount\x18\r \x01(\x04R\fcommentCount\x12\x1c\n" +
@@ -1167,7 +1147,7 @@ const file_article_proto_rawDesc = "" +
 	"\fauthorAvatar\x18\x12 \x01(\tR\fauthorAvatar\x12\x1e\n" +
 	"\n" +
 	"favorCount\x18\x13 \x01(\x04R\n" +
-	"favorCount\"\x94\x02\n" +
+	"favorCount\"\xf4\x01\n" +
 	"\x14CreateArticleRequest\x12\x1a\n" +
 	"\bauthorID\x18\x01 \x01(\x04R\bauthorID\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x18\n" +
@@ -1180,10 +1160,7 @@ const file_article_proto_rawDesc = "" +
 	"categoryID\x18\x06 \x01(\x04R\n" +
 	"categoryID\x12\x14\n" +
 	"\x05isTop\x18\a \x01(\bR\x05isTop\x12 \n" +
-	"\visPublished\x18\b \x01(\bR\visPublished\x12\x1e\n" +
-	"\n" +
-	"visibility\x18\t \x01(\rR\n" +
-	"visibility\"1\n" +
+	"\visPublished\x18\b \x01(\bR\visPublished\"1\n" +
 	"\x15CreateArticleResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\"#\n" +
 	"\x11GetArticleRequest\x12\x0e\n" +
@@ -1194,7 +1171,7 @@ const file_article_proto_rawDesc = "" +
 	"\x04page\x18\x01 \x01(\rR\x04page\x12\x1a\n" +
 	"\bpageSize\x18\x02 \x01(\rR\bpageSize\"D\n" +
 	"\x14ListArticlesResponse\x12,\n" +
-	"\barticles\x18\x01 \x03(\v2\x10.article.ArticleR\barticles\"\xa4\x02\n" +
+	"\barticles\x18\x01 \x03(\v2\x10.article.ArticleR\barticles\"\x84\x02\n" +
 	"\x14EditorArticleRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x1a\n" +
 	"\bauthorID\x18\x02 \x01(\x04R\bauthorID\x12\x14\n" +
@@ -1208,17 +1185,14 @@ const file_article_proto_rawDesc = "" +
 	"categoryID\x18\a \x01(\x04R\n" +
 	"categoryID\x12\x14\n" +
 	"\x05isTop\x18\b \x01(\bR\x05isTop\x12 \n" +
-	"\visPublished\x18\t \x01(\bR\visPublished\x12\x1e\n" +
-	"\n" +
-	"visibility\x18\n" +
-	" \x01(\rR\n" +
-	"visibility\"O\n" +
+	"\visPublished\x18\t \x01(\bR\visPublished\"O\n" +
 	"\x15EditorArticleResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x1c\n" +
-	"\tarticleID\x18\x02 \x01(\x04R\tarticleID\"B\n" +
+	"\tarticleID\x18\x02 \x01(\x04R\tarticleID\"R\n" +
 	"\x14DeleteArticleRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x1a\n" +
-	"\bauthorID\x18\x02 \x01(\x04R\bauthorID\"1\n" +
+	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x16\n" +
+	"\x06UserID\x18\x02 \x01(\x04R\x06UserID\x12\x12\n" +
+	"\x04Role\x18\x03 \x01(\tR\x04Role\"1\n" +
 	"\x15DeleteArticleResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x9a\x01\n" +
 	"\x15ListMyArticlesRequest\x12\x1a\n" +

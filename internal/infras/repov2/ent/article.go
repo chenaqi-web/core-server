@@ -43,8 +43,6 @@ type Article struct {
 	IsTop bool `json:"is_top,omitempty"`
 	// 是否发布 默认发布
 	IsPublished bool `json:"is_published,omitempty"`
-	// 可见性 0为私密 1为公开 默认为公开 后续可加入仅关注可看与付费等等
-	Visibility int `json:"visibility,omitempty"`
 	// 浏览量
 	ViewCount int `json:"view_count,omitempty"`
 	// 点赞量
@@ -99,7 +97,7 @@ func (*Article) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case article.FieldIsTop, article.FieldIsPublished:
 			values[i] = new(sql.NullBool)
-		case article.FieldID, article.FieldAuthorID, article.FieldCategoryID, article.FieldVisibility, article.FieldViewCount, article.FieldLikeCount, article.FieldFavorCount, article.FieldCommentCount:
+		case article.FieldID, article.FieldAuthorID, article.FieldCategoryID, article.FieldViewCount, article.FieldLikeCount, article.FieldFavorCount, article.FieldCommentCount:
 			values[i] = new(sql.NullInt64)
 		case article.FieldTitle, article.FieldSummary, article.FieldContent, article.FieldCoverImage:
 			values[i] = new(sql.NullString)
@@ -199,12 +197,6 @@ func (_m *Article) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field is_published", values[i])
 			} else if value.Valid {
 				_m.IsPublished = value.Bool
-			}
-		case article.FieldVisibility:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field visibility", values[i])
-			} else if value.Valid {
-				_m.Visibility = int(value.Int64)
 			}
 		case article.FieldViewCount:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -315,9 +307,6 @@ func (_m *Article) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("is_published=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IsPublished))
-	builder.WriteString(", ")
-	builder.WriteString("visibility=")
-	builder.WriteString(fmt.Sprintf("%v", _m.Visibility))
 	builder.WriteString(", ")
 	builder.WriteString("view_count=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ViewCount))

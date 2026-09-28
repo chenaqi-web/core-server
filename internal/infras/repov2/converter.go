@@ -2,6 +2,7 @@ package repov2
 
 import (
 	"core-server/internal/infras/repov2/ent"
+	"core-server/internal/model/aggregate"
 	"core-server/internal/model/entity"
 	"core-server/internal/model/enum"
 	"database/sql"
@@ -116,4 +117,23 @@ func toEntityArticles(nodes []*ent.Article) []*entity.Article {
 		items = append(items, toEntityArticle(node))
 	}
 	return items
+}
+
+func toEntityArticleAggregates(nodes []*ent.Article) []*aggregate.ArticleAggregate {
+	items := make([]*aggregate.ArticleAggregate, 0, len(nodes))
+	for _, node := range nodes {
+		items = append(items, toEntityArticleAggregate(node))
+	}
+
+	return items
+}
+
+func toEntityArticleAggregate(node *ent.Article) *aggregate.ArticleAggregate {
+	author := node.Edges.User
+	cate := node.Edges.Category
+	return &aggregate.ArticleAggregate{
+		Article: toEntityArticle(node),
+		Author:  toEntityUser(author),
+		Cate:    toEntityCategory(cate),
+	}
 }

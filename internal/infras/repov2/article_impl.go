@@ -3,6 +3,8 @@ package repov2
 import (
 	"context"
 	"core-server/internal/infras/repov2/ent/user"
+	"core-server/internal/model/aggregate"
+	"core-server/internal/model/enum"
 	"errors"
 	"time"
 
@@ -23,16 +25,6 @@ func NewArticleRepo(client *EntClient) *ArticleRepo {
 
 // Create 创建一篇文章
 func (r *ArticleRepo) Create(ctx context.Context, value *entity.Article) error {
-	create := r.DB(ctx).Article.Create().
-		SetTitle(value.Title).
-		SetSummary(value.Summary).
-		SetContent(value.Content).
-		SetCoverImage(value.CoverImage).
-		SetAuthorID(value.AuthorID).
-		SetCategoryID(value.CategoryID).
-		SetIsTop(value.IsTop).
-		SetIsPublished(value.IsPublished).
-
 	// 判断作者是否存在用户表里面
 	exists, _ := r.db.User.Query().
 		Where(user.IDEQ(value.AuthorID)).
@@ -41,13 +33,22 @@ func (r *ArticleRepo) Create(ctx context.Context, value *entity.Article) error {
 		return errors.New("user not found")
 	}
 
-	// 如果用户选择发表文章 设置发布时间为当前时间
-	if value.PublishedAt.Valid {
-		create.SetPublishedAt(time.Now())
+	_, err := r.DB(ctx).Article.Create().
+		SetTitle(value.Title).
+		SetSummary(value.Summary).
+		SetContent(value.Content).
+		SetCoverImage(value.CoverImage).
+		SetAuthorID(value.AuthorID).
+		SetCategoryID(value.CategoryID).
+		SetIsTop(value.IsTop).
+		SetIsPublished(value.IsPublished).
+		Save(ctx)
+
+	if err != nil {
+		return err
 	}
 
-	_, err := create.Save(ctx)
-	return err
+	return nil
 }
 
 // Edit 编辑文章 需要做权限校验，无法编辑他人的文章
@@ -67,14 +68,14 @@ func (r *ArticleRepo) Edit(ctx context.Context, value *entity.Article) error {
 }
 
 // DeleteByID 软删除文章；authorID 为 0 时表示管理员删除，不再校验作者
-func (r *ArticleRepo) DeleteByID(ctx context.Context, id, authorID uint64) error {
+func (r *ArticleRepo) DeleteByID(ctx context.Context, id, authorID uint64, role string) error {
 	now := time.Now()
 	update := r.DB(ctx).Article.Update().
 		Where(article.IDEQ(id), article.DeletedAtIsNil()).
 		SetDeletedAt(now)
 
 	// 非管理员删除时，额外校验文章归属
-	if authorID != 0 {
+	if role != enum.UserRoleAdmin.String() {
 		update = update.Where(article.AuthorIDEQ(authorID))
 	}
 
@@ -89,9 +90,11 @@ func (r *ArticleRepo) DeleteByID(ctx context.Context, id, authorID uint64) error
 }
 
 // GetByID 根据 ID 查询单篇未删除且已发布的文章（前台详情页，过滤草稿）
-func (r *ArticleRepo) GetByID(ctx context.Context, id uint64) (*entity.Article, error) {
+func (r *ArticleRepo) GetByID(ctx context.Context, id uint64) (*aggregate.ArticleAggregate, error) {
 	node, err := r.DB(ctx).Article.Query().
 		Where(article.IDEQ(id), article.DeletedAtIsNil(), article.IsPublishedEQ(true)).
+		WithCategory().
+		WithUser().
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -99,11 +102,11 @@ func (r *ArticleRepo) GetByID(ctx context.Context, id uint64) (*entity.Article, 
 		}
 		return nil, err
 	}
-	return toEntityArticle(node), nil
+	return toEntityArticleAggregate(node), nil
 }
 
 // ListByIDs 根据 ID 批量查询未删除的文章
-func (r *ArticleRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*entity.Article, error) {
+func (r *ArticleRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*aggregate.ArticleAggregate, error) {
 	if len(ids) == 0 {
 		return nil, nil
 	}
@@ -114,25 +117,27 @@ func (r *ArticleRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*entity.Ar
 	if err != nil {
 		return nil, err
 	}
-	return toEntityArticles(nodes), nil
+	return toEntityArticleAggregates(nodes), nil
 }
 
 // List 分页查询全部已发布文章，按 ID 倒序
-func (r *ArticleRepo) List(ctx context.Context, page, pagesize int) ([]*entity.Article, error) {
+func (r *ArticleRepo) List(ctx context.Context, page, pageSize int) ([]*aggregate.ArticleAggregate, error) {
 	nodes, err := r.DB(ctx).Article.Query().
 		Where(article.DeletedAtIsNil(), article.IsPublishedEQ(true)).
+		WithCategory().
+		WithUser().
 		Order(ent.Desc(article.FieldID)).
 		Offset(page).
-		Limit(pagesize).
+		Limit(pageSize).
 		All(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return toEntityArticles(nodes), nil
+	return toEntityArticleAggregates(nodes), nil
 }
 
 // ListByAuthor 分页查询某个作者的文章（无法查看草稿和私密文章） 按 ID 倒序
-func (r *ArticleRepo) ListByAuthor(ctx context.Context, authorID uint64, offset, limit int) ([]*entity.Article, error) {
+func (r *ArticleRepo) ListByAuthor(ctx context.Context, authorID uint64, offset, limit int) ([]*aggregate.ArticleAggregate, error) {
 	nodes, err := r.DB(ctx).Article.Query().
 		Where(article.AuthorIDEQ(authorID), article.DeletedAtIsNil(), article.IsPublishedEQ(true)).
 		Order(ent.Desc(article.FieldID)).
@@ -142,7 +147,7 @@ func (r *ArticleRepo) ListByAuthor(ctx context.Context, authorID uint64, offset,
 	if err != nil {
 		return nil, err
 	}
-	return toEntityArticles(nodes), nil
+	return toEntityArticleAggregates(nodes), nil
 }
 
 // ListMe 查看自己的全部文章 (含草稿和私密文章)
@@ -160,7 +165,7 @@ func (r *ArticleRepo) ListMe(ctx context.Context, userID uint64, offset, limit i
 }
 
 // ListByCategory 分页查询某个分类下的已发布文章，按 ID 倒序
-func (r *ArticleRepo) ListByCategory(ctx context.Context, categoryID uint64, offset, limit int) ([]*entity.Article, error) {
+func (r *ArticleRepo) ListByCategory(ctx context.Context, categoryID uint64, offset, limit int) ([]*aggregate.ArticleAggregate, error) {
 	nodes, err := r.DB(ctx).Article.Query().
 		Where(article.CategoryIDEQ(categoryID), article.DeletedAtIsNil(), article.IsPublishedEQ(true)).
 		Order(ent.Desc(article.FieldID)).
@@ -170,11 +175,11 @@ func (r *ArticleRepo) ListByCategory(ctx context.Context, categoryID uint64, off
 	if err != nil {
 		return nil, err
 	}
-	return toEntityArticles(nodes), nil
+	return toEntityArticleAggregates(nodes), nil
 }
 
 // Search 按标题、摘要、正文模糊搜索已发布文章，按 ID 倒序
-func (r *ArticleRepo) Search(ctx context.Context, name string, offset, limit int) ([]*entity.Article, error) {
+func (r *ArticleRepo) Search(ctx context.Context, name string, offset, limit int) ([]*aggregate.ArticleAggregate, error) {
 	nodes, err := r.DB(ctx).Article.Query().
 		Where(
 			article.DeletedAtIsNil(),
@@ -192,5 +197,5 @@ func (r *ArticleRepo) Search(ctx context.Context, name string, offset, limit int
 	if err != nil {
 		return nil, err
 	}
-	return toEntityArticles(nodes), nil
+	return toEntityArticleAggregates(nodes), nil
 }

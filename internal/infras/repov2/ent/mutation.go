@@ -51,8 +51,6 @@ type ArticleMutation struct {
 	cover_image      *string
 	is_top           *bool
 	is_published     *bool
-	visibility       *int
-	addvisibility    *int
 	view_count       *int
 	addview_count    *int
 	like_count       *int
@@ -633,62 +631,6 @@ func (m *ArticleMutation) ResetIsPublished() {
 	m.is_published = nil
 }
 
-// SetVisibility sets the "visibility" field.
-func (m *ArticleMutation) SetVisibility(i int) {
-	m.visibility = &i
-	m.addvisibility = nil
-}
-
-// Visibility returns the value of the "visibility" field in the mutation.
-func (m *ArticleMutation) Visibility() (r int, exists bool) {
-	v := m.visibility
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldVisibility returns the old "visibility" field's value of the Article entity.
-// If the Article object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ArticleMutation) OldVisibility(ctx context.Context) (v int, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldVisibility is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldVisibility requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldVisibility: %w", err)
-	}
-	return oldValue.Visibility, nil
-}
-
-// AddVisibility adds i to the "visibility" field.
-func (m *ArticleMutation) AddVisibility(i int) {
-	if m.addvisibility != nil {
-		*m.addvisibility += i
-	} else {
-		m.addvisibility = &i
-	}
-}
-
-// AddedVisibility returns the value that was added to the "visibility" field in this mutation.
-func (m *ArticleMutation) AddedVisibility() (r int, exists bool) {
-	v := m.addvisibility
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ResetVisibility resets all changes to the "visibility" field.
-func (m *ArticleMutation) ResetVisibility() {
-	m.visibility = nil
-	m.addvisibility = nil
-}
-
 // SetViewCount sets the "view_count" field.
 func (m *ArticleMutation) SetViewCount(i int) {
 	m.view_count = &i
@@ -1014,7 +956,7 @@ func (m *ArticleMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ArticleMutation) Fields() []string {
-	fields := make([]string, 0, 17)
+	fields := make([]string, 0, 16)
 	if m.created_at != nil {
 		fields = append(fields, article.FieldCreatedAt)
 	}
@@ -1050,9 +992,6 @@ func (m *ArticleMutation) Fields() []string {
 	}
 	if m.is_published != nil {
 		fields = append(fields, article.FieldIsPublished)
-	}
-	if m.visibility != nil {
-		fields = append(fields, article.FieldVisibility)
 	}
 	if m.view_count != nil {
 		fields = append(fields, article.FieldViewCount)
@@ -1098,8 +1037,6 @@ func (m *ArticleMutation) Field(name string) (ent.Value, bool) {
 		return m.IsTop()
 	case article.FieldIsPublished:
 		return m.IsPublished()
-	case article.FieldVisibility:
-		return m.Visibility()
 	case article.FieldViewCount:
 		return m.ViewCount()
 	case article.FieldLikeCount:
@@ -1141,8 +1078,6 @@ func (m *ArticleMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldIsTop(ctx)
 	case article.FieldIsPublished:
 		return m.OldIsPublished(ctx)
-	case article.FieldVisibility:
-		return m.OldVisibility(ctx)
 	case article.FieldViewCount:
 		return m.OldViewCount(ctx)
 	case article.FieldLikeCount:
@@ -1244,13 +1179,6 @@ func (m *ArticleMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetIsPublished(v)
 		return nil
-	case article.FieldVisibility:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetVisibility(v)
-		return nil
 	case article.FieldViewCount:
 		v, ok := value.(int)
 		if !ok {
@@ -1287,9 +1215,6 @@ func (m *ArticleMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *ArticleMutation) AddedFields() []string {
 	var fields []string
-	if m.addvisibility != nil {
-		fields = append(fields, article.FieldVisibility)
-	}
 	if m.addview_count != nil {
 		fields = append(fields, article.FieldViewCount)
 	}
@@ -1310,8 +1235,6 @@ func (m *ArticleMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *ArticleMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
-	case article.FieldVisibility:
-		return m.AddedVisibility()
 	case article.FieldViewCount:
 		return m.AddedViewCount()
 	case article.FieldLikeCount:
@@ -1329,13 +1252,6 @@ func (m *ArticleMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *ArticleMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case article.FieldVisibility:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddVisibility(v)
-		return nil
 	case article.FieldViewCount:
 		v, ok := value.(int)
 		if !ok {
@@ -1441,9 +1357,6 @@ func (m *ArticleMutation) ResetField(name string) error {
 		return nil
 	case article.FieldIsPublished:
 		m.ResetIsPublished()
-		return nil
-	case article.FieldVisibility:
-		m.ResetVisibility()
 		return nil
 	case article.FieldViewCount:
 		m.ResetViewCount()

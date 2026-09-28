@@ -15,15 +15,14 @@ type ArticleAggregate struct {
 	// 作者的基础信息
 	Author *entity.User
 
-	// 有关计数
-	Stats *entity.InteractionStats
+	// 分类
+	Cate *entity.Category
 }
 
-// NewArticleAggregate 新建聚合
-func NewArticleAggregate(article *entity.Article, author *entity.User, Stats *entity.InteractionStats) *ArticleAggregate {
+func NewArticleAggregate(article *entity.Article, author *entity.User, Cate *entity.Category) *ArticleAggregate {
 	return &ArticleAggregate{
 		Article: article,
 		Author:  author,
-		Stats:   Stats,
+		Cate:    Cate,
 	}
 }

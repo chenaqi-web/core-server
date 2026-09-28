@@ -75,7 +75,11 @@ func (a *ArticleRPC) ListArticles(ctx context.Context, req *articlepb.ListArticl
 }
 
 func (a *ArticleRPC) DeleteArticle(ctx context.Context, req *articlepb.DeleteArticleRequest) (*articlepb.DeleteArticleResponse, error) {
-	if err := a.ArticleService.DeleteArticle(ctx, req.GetId(), req.GetAuthorID()); err != nil {
+	if err := a.ArticleService.DeleteArticle(ctx, &dto.DelArticleRequest{
+		ID:     req.GetId(),
+		UserID: req.GetUserID(),
+		Role:   req.GetRole(),
+	}); err != nil {
 		return nil, err
 	}
 	return &articlepb.DeleteArticleResponse{Success: true}, nil
@@ -105,7 +109,7 @@ func (a *ArticleRPC) SearchArticles(ctx context.Context, req *articlepb.SearchAr
 	return &articlepb.SearchArticlesResponse{Articles: toArticlePBList(res.Articles)}, nil
 }
 
-func toArticlePBList(aggregates []*dto.ArticleResponse) []*articlepb.Article {
+func toArticlePBList(aggregates []*dto.ArticleMsg) []*articlepb.Article {
 	if len(aggregates) == 0 {
 		return nil
 	}
@@ -116,7 +120,7 @@ func toArticlePBList(aggregates []*dto.ArticleResponse) []*articlepb.Article {
 	return items
 }
 
-func toArticlePB(a *dto.ArticleResponse) *articlepb.Article {
+func toArticlePB(a *dto.ArticleMsg) *articlepb.Article {
 	if a == nil {
 		return nil
 	}

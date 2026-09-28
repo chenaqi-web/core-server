@@ -5,7 +5,7 @@
 // source: article.proto
 
 // article service
-// 涓庢暟鎹簱琛?`blog_posts` 瀛楁瀵瑰簲鐨勬枃绔?proto 瀹氫箟
+// 与数据库表 `blog_posts` 字段对应的文章 proto 定义
 
 package articlepb
 
@@ -41,9 +41,9 @@ type ArticleServiceClient interface {
 	GetArticle(ctx context.Context, in *GetArticleRequest, opts ...grpc.CallOption) (*GetArticleResponse, error)
 	ListArticles(ctx context.Context, in *ListArticlesRequest, opts ...grpc.CallOption) (*ListArticlesResponse, error)
 	ListMyArticles(ctx context.Context, in *ListMyArticlesRequest, opts ...grpc.CallOption) (*ListMyArticlesResponse, error)
-	// 鏌ヨ鏌愪釜鍒嗙被涓嬬殑鏂囩珷鍒楄〃
+	// 查询某个分类下的文章列表
 	ListByCategory(ctx context.Context, in *ListByCategoryRequest, opts ...grpc.CallOption) (*ListByCategoryResponse, error)
-	// 鎼滅储鏂囩珷锛堟爣棰?鎽樿/姝ｆ枃锛?
+	// 搜索文章（标题/摘要/正文）
 	SearchArticles(ctx context.Context, in *SearchArticlesRequest, opts ...grpc.CallOption) (*SearchArticlesResponse, error)
 	DeleteArticle(ctx context.Context, in *DeleteArticleRequest, opts ...grpc.CallOption) (*DeleteArticleResponse, error)
 }
@@ -145,9 +145,9 @@ type ArticleServiceServer interface {
 	GetArticle(context.Context, *GetArticleRequest) (*GetArticleResponse, error)
 	ListArticles(context.Context, *ListArticlesRequest) (*ListArticlesResponse, error)
 	ListMyArticles(context.Context, *ListMyArticlesRequest) (*ListMyArticlesResponse, error)
-	// 鏌ヨ鏌愪釜鍒嗙被涓嬬殑鏂囩珷鍒楄〃
+	// 查询某个分类下的文章列表
 	ListByCategory(context.Context, *ListByCategoryRequest) (*ListByCategoryResponse, error)
-	// 鎼滅储鏂囩珷锛堟爣棰?鎽樿/姝ｆ枃锛?
+	// 搜索文章（标题/摘要/正文）
 	SearchArticles(context.Context, *SearchArticlesRequest) (*SearchArticlesResponse, error)
 	DeleteArticle(context.Context, *DeleteArticleRequest) (*DeleteArticleResponse, error)
 	mustEmbedUnimplementedArticleServiceServer()

@@ -38,8 +38,6 @@ const (
 	FieldIsTop = "is_top"
 	// FieldIsPublished holds the string denoting the is_published field in the database.
 	FieldIsPublished = "is_published"
-	// FieldVisibility holds the string denoting the visibility field in the database.
-	FieldVisibility = "visibility"
 	// FieldViewCount holds the string denoting the view_count field in the database.
 	FieldViewCount = "view_count"
 	// FieldLikeCount holds the string denoting the like_count field in the database.
@@ -85,7 +83,6 @@ var Columns = []string{
 	FieldCategoryID,
 	FieldIsTop,
 	FieldIsPublished,
-	FieldVisibility,
 	FieldViewCount,
 	FieldLikeCount,
 	FieldFavorCount,
@@ -117,8 +114,6 @@ var (
 	DefaultIsTop bool
 	// DefaultIsPublished holds the default value on creation for the "is_published" field.
 	DefaultIsPublished bool
-	// DefaultVisibility holds the default value on creation for the "visibility" field.
-	DefaultVisibility int
 	// DefaultViewCount holds the default value on creation for the "view_count" field.
 	DefaultViewCount int
 	// DefaultLikeCount holds the default value on creation for the "like_count" field.
@@ -195,11 +190,6 @@ func ByIsTop(opts ...sql.OrderTermOption) OrderOption {
 // ByIsPublished orders the results by the is_published field.
 func ByIsPublished(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsPublished, opts...).ToFunc()
-}
-
-// ByVisibility orders the results by the visibility field.
-func ByVisibility(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldVisibility, opts...).ToFunc()
 }
 
 // ByViewCount orders the results by the view_count field.

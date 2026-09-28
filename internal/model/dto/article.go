@@ -28,25 +28,36 @@ type EditorArticleRequest struct {
 	IsPublished bool
 }
 
-type ArticleResponse struct {
-	ID           uint64
-	Title        string
-	Summary      string
-	Content      string
-	CoverImage   string
+type DelArticleRequest struct {
+	ID     uint64
+	UserID uint64
+	Role   string
+}
+
+type ArticleMsg struct {
+	ID          uint64
+	Title       string
+	Summary     string
+	Content     string
+	CoverImage  string
+	IsTop       bool
+	IsPublished bool
+
 	AuthorID     uint64
+	AuthorName   string
+	AuthorAvatar string
+
 	CategoryID   uint64
-	IsTop        bool
-	IsPublished  bool
+	CategoryName string
+
 	ViewCount    uint64
 	LikeCount    uint64
 	FavorCount   uint64
 	CommentCount uint64
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	PublishedAt  time.Time
-	AuthorName   string
-	AuthorAvatar string
+
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	PublishedAt time.Time
 }
 
 type CreateArticleResponse struct{ Success bool }
@@ -54,14 +65,12 @@ type EditorArticleResponse struct {
 	Success   bool
 	ArticleID uint64
 }
-type GetArticleResponse struct{ Article *ArticleResponse }
-type ListArticlesResponse struct{ Articles []*ArticleResponse }
-type DeleteArticleResponse struct{ Success bool }
-type ListMyArticlesResponse struct{ Articles []*ArticleResponse }
-type ListArticlesByCategoryResponse struct{ Articles []*ArticleResponse }
-type SearchArticlesResponse struct{ Articles []*ArticleResponse }
+type GetArticleResponse struct{ Article *ArticleMsg }
+type ListArticlesResponse struct{ Articles []*ArticleMsg }
+type ListMyArticlesResponse struct{ Articles []*ArticleMsg }
+type ListArticlesByCategoryResponse struct{ Articles []*ArticleMsg }
+type SearchArticlesResponse struct{ Articles []*ArticleMsg }
 
-type GetArticleRequest struct{ ID uint64 }
 type ListArticlesRequest struct{ Page, PageSize int }
 type ListMyArticlesRequest struct {
 	AuthorID       uint64
@@ -76,23 +85,37 @@ type SearchArticlesRequest struct {
 	Page, PageSize int
 }
 
-func ToArticleResponse(agg *aggregate.ArticleAggregate) *ArticleResponse {
+func ToArticleResponse(agg *aggregate.ArticleAggregate) *ArticleMsg {
 	if agg == nil || agg.Article == nil {
 		return nil
 	}
 	a := agg.Article
-	r := &ArticleResponse{ID: a.ID, Title: a.Title, Summary: a.Summary, Content: a.Content, CoverImage: a.CoverImage,
-		AuthorID: a.AuthorID, CategoryID: a.CategoryID, IsTop: a.IsTop, IsPublished: a.IsPublished,
-		ViewCount: a.ViewCount, LikeCount: a.LikeCount, FavorCount: a.FavorCount,
-		CommentCount: a.CommentCount, CreatedAt: a.CreatedAt, UpdatedAt: a.UpdatedAt}
+	r := &ArticleMsg{
+		ID:           a.ID,
+		Title:        a.Title,
+		Summary:      a.Summary,
+		Content:      a.Content,
+		CoverImage:   a.CoverImage,
+		AuthorID:     a.AuthorID,
+		CategoryID:   a.CategoryID,
+		IsTop:        a.IsTop,
+		IsPublished:  a.IsPublished,
+		ViewCount:    a.ViewCount,
+		LikeCount:    a.LikeCount,
+		FavorCount:   a.FavorCount,
+		CommentCount: a.CommentCount,
+		CreatedAt:    a.CreatedAt,
+		UpdatedAt:    a.UpdatedAt,
+	}
+
 	if a.PublishedAt.Valid {
 		r.PublishedAt = a.PublishedAt.Time
 	}
-	if agg.Stats != nil {
-		r.ViewCount = agg.Stats.ViewCount
-		r.LikeCount = agg.Stats.LikeCount
-		r.CommentCount = agg.Stats.CommentCount
+
+	if agg.Cate != nil {
+		r.CategoryName = agg.Cate.Name
 	}
+
 	if agg.Author != nil {
 		r.AuthorName = agg.Author.Name
 		r.AuthorAvatar = agg.Author.Avatar
@@ -100,8 +123,8 @@ func ToArticleResponse(agg *aggregate.ArticleAggregate) *ArticleResponse {
 	return r
 }
 
-func ToArticleResponses(aggs []*aggregate.ArticleAggregate) []*ArticleResponse {
-	items := make([]*ArticleResponse, 0, len(aggs))
+func ToArticleResponses(aggs []*aggregate.ArticleAggregate) []*ArticleMsg {
+	items := make([]*ArticleMsg, 0, len(aggs))
 	for _, agg := range aggs {
 		if item := ToArticleResponse(agg); item != nil {
 			items = append(items, item)
@@ -111,7 +134,7 @@ func ToArticleResponses(aggs []*aggregate.ArticleAggregate) []*ArticleResponse {
 }
 
 func ToGetArticleResponse(agg *aggregate.ArticleAggregate) *GetArticleResponse {
-	return &GetArticleResponse{Article: ToArticleResponse(agg)}
+	return &GetArticleResponse{ToArticleResponse(agg)}
 }
 
 func ToListArticlesResponse(aggs []*aggregate.ArticleAggregate) *ListArticlesResponse {

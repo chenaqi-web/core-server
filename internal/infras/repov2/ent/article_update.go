@@ -202,27 +202,6 @@ func (_u *ArticleUpdate) SetNillableIsPublished(v *bool) *ArticleUpdate {
 	return _u
 }
 
-// SetVisibility sets the "visibility" field.
-func (_u *ArticleUpdate) SetVisibility(v int) *ArticleUpdate {
-	_u.mutation.ResetVisibility()
-	_u.mutation.SetVisibility(v)
-	return _u
-}
-
-// SetNillableVisibility sets the "visibility" field if the given value is not nil.
-func (_u *ArticleUpdate) SetNillableVisibility(v *int) *ArticleUpdate {
-	if v != nil {
-		_u.SetVisibility(*v)
-	}
-	return _u
-}
-
-// AddVisibility adds value to the "visibility" field.
-func (_u *ArticleUpdate) AddVisibility(v int) *ArticleUpdate {
-	_u.mutation.AddVisibility(v)
-	return _u
-}
-
 // SetViewCount sets the "view_count" field.
 func (_u *ArticleUpdate) SetViewCount(v int) *ArticleUpdate {
 	_u.mutation.ResetViewCount()
@@ -434,12 +413,6 @@ func (_u *ArticleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.IsPublished(); ok {
 		_spec.SetField(article.FieldIsPublished, field.TypeBool, value)
-	}
-	if value, ok := _u.mutation.Visibility(); ok {
-		_spec.SetField(article.FieldVisibility, field.TypeInt, value)
-	}
-	if value, ok := _u.mutation.AddedVisibility(); ok {
-		_spec.AddField(article.FieldVisibility, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.ViewCount(); ok {
 		_spec.SetField(article.FieldViewCount, field.TypeInt, value)
@@ -715,27 +688,6 @@ func (_u *ArticleUpdateOne) SetNillableIsPublished(v *bool) *ArticleUpdateOne {
 	return _u
 }
 
-// SetVisibility sets the "visibility" field.
-func (_u *ArticleUpdateOne) SetVisibility(v int) *ArticleUpdateOne {
-	_u.mutation.ResetVisibility()
-	_u.mutation.SetVisibility(v)
-	return _u
-}
-
-// SetNillableVisibility sets the "visibility" field if the given value is not nil.
-func (_u *ArticleUpdateOne) SetNillableVisibility(v *int) *ArticleUpdateOne {
-	if v != nil {
-		_u.SetVisibility(*v)
-	}
-	return _u
-}
-
-// AddVisibility adds value to the "visibility" field.
-func (_u *ArticleUpdateOne) AddVisibility(v int) *ArticleUpdateOne {
-	_u.mutation.AddVisibility(v)
-	return _u
-}
-
 // SetViewCount sets the "view_count" field.
 func (_u *ArticleUpdateOne) SetViewCount(v int) *ArticleUpdateOne {
 	_u.mutation.ResetViewCount()
@@ -977,12 +929,6 @@ func (_u *ArticleUpdateOne) sqlSave(ctx context.Context) (_node *Article, err er
 	}
 	if value, ok := _u.mutation.IsPublished(); ok {
 		_spec.SetField(article.FieldIsPublished, field.TypeBool, value)
-	}
-	if value, ok := _u.mutation.Visibility(); ok {
-		_spec.SetField(article.FieldVisibility, field.TypeInt, value)
-	}
-	if value, ok := _u.mutation.AddedVisibility(); ok {
-		_spec.AddField(article.FieldVisibility, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.ViewCount(); ok {
 		_spec.SetField(article.FieldViewCount, field.TypeInt, value)

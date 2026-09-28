@@ -115,11 +115,6 @@ func IsPublished(v bool) predicate.Article {
 	return predicate.Article(sql.FieldEQ(FieldIsPublished, v))
 }
 
-// Visibility applies equality check predicate on the "visibility" field. It's identical to VisibilityEQ.
-func Visibility(v int) predicate.Article {
-	return predicate.Article(sql.FieldEQ(FieldVisibility, v))
-}
-
 // ViewCount applies equality check predicate on the "view_count" field. It's identical to ViewCountEQ.
 func ViewCount(v int) predicate.Article {
 	return predicate.Article(sql.FieldEQ(FieldViewCount, v))
@@ -638,46 +633,6 @@ func IsPublishedEQ(v bool) predicate.Article {
 // IsPublishedNEQ applies the NEQ predicate on the "is_published" field.
 func IsPublishedNEQ(v bool) predicate.Article {
 	return predicate.Article(sql.FieldNEQ(FieldIsPublished, v))
-}
-
-// VisibilityEQ applies the EQ predicate on the "visibility" field.
-func VisibilityEQ(v int) predicate.Article {
-	return predicate.Article(sql.FieldEQ(FieldVisibility, v))
-}
-
-// VisibilityNEQ applies the NEQ predicate on the "visibility" field.
-func VisibilityNEQ(v int) predicate.Article {
-	return predicate.Article(sql.FieldNEQ(FieldVisibility, v))
-}
-
-// VisibilityIn applies the In predicate on the "visibility" field.
-func VisibilityIn(vs ...int) predicate.Article {
-	return predicate.Article(sql.FieldIn(FieldVisibility, vs...))
-}
-
-// VisibilityNotIn applies the NotIn predicate on the "visibility" field.
-func VisibilityNotIn(vs ...int) predicate.Article {
-	return predicate.Article(sql.FieldNotIn(FieldVisibility, vs...))
-}
-
-// VisibilityGT applies the GT predicate on the "visibility" field.
-func VisibilityGT(v int) predicate.Article {
-	return predicate.Article(sql.FieldGT(FieldVisibility, v))
-}
-
-// VisibilityGTE applies the GTE predicate on the "visibility" field.
-func VisibilityGTE(v int) predicate.Article {
-	return predicate.Article(sql.FieldGTE(FieldVisibility, v))
-}
-
-// VisibilityLT applies the LT predicate on the "visibility" field.
-func VisibilityLT(v int) predicate.Article {
-	return predicate.Article(sql.FieldLT(FieldVisibility, v))
-}
-
-// VisibilityLTE applies the LTE predicate on the "visibility" field.
-func VisibilityLTE(v int) predicate.Article {
-	return predicate.Article(sql.FieldLTE(FieldVisibility, v))
 }
 
 // ViewCountEQ applies the EQ predicate on the "view_count" field.

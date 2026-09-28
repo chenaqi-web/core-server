@@ -241,7 +241,7 @@ func (s *LikeService) UserLikeList(ctx context.Context, userID uint64, objectTyp
 	// 2) 先查 zset 热数据
 	cachedIDs, cacheErr := s.cache.PageQueryObjects(ctx, userID, objectType, page, pageSize)
 	if cacheErr == nil && len(cachedIDs) == pageSize {
-		articles, err := s.loadArticlesByIDs(ctx, cachedIDs)
+		articles, err := s.articleRepo.ListByIDs(ctx, cachedIDs)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -266,49 +266,11 @@ func (s *LikeService) UserLikeList(ctx context.Context, userID uint64, objectTyp
 		s.log.Error("set like list cache failed", zap.Error(err))
 	}
 
-	articles, err := s.loadArticlesByIDs(ctx, ids)
+	articles, err := s.articleRepo.ListByIDs(ctx, ids)
 	if err != nil {
 		return nil, 0, err
 	}
 	return articles, total, nil
-}
-
-func (s *LikeService) loadArticlesByIDs(ctx context.Context, ids []uint64) ([]*aggregate.ArticleAggregate, error) {
-	if len(ids) == 0 {
-		return nil, nil
-	}
-
-	storedArticles, err := s.articleRepo.ListByIDs(ctx, ids)
-	if err != nil {
-		return nil, err
-	}
-	articleMap := make(map[uint64]*entity.Article, len(storedArticles))
-	for _, article := range storedArticles {
-		articleMap[article.ID] = article
-	}
-
-	authorMap, err := LoadUserMap(ctx, s.userRepo, CollectArticleAuthorIDs(storedArticles))
-	if err != nil {
-		return nil, err
-	}
-	statsMap, err := s.countService.BatchGetArticleInteractionCounts(ctx, ids)
-	if err != nil {
-		return nil, err
-	}
-
-	articles := make([]*aggregate.ArticleAggregate, 0, len(storedArticles))
-	for _, id := range ids {
-		article, ok := articleMap[id]
-		if !ok {
-			continue
-		}
-		articles = append(articles, aggregate.NewArticleAggregate(
-			article,
-			authorMap[article.AuthorID],
-			statsMap[article.ID],
-		))
-	}
-	return articles, nil
 }
 
 // =====================================================================================================================
@@ -383,6 +345,6 @@ func (s *LikeService) UserLikeListDirect(ctx context.Context, userID uint64, obj
 	for _, like := range likes {
 		ids = append(ids, like.ObjectID)
 	}
-	articles, err := s.loadArticlesByIDs(ctx, ids)
+	articles, err := s.articleRepo.ListByIDs(ctx, ids)
 	return articles, total, err
 }

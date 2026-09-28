@@ -5,23 +5,19 @@ import (
 	"core-server/internal/config"
 	"core-server/internal/domain"
 	"core-server/internal/infras/clog"
-	"core-server/internal/infras/repov2"
-	"core-server/internal/model/aggregate"
 	"core-server/internal/model/dto"
 	"core-server/internal/model/entity"
 	"database/sql"
-	"errors"
 	"time"
 
 	"go.uber.org/zap"
 )
 
 type ArticleService struct {
-	log       *clog.Log
-	cfg       *config.Config
-	ArtRepo   domain.ArticleRepoDomain
-	userRepo  domain.UserRepoDomain
-	countRepo *CountService
+	log      *clog.Log
+	cfg      *config.Config
+	ArtRepo  domain.ArticleRepoDomain
+	userRepo domain.UserRepoDomain
 }
 
 func NewArticleService(
@@ -29,14 +25,12 @@ func NewArticleService(
 	cfg *config.Config,
 	ArtRepo domain.ArticleRepoDomain,
 	userRepo domain.UserRepoDomain,
-	countRepo *CountService,
 ) (*ArticleService, error) {
 	return &ArticleService{
-		cfg:       cfg,
-		log:       log,
-		ArtRepo:   ArtRepo,
-		userRepo:  userRepo,
-		countRepo: countRepo,
+		cfg:      cfg,
+		log:      log,
+		ArtRepo:  ArtRepo,
+		userRepo: userRepo,
 	}, nil
 }
 
@@ -52,6 +46,7 @@ func (s *ArticleService) CreateArticle(ctx context.Context, req *dto.CreateArtic
 		IsPublished: req.IsPublished,
 	}
 
+	// 用来记录这篇文章的状态
 	if a.IsPublished {
 		a.PublishedAt = sql.NullTime{
 			Valid: true, // 表示当前这个字段有数据
@@ -67,7 +62,6 @@ func (s *ArticleService) CreateArticle(ctx context.Context, req *dto.CreateArtic
 }
 
 func (s *ArticleService) EditorArticle(ctx context.Context, req *dto.EditorArticleRequest) error {
-	S
 	a := &entity.Article{
 		ID:          req.ID,
 		AuthorID:    req.AuthorID,
@@ -79,22 +73,16 @@ func (s *ArticleService) EditorArticle(ctx context.Context, req *dto.EditorArtic
 		IsPublished: req.IsPublished,
 		CoverImage:  req.CoverImage,
 	}
-	if a.ID == 0 {
-		return errors.New("have no right to modify others' articles")
-	}
 	if err := s.ArtRepo.Edit(ctx, a); err != nil {
+		s.log.Error("EditorArticle error", zap.Error(err))
 		return err
 	}
 	return nil
 }
 
-func (s *ArticleService) DeleteArticle(ctx context.Context, id uint64, authorID uint64) error {
+func (s *ArticleService) DeleteArticle(ctx context.Context, req *dto.DelArticleRequest) error {
 	// 这个删除是包含管理员删除的
-	// 当其是管理员的时候，传入的authorID是0,在repo下面是不会加上这个authorId = ? 的判断条件
-	if err := s.ArtRepo.DeleteByID(ctx, id, authorID); err != nil {
-		if errors.Is(err, repov2.ErrNotFound) {
-			return ErrArticleNotFound
-		}
+	if err := s.ArtRepo.DeleteByID(ctx, req.ID, req.UserID, req.Role); err != nil {
 		s.log.Error("DeleteArticle error", zap.Error(err))
 		return err
 	}
@@ -102,40 +90,16 @@ func (s *ArticleService) DeleteArticle(ctx context.Context, id uint64, authorID 
 }
 
 func (s *ArticleService) GetArticle(ctx context.Context, id uint64) (*dto.GetArticleResponse, error) {
-	article, err := s.ArtRepo.GetByID(ctx, id)
+	res, err := s.ArtRepo.GetByID(ctx, id)
 	if err != nil {
-		if errors.Is(err, repov2.ErrNotFound) {
-			return dto.ToGetArticleResponse(nil), nil
-		}
 		s.log.Error("GetArticle info", zap.Error(err))
 		return nil, err
 	}
-	if article == nil {
-		return dto.ToGetArticleResponse(nil), nil
+	if res == nil {
+		return nil, nil
 	}
 
-	author, err := s.userRepo.GetByID(ctx, article.AuthorID)
-	if err != nil {
-		if errors.Is(err, repov2.ErrNotFound) {
-			return dto.ToGetArticleResponse(nil), nil
-		}
-		s.log.Error("GetArticle info", zap.Error(err))
-		return nil, err
-	}
-
-	counts, err := s.countRepo.GetArticleInteractionCount(ctx, article.ID)
-	if err != nil {
-		s.log.Error("GetArticleInteractionCount error", zap.Error(err))
-		return nil, err
-	}
-
-	// todo 暂时先将这个浏览量增加函数放到这个博客获取的位置
-	if err := s.countRepo.IncrementArticleView(ctx, article.ID); err != nil {
-		s.log.Error("increment article view count error", zap.Error(err))
-		return nil, err
-	}
-
-	return dto.ToGetArticleResponse(aggregate.NewArticleAggregate(article, author, counts)), nil
+	return dto.ToGetArticleResponse(res), nil
 }
 
 // =====================================================================================================================
@@ -152,11 +116,7 @@ func (s *ArticleService) ListArticles(ctx context.Context, req *dto.ListArticles
 		return nil, err
 	}
 
-	aggs, err := s.BuildArticleAggregates(ctx, articles)
-	if err != nil {
-		return nil, err
-	}
-	return dto.ToListArticlesResponse(aggs), nil
+	return dto.ToListArticlesResponse(articles), nil
 }
 
 func (s *ArticleService) ListMyArticles(ctx context.Context, req *dto.ListMyArticlesRequest) (*dto.ListMyArticlesResponse, error) {
@@ -169,14 +129,8 @@ func (s *ArticleService) ListMyArticles(ctx context.Context, req *dto.ListMyArti
 		s.log.Error(err.Error())
 		return nil, err
 	}
-	if len(articles) == 0 {
-		return dto.ToListMyArticlesResponse(nil), nil
-	}
-	aggs, err := s.BuildArticleAggregates(ctx, articles)
-	if err != nil {
-		return nil, err
-	}
-	return dto.ToListMyArticlesResponse(aggs), nil
+
+	return dto.ToListMyArticlesResponse(articles), nil
 }
 
 func (s *ArticleService) ListArticlesByCategory(ctx context.Context, req *dto.ListArticlesByCategoryRequest) (*dto.ListArticlesByCategoryResponse, error) {
@@ -189,11 +143,7 @@ func (s *ArticleService) ListArticlesByCategory(ctx context.Context, req *dto.Li
 		s.log.Error(err.Error())
 		return nil, err
 	}
-	aggs, err := s.BuildArticleAggregates(ctx, articles)
-	if err != nil {
-		return nil, err
-	}
-	return dto.ToListArticlesByCategoryResponse(aggs), nil
+	return dto.ToListArticlesByCategoryResponse(articles), nil
 }
 
 func (s *ArticleService) SearchArticles(ctx context.Context, req *dto.SearchArticlesRequest) (*dto.SearchArticlesResponse, error) {
@@ -206,58 +156,5 @@ func (s *ArticleService) SearchArticles(ctx context.Context, req *dto.SearchArti
 		s.log.Error(err.Error())
 		return nil, err
 	}
-	aggs, err := s.BuildArticleAggregates(ctx, articles)
-	if err != nil {
-		return nil, err
-	}
-	return dto.ToSearchArticlesResponse(aggs), nil
-}
-
-// =====================================================================================================================
-
-// BuildArticleAggregates  对聚合根的构建
-func (s *ArticleService) BuildArticleAggregates(ctx context.Context, arts []*entity.Article) ([]*aggregate.ArticleAggregate, error) {
-	// 一次遍历同时收集作者ID和文章ID
-	authorIDs := make([]uint64, 0, len(arts))
-	articleIDs := make([]uint64, 0, len(arts))
-	seenAuthors := make(map[uint64]struct{})
-
-	for _, article := range arts {
-		// 收集文章ID
-		articleIDs = append(articleIDs, article.ID)
-
-		// 收集作者ID（去重）
-		if _, ok := seenAuthors[article.AuthorID]; !ok {
-			seenAuthors[article.AuthorID] = struct{}{}
-			authorIDs = append(authorIDs, article.AuthorID)
-		}
-	}
-
-	// 批量加载用户信息
-	users, err := s.userRepo.ListByIDs(ctx, authorIDs)
-	if err != nil {
-		return nil, err
-	}
-	authorMap := make(map[uint64]*entity.User, len(users))
-	for _, user := range users {
-		authorMap[user.ID] = user
-	}
-
-	// 批量获取文章互动统计数据
-	statsMap, err := s.countRepo.BatchGetArticleInteractionCounts(ctx, articleIDs)
-	if err != nil {
-		return nil, err
-	}
-
-	// 构建聚合结果
-	items := make([]*aggregate.ArticleAggregate, 0, len(arts))
-	for _, article := range arts {
-		items = append(items, aggregate.NewArticleAggregate(
-			article,
-			authorMap[article.AuthorID],
-			statsMap[article.ID],
-		))
-	}
-
-	return items, nil
+	return dto.ToSearchArticlesResponse(articles), nil
 }

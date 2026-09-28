@@ -158,20 +158,6 @@ func (_c *ArticleCreate) SetNillableIsPublished(v *bool) *ArticleCreate {
 	return _c
 }
 
-// SetVisibility sets the "visibility" field.
-func (_c *ArticleCreate) SetVisibility(v int) *ArticleCreate {
-	_c.mutation.SetVisibility(v)
-	return _c
-}
-
-// SetNillableVisibility sets the "visibility" field if the given value is not nil.
-func (_c *ArticleCreate) SetNillableVisibility(v *int) *ArticleCreate {
-	if v != nil {
-		_c.SetVisibility(*v)
-	}
-	return _c
-}
-
 // SetViewCount sets the "view_count" field.
 func (_c *ArticleCreate) SetViewCount(v int) *ArticleCreate {
 	_c.mutation.SetViewCount(v)
@@ -309,10 +295,6 @@ func (_c *ArticleCreate) defaults() {
 		v := article.DefaultIsPublished
 		_c.mutation.SetIsPublished(v)
 	}
-	if _, ok := _c.mutation.Visibility(); !ok {
-		v := article.DefaultVisibility
-		_c.mutation.SetVisibility(v)
-	}
 	if _, ok := _c.mutation.ViewCount(); !ok {
 		v := article.DefaultViewCount
 		_c.mutation.SetViewCount(v)
@@ -362,9 +344,6 @@ func (_c *ArticleCreate) check() error {
 	}
 	if _, ok := _c.mutation.IsPublished(); !ok {
 		return &ValidationError{Name: "is_published", err: errors.New(`ent: missing required field "Article.is_published"`)}
-	}
-	if _, ok := _c.mutation.Visibility(); !ok {
-		return &ValidationError{Name: "visibility", err: errors.New(`ent: missing required field "Article.visibility"`)}
 	}
 	if _, ok := _c.mutation.ViewCount(); !ok {
 		return &ValidationError{Name: "view_count", err: errors.New(`ent: missing required field "Article.view_count"`)}
@@ -455,10 +434,6 @@ func (_c *ArticleCreate) createSpec() (*Article, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.IsPublished(); ok {
 		_spec.SetField(article.FieldIsPublished, field.TypeBool, value)
 		_node.IsPublished = value
-	}
-	if value, ok := _c.mutation.Visibility(); ok {
-		_spec.SetField(article.FieldVisibility, field.TypeInt, value)
-		_node.Visibility = value
 	}
 	if value, ok := _c.mutation.ViewCount(); ok {
 		_spec.SetField(article.FieldViewCount, field.TypeInt, value)

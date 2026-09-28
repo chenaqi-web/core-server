@@ -66,7 +66,7 @@ message EditorArticleRequest {
   uint64 categoryID = 7;   // 分类ID
   bool isTop = 8;          // 是否置顶
   bool isPublished = 9;    // 是否发布（true=发布, false=存草稿）
-  uint64 userID = 10;      // 用户id，当userid = authorID时才可修改
+//  uint64 userID = 10;      // 用户id，当userid = authorID时才可修改
 }
 
 message EditorArticleResponse {
@@ -76,7 +76,8 @@ message EditorArticleResponse {
 
 message DeleteArticleRequest {
   uint64 id = 1;
-  uint64 authorID = 2; // 请求者用户ID，用于校验是否有权限删除
+  uint64 UserID = 2; // 请求者用户ID，用于校验是否有权限删除
+  string Role = 3;
 }
 message DeleteArticleResponse {
   bool success = 1;
