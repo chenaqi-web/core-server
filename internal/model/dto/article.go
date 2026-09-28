@@ -60,29 +60,41 @@ type ArticleMsg struct {
 	PublishedAt time.Time
 }
 
-type CreateArticleResponse struct{ Success bool }
-type EditorArticleResponse struct {
-	Success   bool
-	ArticleID uint64
+type GetArticleResponse struct {
+	*ArticleMsg
 }
-type GetArticleResponse struct{ *ArticleMsg }
-type ListArticlesResponse struct{ Articles []*ArticleMsg }
-type ListMyArticlesResponse struct{ Articles []*ArticleMsg }
-type ListArticlesByCategoryResponse struct{ Articles []*ArticleMsg }
-type SearchArticlesResponse struct{ Articles []*ArticleMsg }
 
-type ListArticlesRequest struct{ Page, PageSize int }
+type ListArticlesResponse struct {
+	Articles []*ArticleMsg
+}
+type ListMyArticlesResponse struct {
+	Articles []*ArticleMsg
+}
+type ListArticlesByCategoryResponse struct {
+	Articles []*ArticleMsg
+}
+type SearchArticlesResponse struct {
+	Articles []*ArticleMsg
+}
+
+type ListArticlesRequest struct {
+	Page     int
+	PageSize int
+}
 type ListMyArticlesRequest struct {
-	AuthorID       uint64
-	Page, PageSize int
+	AuthorID uint64
+	Page     int
+	PageSize int
 }
 type ListArticlesByCategoryRequest struct {
-	CategoryID     uint64
-	Page, PageSize int
+	CategoryID uint64
+	Page       int
+	PageSize   int
 }
 type SearchArticlesRequest struct {
-	Query          string
-	Page, PageSize int
+	Query    string
+	Page     int
+	PageSize int
 }
 
 func ToArticleResponse(agg *aggregate.ArticleAggregate) *ArticleMsg {
