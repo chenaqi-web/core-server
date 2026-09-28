@@ -51,16 +51,16 @@ const (
 	// EdgeCategory holds the string denoting the category edge name in mutations.
 	EdgeCategory = "category"
 	// Table holds the table name of the article in the database.
-	Table = "blog_article"
+	Table = "article"
 	// UserTable is the table that holds the user relation/edge.
-	UserTable = "blog_article"
+	UserTable = "article"
 	// UserInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	UserInverseTable = "user"
 	// UserColumn is the table column denoting the user relation/edge.
 	UserColumn = "author_id"
 	// CategoryTable is the table that holds the category relation/edge.
-	CategoryTable = "blog_article"
+	CategoryTable = "article"
 	// CategoryInverseTable is the table name for the Category entity.
 	// It exists in this package in order to avoid circular dependency with the "category" package.
 	CategoryInverseTable = "category"

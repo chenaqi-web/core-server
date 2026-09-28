@@ -18,11 +18,3 @@ type ArticleAggregate struct {
 	// 分类
 	Cate *entity.Category
 }
-
-func NewArticleAggregate(article *entity.Article, author *entity.User, Cate *entity.Category) *ArticleAggregate {
-	return &ArticleAggregate{
-		Article: article,
-		Author:  author,
-		Cate:    Cate,
-	}
-}

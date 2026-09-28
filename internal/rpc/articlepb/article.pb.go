@@ -394,7 +394,24 @@ func (x *GetArticleRequest) GetId() uint64 {
 
 type GetArticleResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Article       *Article               `protobuf:"bytes,1,opt,name=article,proto3" json:"article,omitempty"`
+	Id            uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	Summary       string                 `protobuf:"bytes,3,opt,name=summary,proto3" json:"summary,omitempty"`
+	Content       string                 `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty"`
+	CoverImage    string                 `protobuf:"bytes,5,opt,name=coverImage,proto3" json:"coverImage,omitempty"`
+	AuthorID      uint64                 `protobuf:"varint,6,opt,name=authorID,proto3" json:"authorID,omitempty"`
+	CategoryID    uint64                 `protobuf:"varint,7,opt,name=categoryID,proto3" json:"categoryID,omitempty"`
+	IsTop         bool                   `protobuf:"varint,8,opt,name=isTop,proto3" json:"isTop,omitempty"`
+	IsPublished   bool                   `protobuf:"varint,9,opt,name=isPublished,proto3" json:"isPublished,omitempty"`
+	ViewCount     uint64                 `protobuf:"varint,11,opt,name=viewCount,proto3" json:"viewCount,omitempty"`
+	LikeCount     uint64                 `protobuf:"varint,12,opt,name=likeCount,proto3" json:"likeCount,omitempty"`
+	CommentCount  uint64                 `protobuf:"varint,13,opt,name=commentCount,proto3" json:"commentCount,omitempty"`
+	CreatedAt     uint64                 `protobuf:"varint,14,opt,name=createdAt,proto3" json:"createdAt,omitempty"` // unix timestamp (seconds)
+	UpdatedAt     uint64                 `protobuf:"varint,15,opt,name=updatedAt,proto3" json:"updatedAt,omitempty"` // unix timestamp (seconds)
+	PublishedAt   uint64                 `protobuf:"varint,16,opt,name=publishedAt,proto3" json:"publishedAt,omitempty"`
+	AuthorName    string                 `protobuf:"bytes,17,opt,name=authorName,proto3" json:"authorName,omitempty"`     // 作者昵称，来自 user.name
+	AuthorAvatar  string                 `protobuf:"bytes,18,opt,name=authorAvatar,proto3" json:"authorAvatar,omitempty"` // 作者头像，来自 user.avatar
+	FavorCount    uint64                 `protobuf:"varint,19,opt,name=favorCount,proto3" json:"favorCount,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -429,11 +446,130 @@ func (*GetArticleResponse) Descriptor() ([]byte, []int) {
 	return file_article_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *GetArticleResponse) GetArticle() *Article {
+func (x *GetArticleResponse) GetId() uint64 {
 	if x != nil {
-		return x.Article
+		return x.Id
 	}
-	return nil
+	return 0
+}
+
+func (x *GetArticleResponse) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *GetArticleResponse) GetSummary() string {
+	if x != nil {
+		return x.Summary
+	}
+	return ""
+}
+
+func (x *GetArticleResponse) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+func (x *GetArticleResponse) GetCoverImage() string {
+	if x != nil {
+		return x.CoverImage
+	}
+	return ""
+}
+
+func (x *GetArticleResponse) GetAuthorID() uint64 {
+	if x != nil {
+		return x.AuthorID
+	}
+	return 0
+}
+
+func (x *GetArticleResponse) GetCategoryID() uint64 {
+	if x != nil {
+		return x.CategoryID
+	}
+	return 0
+}
+
+func (x *GetArticleResponse) GetIsTop() bool {
+	if x != nil {
+		return x.IsTop
+	}
+	return false
+}
+
+func (x *GetArticleResponse) GetIsPublished() bool {
+	if x != nil {
+		return x.IsPublished
+	}
+	return false
+}
+
+func (x *GetArticleResponse) GetViewCount() uint64 {
+	if x != nil {
+		return x.ViewCount
+	}
+	return 0
+}
+
+func (x *GetArticleResponse) GetLikeCount() uint64 {
+	if x != nil {
+		return x.LikeCount
+	}
+	return 0
+}
+
+func (x *GetArticleResponse) GetCommentCount() uint64 {
+	if x != nil {
+		return x.CommentCount
+	}
+	return 0
+}
+
+func (x *GetArticleResponse) GetCreatedAt() uint64 {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return 0
+}
+
+func (x *GetArticleResponse) GetUpdatedAt() uint64 {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return 0
+}
+
+func (x *GetArticleResponse) GetPublishedAt() uint64 {
+	if x != nil {
+		return x.PublishedAt
+	}
+	return 0
+}
+
+func (x *GetArticleResponse) GetAuthorName() string {
+	if x != nil {
+		return x.AuthorName
+	}
+	return ""
+}
+
+func (x *GetArticleResponse) GetAuthorAvatar() string {
+	if x != nil {
+		return x.AuthorAvatar
+	}
+	return ""
+}
+
+func (x *GetArticleResponse) GetFavorCount() uint64 {
+	if x != nil {
+		return x.FavorCount
+	}
+	return 0
 }
 
 type ListArticlesRequest struct {
@@ -1164,9 +1300,34 @@ const file_article_proto_rawDesc = "" +
 	"\x15CreateArticleResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\"#\n" +
 	"\x11GetArticleRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x04R\x02id\"@\n" +
-	"\x12GetArticleResponse\x12*\n" +
-	"\aarticle\x18\x01 \x01(\v2\x10.article.ArticleR\aarticle\"E\n" +
+	"\x02id\x18\x01 \x01(\x04R\x02id\"\xa4\x04\n" +
+	"\x12GetArticleResponse\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x14\n" +
+	"\x05title\x18\x02 \x01(\tR\x05title\x12\x18\n" +
+	"\asummary\x18\x03 \x01(\tR\asummary\x12\x18\n" +
+	"\acontent\x18\x04 \x01(\tR\acontent\x12\x1e\n" +
+	"\n" +
+	"coverImage\x18\x05 \x01(\tR\n" +
+	"coverImage\x12\x1a\n" +
+	"\bauthorID\x18\x06 \x01(\x04R\bauthorID\x12\x1e\n" +
+	"\n" +
+	"categoryID\x18\a \x01(\x04R\n" +
+	"categoryID\x12\x14\n" +
+	"\x05isTop\x18\b \x01(\bR\x05isTop\x12 \n" +
+	"\visPublished\x18\t \x01(\bR\visPublished\x12\x1c\n" +
+	"\tviewCount\x18\v \x01(\x04R\tviewCount\x12\x1c\n" +
+	"\tlikeCount\x18\f \x01(\x04R\tlikeCount\x12\"\n" +
+	"\fcommentCount\x18\r \x01(\x04R\fcommentCount\x12\x1c\n" +
+	"\tcreatedAt\x18\x0e \x01(\x04R\tcreatedAt\x12\x1c\n" +
+	"\tupdatedAt\x18\x0f \x01(\x04R\tupdatedAt\x12 \n" +
+	"\vpublishedAt\x18\x10 \x01(\x04R\vpublishedAt\x12\x1e\n" +
+	"\n" +
+	"authorName\x18\x11 \x01(\tR\n" +
+	"authorName\x12\"\n" +
+	"\fauthorAvatar\x18\x12 \x01(\tR\fauthorAvatar\x12\x1e\n" +
+	"\n" +
+	"favorCount\x18\x13 \x01(\x04R\n" +
+	"favorCount\"E\n" +
 	"\x13ListArticlesRequest\x12\x12\n" +
 	"\x04page\x18\x01 \x01(\rR\x04page\x12\x1a\n" +
 	"\bpageSize\x18\x02 \x01(\rR\bpageSize\"D\n" +
@@ -1261,32 +1422,31 @@ var file_article_proto_goTypes = []any{
 	(*SearchArticlesResponse)(nil), // 16: article.SearchArticlesResponse
 }
 var file_article_proto_depIdxs = []int32{
-	0,  // 0: article.GetArticleResponse.article:type_name -> article.Article
-	0,  // 1: article.ListArticlesResponse.articles:type_name -> article.Article
-	0,  // 2: article.ListMyArticlesResponse.articles:type_name -> article.Article
-	0,  // 3: article.ListByCategoryResponse.articles:type_name -> article.Article
-	0,  // 4: article.SearchArticlesResponse.articles:type_name -> article.Article
-	1,  // 5: article.ArticleService.CreateArticle:input_type -> article.CreateArticleRequest
-	7,  // 6: article.ArticleService.EditorArticle:input_type -> article.EditorArticleRequest
-	3,  // 7: article.ArticleService.GetArticle:input_type -> article.GetArticleRequest
-	5,  // 8: article.ArticleService.ListArticles:input_type -> article.ListArticlesRequest
-	11, // 9: article.ArticleService.ListMyArticles:input_type -> article.ListMyArticlesRequest
-	13, // 10: article.ArticleService.ListByCategory:input_type -> article.ListByCategoryRequest
-	15, // 11: article.ArticleService.SearchArticles:input_type -> article.SearchArticlesRequest
-	9,  // 12: article.ArticleService.DeleteArticle:input_type -> article.DeleteArticleRequest
-	2,  // 13: article.ArticleService.CreateArticle:output_type -> article.CreateArticleResponse
-	8,  // 14: article.ArticleService.EditorArticle:output_type -> article.EditorArticleResponse
-	4,  // 15: article.ArticleService.GetArticle:output_type -> article.GetArticleResponse
-	6,  // 16: article.ArticleService.ListArticles:output_type -> article.ListArticlesResponse
-	12, // 17: article.ArticleService.ListMyArticles:output_type -> article.ListMyArticlesResponse
-	14, // 18: article.ArticleService.ListByCategory:output_type -> article.ListByCategoryResponse
-	16, // 19: article.ArticleService.SearchArticles:output_type -> article.SearchArticlesResponse
-	10, // 20: article.ArticleService.DeleteArticle:output_type -> article.DeleteArticleResponse
-	13, // [13:21] is the sub-list for method output_type
-	5,  // [5:13] is the sub-list for method input_type
-	5,  // [5:5] is the sub-list for extension type_name
-	5,  // [5:5] is the sub-list for extension extendee
-	0,  // [0:5] is the sub-list for field type_name
+	0,  // 0: article.ListArticlesResponse.articles:type_name -> article.Article
+	0,  // 1: article.ListMyArticlesResponse.articles:type_name -> article.Article
+	0,  // 2: article.ListByCategoryResponse.articles:type_name -> article.Article
+	0,  // 3: article.SearchArticlesResponse.articles:type_name -> article.Article
+	1,  // 4: article.ArticleService.CreateArticle:input_type -> article.CreateArticleRequest
+	7,  // 5: article.ArticleService.EditorArticle:input_type -> article.EditorArticleRequest
+	3,  // 6: article.ArticleService.GetArticle:input_type -> article.GetArticleRequest
+	5,  // 7: article.ArticleService.ListArticles:input_type -> article.ListArticlesRequest
+	11, // 8: article.ArticleService.ListMyArticles:input_type -> article.ListMyArticlesRequest
+	13, // 9: article.ArticleService.ListByCategory:input_type -> article.ListByCategoryRequest
+	15, // 10: article.ArticleService.SearchArticles:input_type -> article.SearchArticlesRequest
+	9,  // 11: article.ArticleService.DeleteArticle:input_type -> article.DeleteArticleRequest
+	2,  // 12: article.ArticleService.CreateArticle:output_type -> article.CreateArticleResponse
+	8,  // 13: article.ArticleService.EditorArticle:output_type -> article.EditorArticleResponse
+	4,  // 14: article.ArticleService.GetArticle:output_type -> article.GetArticleResponse
+	6,  // 15: article.ArticleService.ListArticles:output_type -> article.ListArticlesResponse
+	12, // 16: article.ArticleService.ListMyArticles:output_type -> article.ListMyArticlesResponse
+	14, // 17: article.ArticleService.ListByCategory:output_type -> article.ListByCategoryResponse
+	16, // 18: article.ArticleService.SearchArticles:output_type -> article.SearchArticlesResponse
+	10, // 19: article.ArticleService.DeleteArticle:output_type -> article.DeleteArticleResponse
+	12, // [12:20] is the sub-list for method output_type
+	4,  // [4:12] is the sub-list for method input_type
+	4,  // [4:4] is the sub-list for extension type_name
+	4,  // [4:4] is the sub-list for extension extendee
+	0,  // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_article_proto_init() }

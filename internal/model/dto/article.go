@@ -65,7 +65,7 @@ type EditorArticleResponse struct {
 	Success   bool
 	ArticleID uint64
 }
-type GetArticleResponse struct{ Article *ArticleMsg }
+type GetArticleResponse struct{ *ArticleMsg }
 type ListArticlesResponse struct{ Articles []*ArticleMsg }
 type ListMyArticlesResponse struct{ Articles []*ArticleMsg }
 type ListArticlesByCategoryResponse struct{ Articles []*ArticleMsg }

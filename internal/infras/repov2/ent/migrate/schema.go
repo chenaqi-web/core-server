@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	// BlogArticleColumns holds the columns for the "blog_article" table.
-	BlogArticleColumns = []*schema.Column{
+	// ArticleColumns holds the columns for the "article" table.
+	ArticleColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUint64, Increment: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
@@ -29,21 +29,21 @@ var (
 		{Name: "category_id", Type: field.TypeUint64, Unique: true},
 		{Name: "author_id", Type: field.TypeUint64, Unique: true},
 	}
-	// BlogArticleTable holds the schema information for the "blog_article" table.
-	BlogArticleTable = &schema.Table{
-		Name:       "blog_article",
-		Columns:    BlogArticleColumns,
-		PrimaryKey: []*schema.Column{BlogArticleColumns[0]},
+	// ArticleTable holds the schema information for the "article" table.
+	ArticleTable = &schema.Table{
+		Name:       "article",
+		Columns:    ArticleColumns,
+		PrimaryKey: []*schema.Column{ArticleColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "blog_article_category_articles",
-				Columns:    []*schema.Column{BlogArticleColumns[15]},
+				Symbol:     "article_category_articles",
+				Columns:    []*schema.Column{ArticleColumns[15]},
 				RefColumns: []*schema.Column{CategoryColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
-				Symbol:     "blog_article_user_articles",
-				Columns:    []*schema.Column{BlogArticleColumns[16]},
+				Symbol:     "article_user_articles",
+				Columns:    []*schema.Column{ArticleColumns[16]},
 				RefColumns: []*schema.Column{UserColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -147,7 +147,7 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
-		BlogArticleTable,
+		ArticleTable,
 		CategoryTable,
 		InteractionCountTable,
 		UserTable,
@@ -156,10 +156,10 @@ var (
 )
 
 func init() {
-	BlogArticleTable.ForeignKeys[0].RefTable = CategoryTable
-	BlogArticleTable.ForeignKeys[1].RefTable = UserTable
-	BlogArticleTable.Annotation = &entsql.Annotation{
-		Table: "blog_article",
+	ArticleTable.ForeignKeys[0].RefTable = CategoryTable
+	ArticleTable.ForeignKeys[1].RefTable = UserTable
+	ArticleTable.Annotation = &entsql.Annotation{
+		Table: "article",
 	}
 	CategoryTable.Annotation = &entsql.Annotation{
 		Table: "category",

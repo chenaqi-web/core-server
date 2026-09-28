@@ -60,10 +60,29 @@ func (a *ArticleRPC) GetArticle(ctx context.Context, req *articlepb.GetArticleRe
 	if err != nil {
 		return nil, err
 	}
-	if res == nil || res.Article == nil {
-		return &articlepb.GetArticleResponse{}, nil
+	if res == nil {
+		return nil, nil
 	}
-	return &articlepb.GetArticleResponse{Article: toArticlePB(res.Article)}, nil
+	return &articlepb.GetArticleResponse{
+		Id:           res.ID,
+		Title:        res.Title,
+		Summary:      res.Summary,
+		Content:      res.Content,
+		CoverImage:   res.CoverImage,
+		AuthorID:     res.AuthorID,
+		CategoryID:   res.CategoryID,
+		IsTop:        res.IsTop,
+		IsPublished:  res.IsPublished,
+		ViewCount:    res.ViewCount,
+		LikeCount:    res.LikeCount,
+		CommentCount: res.CommentCount,
+		CreatedAt:    uint64(res.CreatedAt.Unix()),
+		UpdatedAt:    uint64(res.UpdatedAt.Unix()),
+		PublishedAt:  uint64(res.PublishedAt.Unix()),
+		AuthorName:   res.AuthorName,
+		AuthorAvatar: res.AuthorAvatar,
+		FavorCount:   res.FavorCount,
+	}, nil
 }
 
 func (a *ArticleRPC) ListArticles(ctx context.Context, req *articlepb.ListArticlesRequest) (*articlepb.ListArticlesResponse, error) {

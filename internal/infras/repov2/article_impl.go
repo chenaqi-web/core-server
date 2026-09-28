@@ -113,6 +113,8 @@ func (r *ArticleRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*aggregate
 
 	nodes, err := r.DB(ctx).Article.Query().
 		Where(article.IDIn(ids...), article.DeletedAtIsNil(), article.IsPublishedEQ(true)).
+		WithCategory().
+		WithUser().
 		All(ctx)
 	if err != nil {
 		return nil, err
@@ -140,6 +142,8 @@ func (r *ArticleRepo) List(ctx context.Context, page, pageSize int) ([]*aggregat
 func (r *ArticleRepo) ListByAuthor(ctx context.Context, authorID uint64, offset, limit int) ([]*aggregate.ArticleAggregate, error) {
 	nodes, err := r.DB(ctx).Article.Query().
 		Where(article.AuthorIDEQ(authorID), article.DeletedAtIsNil(), article.IsPublishedEQ(true)).
+		WithCategory().
+		WithUser().
 		Order(ent.Desc(article.FieldID)).
 		Offset(offset).
 		Limit(limit).
@@ -168,6 +172,8 @@ func (r *ArticleRepo) ListMe(ctx context.Context, userID uint64, offset, limit i
 func (r *ArticleRepo) ListByCategory(ctx context.Context, categoryID uint64, offset, limit int) ([]*aggregate.ArticleAggregate, error) {
 	nodes, err := r.DB(ctx).Article.Query().
 		Where(article.CategoryIDEQ(categoryID), article.DeletedAtIsNil(), article.IsPublishedEQ(true)).
+		WithCategory().
+		WithUser().
 		Order(ent.Desc(article.FieldID)).
 		Offset(offset).
 		Limit(limit).
@@ -190,6 +196,8 @@ func (r *ArticleRepo) Search(ctx context.Context, name string, offset, limit int
 				article.ContentContains(name),
 			),
 		).
+		WithCategory().
+		WithUser().
 		Order(ent.Desc(article.FieldID)).
 		Offset(offset).
 		Limit(limit).

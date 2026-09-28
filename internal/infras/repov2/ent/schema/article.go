@@ -18,7 +18,7 @@ type Article struct {
 // Annotations keeps Ent mapped to the existing table used by the SQLX repository.
 func (Article) Annotations() []entschema.Annotation {
 	return []entschema.Annotation{
-		entsql.Annotation{Table: "blog_article"},
+		entsql.Annotation{Table: "article"},
 	}
 }
 
