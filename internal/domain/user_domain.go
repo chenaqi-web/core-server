@@ -21,20 +21,20 @@ type UserRepo interface {
 	List(ctx context.Context, limit, offset int32) ([]*entity.User, uint64, error)
 	ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User, error)
 
-	// todo 有关用户互动方面的操作
-
-	GetLikeCount(ctx context.Context, userID uint64) (int64, error)
-	GetReceiveLikeCount(ctx context.Context, userID uint64) (int64, error)
-	SetReceiveLikeCount(ctx context.Context, userID uint64, count int64) error
-	IncrementLikeCount(ctx context.Context, userID uint64) error
-	DecrementLikeCount(ctx context.Context, userID uint64) error
-
 	// 有关用户更新方面的操作
 
 	UpdateProfile(ctx context.Context, user *entity.User) error
 	UpdateAvatar(ctx context.Context, userID uint64, avatar string) error
 	UpdatePassword(ctx context.Context, userID uint64, password string) error
 	UpdateStatus(ctx context.Context, userID uint64, status enum.UserStatus) error
+
+	// 个人主页方面的接口
+
+	GetLikeCount(ctx context.Context, userID uint64) (int64, error)
+	GetReceiveLikeCount(ctx context.Context, userID uint64) (int64, error)
+	SetReceiveLikeCount(ctx context.Context, userID uint64, count int64) error
+	IncrementLikeCount(ctx context.Context, userID uint64) error
+	DecrementLikeCount(ctx context.Context, userID uint64) error
 }
 
 type UserRepoDomain interface {

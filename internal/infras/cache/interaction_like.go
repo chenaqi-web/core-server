@@ -14,7 +14,7 @@ import (
 
 const (
 	// zset 最大长度
-	defaultMaxLikeSetSize      int64         = 50
+	defaultMaxLikeSetSize      int64         = 100
 	defaultLikeListExpiration  time.Duration = 7 * 24 * time.Hour
 	defaultLikeCountExpiration time.Duration = 7 * 24 * time.Hour
 )

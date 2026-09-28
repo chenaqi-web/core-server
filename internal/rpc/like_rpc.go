@@ -50,7 +50,7 @@ func (l *LikeRPC) CancelThumbUp(ctx context.Context, request *likepb.CancelThumb
 }
 
 func (l *LikeRPC) PageQueryUserLikeList(ctx context.Context, request *likepb.PageQueryUserLikeListRequest) (*likepb.PageQueryUserLikeListResponse, error) {
-	articles, total, err := l.LikeService.UserLikeList(ctx, request.GetUserID(), request.GetObjectType(), int(request.GetPage()), int(request.GetPageSize()))
+	articles, err := l.LikeService.UserLikeList(ctx, request.GetUserID(), request.GetObjectType(), int(request.GetPage()), int(request.GetPageSize()))
 	if err != nil {
 		return nil, err
 	}
@@ -61,5 +61,5 @@ func (l *LikeRPC) PageQueryUserLikeList(ctx context.Context, request *likepb.Pag
 		}
 		items = append(items, toArticlePB(dto.ToArticleResponse(article)))
 	}
-	return &likepb.PageQueryUserLikeListResponse{Articles: items, Total: total}, nil
+	return &likepb.PageQueryUserLikeListResponse{Articles: items, Total: 0}, nil
 }

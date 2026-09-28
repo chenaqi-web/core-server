@@ -189,6 +189,14 @@ func (s *UserService) UpdateAvatar(ctx context.Context, req *dto.UpdateAvatarReq
 
 // =====================================================================================================================
 
+// 个人主页方面
+
+func (s *UserService) GetUserStat(ctx context.Context) {
+
+}
+
+// =====================================================================================================================
+
 // 管理用户方面
 
 func (s *UserService) UpdateStatus(ctx context.Context, req *dto.UpdateUserStatusRequest) error {
