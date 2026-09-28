@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	"core-server/internal/model/aggregate"
 	"core-server/internal/model/entity"
 )
 
@@ -11,13 +12,13 @@ type CommentRepo interface {
 	SoftDelete(ctx context.Context, id, userID uint64) error
 	SoftDeleteRepliesByParent(ctx context.Context, parentID uint64) (int64, error)
 
-	GetByID(ctx context.Context, id uint64) (*entity.Comment, error)
-	ListByIDs(ctx context.Context, ids []uint64) ([]*entity.Comment, error)
+	GetByID(ctx context.Context, id uint64) (*aggregate.CommentAggregate, error)
+	ListByIDs(ctx context.Context, ids []uint64) ([]*aggregate.CommentAggregate, error)
 	IncrementChildCount(ctx context.Context, rootID uint64) error
 	DecrementChildCount(ctx context.Context, rootID uint64) error
 
-	ListTopByArticle(ctx context.Context, articleID uint64, offset, limit int) ([]*entity.Comment, error)
-	ListRepliesByParent(ctx context.Context, parentID uint64, offset, limit int) ([]*entity.Comment, error)
+	ListTopByArticle(ctx context.Context, articleID uint64, offset, limit int) ([]*aggregate.CommentAggregate, error)
+	ListRepliesByParent(ctx context.Context, parentID uint64, offset, limit int) ([]*aggregate.CommentAggregate, error)
 }
 
 type CommentRepoDomain interface {

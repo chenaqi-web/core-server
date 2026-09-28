@@ -5,6 +5,7 @@ package ent
 import (
 	"core-server/internal/infras/repov2/ent/article"
 	"core-server/internal/infras/repov2/ent/category"
+	"core-server/internal/infras/repov2/ent/comment"
 	"core-server/internal/infras/repov2/ent/interactioncount"
 	"core-server/internal/infras/repov2/ent/schema"
 	"core-server/internal/infras/repov2/ent/user"
@@ -80,6 +81,32 @@ func init() {
 	categoryDescName := categoryFields[4].Descriptor()
 	// category.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	category.NameValidator = categoryDescName.Validators[0].(func(string) error)
+	commentFields := schema.Comment{}.Fields()
+	_ = commentFields
+	// commentDescCreatedAt is the schema descriptor for created_at field.
+	commentDescCreatedAt := commentFields[1].Descriptor()
+	// comment.DefaultCreatedAt holds the default value on creation for the created_at field.
+	comment.DefaultCreatedAt = commentDescCreatedAt.Default.(func() time.Time)
+	// commentDescParentID is the schema descriptor for parent_id field.
+	commentDescParentID := commentFields[5].Descriptor()
+	// comment.DefaultParentID holds the default value on creation for the parent_id field.
+	comment.DefaultParentID = commentDescParentID.Default.(uint64)
+	// commentDescRootID is the schema descriptor for root_id field.
+	commentDescRootID := commentFields[6].Descriptor()
+	// comment.DefaultRootID holds the default value on creation for the root_id field.
+	comment.DefaultRootID = commentDescRootID.Default.(uint64)
+	// commentDescReplyToID is the schema descriptor for reply_to_id field.
+	commentDescReplyToID := commentFields[7].Descriptor()
+	// comment.DefaultReplyToID holds the default value on creation for the reply_to_id field.
+	comment.DefaultReplyToID = commentDescReplyToID.Default.(uint64)
+	// commentDescLikeCount is the schema descriptor for like_count field.
+	commentDescLikeCount := commentFields[9].Descriptor()
+	// comment.DefaultLikeCount holds the default value on creation for the like_count field.
+	comment.DefaultLikeCount = commentDescLikeCount.Default.(uint32)
+	// commentDescChildCount is the schema descriptor for child_count field.
+	commentDescChildCount := commentFields[10].Descriptor()
+	// comment.DefaultChildCount holds the default value on creation for the child_count field.
+	comment.DefaultChildCount = commentDescChildCount.Default.(uint32)
 	interactioncountFields := schema.InteractionCount{}.Fields()
 	_ = interactioncountFields
 	// interactioncountDescCreatedAt is the schema descriptor for created_at field.

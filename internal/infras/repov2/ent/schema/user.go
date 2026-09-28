@@ -47,6 +47,7 @@ func (User) Fields() []ent.Field {
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("stat", UserStat.Type).Unique(),
+		edge.To("comments", Comment.Type),
 
 		edge.To("articles", Article.Type).Unique(),
 	}

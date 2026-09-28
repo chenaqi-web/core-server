@@ -12,6 +12,9 @@ type Article func(*sql.Selector)
 // Category is the predicate function for category builders.
 type Category func(*sql.Selector)
 
+// Comment is the predicate function for comment builders.
+type Comment func(*sql.Selector)
+
 // InteractionCount is the predicate function for interactioncount builders.
 type InteractionCount func(*sql.Selector)
 

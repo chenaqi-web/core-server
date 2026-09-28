@@ -55,11 +55,13 @@ type User struct {
 type UserEdges struct {
 	// Stat holds the value of the stat edge.
 	Stat *UserStat `json:"stat,omitempty"`
+	// Comments holds the value of the comments edge.
+	Comments []*Comment `json:"comments,omitempty"`
 	// Articles holds the value of the articles edge.
 	Articles *Article `json:"articles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // StatOrErr returns the Stat value or an error if the edge
@@ -73,12 +75,21 @@ func (e UserEdges) StatOrErr() (*UserStat, error) {
 	return nil, &NotLoadedError{edge: "stat"}
 }
 
+// CommentsOrErr returns the Comments value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) CommentsOrErr() ([]*Comment, error) {
+	if e.loadedTypes[1] {
+		return e.Comments, nil
+	}
+	return nil, &NotLoadedError{edge: "comments"}
+}
+
 // ArticlesOrErr returns the Articles value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e UserEdges) ArticlesOrErr() (*Article, error) {
 	if e.Articles != nil {
 		return e.Articles, nil
-	} else if e.loadedTypes[1] {
+	} else if e.loadedTypes[2] {
 		return nil, &NotFoundError{label: article.Label}
 	}
 	return nil, &NotLoadedError{edge: "articles"}
@@ -212,6 +223,11 @@ func (_m *User) Value(name string) (ent.Value, error) {
 // QueryStat queries the "stat" edge of the User entity.
 func (_m *User) QueryStat() *UserStatQuery {
 	return NewUserClient(_m.config).QueryStat(_m)
+}
+
+// QueryComments queries the "comments" edge of the User entity.
+func (_m *User) QueryComments() *CommentQuery {
+	return NewUserClient(_m.config).QueryComments(_m)
 }
 
 // QueryArticles queries the "articles" edge of the User entity.

@@ -6,6 +6,7 @@ import (
 	"core-server/internal/domain"
 	"core-server/internal/infras/clog"
 	"core-server/internal/infras/repo"
+	"core-server/internal/model/aggregate"
 	"core-server/internal/model/dto"
 	"core-server/internal/model/entity"
 	"core-server/internal/model/enum"
@@ -73,16 +74,16 @@ func (s *CommentService) CreateReply(ctx context.Context, req *dto.CreateReplyRe
 		if err != nil {
 			return err
 		}
-		if rootComment == nil || !rootComment.IsTopLevel() || rootComment.ArticleID != req.ArticleID {
+		if rootComment == nil || rootComment.Comment == nil || !rootComment.Comment.IsTopLevel() || rootComment.Comment.ArticleID != req.ArticleID {
 			return ErrCommentNotFound
 		}
 
-		if req.ReplyToID != 0 && req.ReplyToID != rootComment.ID {
+		if req.ReplyToID != 0 && req.ReplyToID != rootComment.Comment.ID {
 			replyToComment, err := s.repo.GetByID(ctx, req.ReplyToID)
 			if err != nil {
 				return err
 			}
-			if replyToComment == nil || replyToComment.ArticleID != req.ArticleID || replyToComment.ParentID != rootComment.ID {
+			if replyToComment == nil || replyToComment.Comment == nil || replyToComment.Comment.ArticleID != req.ArticleID || replyToComment.Comment.ParentID != rootComment.Comment.ID {
 				return ErrCommentNotFound
 			}
 		}
@@ -91,15 +92,15 @@ func (s *CommentService) CreateReply(ctx context.Context, req *dto.CreateReplyRe
 			ArticleID: req.ArticleID,
 			UserID:    req.UserID,
 			// All replies are second-level comments under the top-level comment.
-			ParentID:  rootComment.ID,
-			RootID:    rootComment.ID,
+			ParentID:  rootComment.Comment.ID,
+			RootID:    rootComment.Comment.ID,
 			ReplyToID: req.ReplyToID,
 			Content:   req.Content,
 		})
 		if err != nil {
 			return err
 		}
-		if err = s.repo.IncrementChildCount(ctx, rootComment.ID); err != nil {
+		if err = s.repo.IncrementChildCount(ctx, rootComment.Comment.ID); err != nil {
 			return err
 		}
 
@@ -120,10 +121,14 @@ func (s *CommentService) CreateReply(ctx context.Context, req *dto.CreateReplyRe
 func (s *CommentService) DeleteComment(ctx context.Context, req *dto.DeleteCommentRequest) error {
 	err := s.repo.WithTransaction(ctx, func(ctx context.Context) error {
 		// 1.首先获取该评论的内容
-		comment, err := s.repo.GetByID(ctx, req.ID)
+		commentAggregate, err := s.repo.GetByID(ctx, req.ID)
 		if err != nil {
 			return err
 		}
+		if commentAggregate == nil || commentAggregate.Comment == nil {
+			return ErrCommentNotFound
+		}
+		comment := commentAggregate.Comment
 
 		// 2.首先删除这个评论
 		if err := s.repo.SoftDelete(ctx, req.ID, req.UserID); err != nil {
@@ -169,11 +174,6 @@ func (s *CommentService) GetArticleComments(ctx context.Context, req *dto.GetArt
 		return nil, err
 	}
 
-	authorMap, err := LoadUserMap(ctx, s.userRepo, CollectCommentUserIDs(comments))
-	if err != nil {
-		s.log.Error(err.Error())
-		return nil, err
-	}
 	likeCounts, err := s.loadCommentLikeCounts(ctx, comments)
 	if err != nil {
 		s.log.Error("load comment like counts error", zap.Error(err))
@@ -181,9 +181,12 @@ func (s *CommentService) GetArticleComments(ctx context.Context, req *dto.GetArt
 	}
 
 	items := make([]*dto.CommentInfoDTO, 0, len(comments))
-	for _, c := range comments {
-		item := dto.CommentInfoFromEntity(c, authorMap[c.UserID])
-		item.LikeCount = likeCounts[c.ID]
+	for _, itemAggregate := range comments {
+		if itemAggregate == nil || itemAggregate.Comment == nil {
+			continue
+		}
+		item := dto.CommentInfoFromEntity(itemAggregate.Comment, itemAggregate.Author)
+		item.LikeCount = likeCounts[itemAggregate.Comment.ID]
 		items = append(items, item)
 	}
 
@@ -207,8 +210,8 @@ func (s *CommentService) GetCommentReplies(ctx context.Context, req *dto.GetComm
 
 	replyToIDs := make([]uint64, 0, len(replies))
 	for _, reply := range replies {
-		if reply != nil && reply.ReplyToID != 0 {
-			replyToIDs = append(replyToIDs, reply.ReplyToID)
+		if reply != nil && reply.Comment != nil && reply.Comment.ReplyToID != 0 {
+			replyToIDs = append(replyToIDs, reply.Comment.ReplyToID)
 		}
 	}
 	replyToComments, err := s.repo.ListByIDs(ctx, replyToIDs)
@@ -216,16 +219,11 @@ func (s *CommentService) GetCommentReplies(ctx context.Context, req *dto.GetComm
 		s.log.Error("load reply targets error", zap.Error(err))
 		return nil, err
 	}
-	replyToCommentMap := make(map[uint64]*entity.Comment, len(replyToComments))
-	allComments := append(append([]*entity.Comment{}, replies...), replyToComments...)
-	for _, comment := range replyToComments {
-		replyToCommentMap[comment.ID] = comment
-	}
-
-	authorMap, err := LoadUserMap(ctx, s.userRepo, CollectCommentUserIDs(allComments))
-	if err != nil {
-		s.log.Error(err.Error())
-		return nil, err
+	replyToCommentMap := make(map[uint64]*aggregate.CommentAggregate, len(replyToComments))
+	for _, replyToComment := range replyToComments {
+		if replyToComment != nil && replyToComment.Comment != nil {
+			replyToCommentMap[replyToComment.Comment.ID] = replyToComment
+		}
 	}
 	likeCounts, err := s.loadCommentLikeCounts(ctx, replies)
 	if err != nil {
@@ -235,12 +233,13 @@ func (s *CommentService) GetCommentReplies(ctx context.Context, req *dto.GetComm
 
 	items := make([]*dto.CommentInfoDTO, 0, len(replies))
 	for _, reply := range replies {
-		item := dto.CommentInfoFromEntity(reply, authorMap[reply.UserID])
-		item.LikeCount = likeCounts[reply.ID]
-		if replyToComment := replyToCommentMap[reply.ReplyToID]; replyToComment != nil {
-			if replyToUser := authorMap[replyToComment.UserID]; replyToUser != nil {
-				item.ReplyToUserName = replyToUser.Name
-			}
+		if reply == nil || reply.Comment == nil {
+			continue
+		}
+		item := dto.CommentInfoFromEntity(reply.Comment, reply.Author)
+		item.LikeCount = likeCounts[reply.Comment.ID]
+		if replyToComment := replyToCommentMap[reply.Comment.ReplyToID]; replyToComment != nil && replyToComment.Author != nil {
+			item.ReplyToUserName = replyToComment.Author.Name
 		}
 		items = append(items, item)
 	}
@@ -252,11 +251,13 @@ func (s *CommentService) GetCommentReplies(ctx context.Context, req *dto.GetComm
 	}, nil
 }
 
-func (s *CommentService) loadCommentLikeCounts(ctx context.Context, comments []*entity.Comment) (map[uint64]uint32, error) {
+// =====================================================================================================================
+
+func (s *CommentService) loadCommentLikeCounts(ctx context.Context, comments []*aggregate.CommentAggregate) (map[uint64]uint32, error) {
 	commentIDs := make([]uint64, 0, len(comments))
-	for _, comment := range comments {
-		if comment != nil {
-			commentIDs = append(commentIDs, comment.ID)
+	for _, item := range comments {
+		if item != nil && item.Comment != nil {
+			commentIDs = append(commentIDs, item.Comment.ID)
 		}
 	}
 	counts := make(map[uint64]uint32, len(commentIDs))

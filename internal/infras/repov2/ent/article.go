@@ -59,13 +59,24 @@ type Article struct {
 
 // ArticleEdges holds the relations/edges for other nodes in the graph.
 type ArticleEdges struct {
+	// Comments holds the value of the comments edge.
+	Comments []*Comment `json:"comments,omitempty"`
 	// User holds the value of the user edge.
 	User *User `json:"user,omitempty"`
 	// Category holds the value of the category edge.
 	Category *Category `json:"category,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
+}
+
+// CommentsOrErr returns the Comments value or an error if the edge
+// was not loaded in eager-loading.
+func (e ArticleEdges) CommentsOrErr() ([]*Comment, error) {
+	if e.loadedTypes[0] {
+		return e.Comments, nil
+	}
+	return nil, &NotLoadedError{edge: "comments"}
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -73,7 +84,7 @@ type ArticleEdges struct {
 func (e ArticleEdges) UserOrErr() (*User, error) {
 	if e.User != nil {
 		return e.User, nil
-	} else if e.loadedTypes[0] {
+	} else if e.loadedTypes[1] {
 		return nil, &NotFoundError{label: user.Label}
 	}
 	return nil, &NotLoadedError{edge: "user"}
@@ -84,7 +95,7 @@ func (e ArticleEdges) UserOrErr() (*User, error) {
 func (e ArticleEdges) CategoryOrErr() (*Category, error) {
 	if e.Category != nil {
 		return e.Category, nil
-	} else if e.loadedTypes[1] {
+	} else if e.loadedTypes[2] {
 		return nil, &NotFoundError{label: category.Label}
 	}
 	return nil, &NotLoadedError{edge: "category"}
@@ -233,6 +244,11 @@ func (_m *Article) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (_m *Article) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
+}
+
+// QueryComments queries the "comments" edge of the Article entity.
+func (_m *Article) QueryComments() *CommentQuery {
+	return NewArticleClient(_m.config).QueryComments(_m)
 }
 
 // QueryUser queries the "user" edge of the Article entity.

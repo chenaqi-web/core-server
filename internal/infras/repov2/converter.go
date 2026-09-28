@@ -119,6 +119,54 @@ func toEntityArticles(nodes []*ent.Article) []*entity.Article {
 	return items
 }
 
+func toEntityComment(node *ent.Comment) *entity.Comment {
+	if node == nil {
+		return nil
+	}
+	value := &entity.Comment{
+		ID:         node.ID,
+		ArticleID:  node.ArticleID,
+		UserID:     node.UserID,
+		ParentID:   node.ParentID,
+		RootID:     node.RootID,
+		ReplyToID:  node.ReplyToID,
+		Content:    node.Content,
+		LikeCount:  node.LikeCount,
+		ChildCount: node.ChildCount,
+		CreatedAt:  node.CreatedAt,
+	}
+	if node.DeletedAt != nil {
+		value.DeletedAt = sql.NullTime{Time: *node.DeletedAt, Valid: true}
+	}
+	return value
+}
+
+func toEntityComments(nodes []*ent.Comment) []*entity.Comment {
+	items := make([]*entity.Comment, 0, len(nodes))
+	for _, node := range nodes {
+		items = append(items, toEntityComment(node))
+	}
+	return items
+}
+
+func commentEntities(items []*aggregate.CommentAggregate) []*entity.Comment {
+	comments := make([]*entity.Comment, 0, len(items))
+	for _, item := range items {
+		if item != nil && item.Comment != nil {
+			comments = append(comments, item.Comment)
+		}
+	}
+	return comments
+}
+
+func toEntityCommentAggregates(nodes []*ent.Comment) []*aggregate.CommentAggregate {
+	items := make([]*aggregate.CommentAggregate, 0, len(nodes))
+	for _, node := range nodes {
+		items = append(items, aggregate.NewCommentAggregate(toEntityComment(node), toEntityUser(node.Edges.User)))
+	}
+	return items
+}
+
 func toEntityArticleAggregates(nodes []*ent.Article) []*aggregate.ArticleAggregate {
 	items := make([]*aggregate.ArticleAggregate, 0, len(nodes))
 	for _, node := range nodes {

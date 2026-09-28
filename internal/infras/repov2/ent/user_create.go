@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"core-server/internal/infras/repov2/ent/article"
+	"core-server/internal/infras/repov2/ent/comment"
 	"core-server/internal/infras/repov2/ent/user"
 	"core-server/internal/infras/repov2/ent/userstat"
 	"errors"
@@ -211,6 +212,21 @@ func (_c *UserCreate) SetNillableStatID(id *int) *UserCreate {
 // SetStat sets the "stat" edge to the UserStat entity.
 func (_c *UserCreate) SetStat(v *UserStat) *UserCreate {
 	return _c.SetStatID(v.ID)
+}
+
+// AddCommentIDs adds the "comments" edge to the Comment entity by IDs.
+func (_c *UserCreate) AddCommentIDs(ids ...uint64) *UserCreate {
+	_c.mutation.AddCommentIDs(ids...)
+	return _c
+}
+
+// AddComments adds the "comments" edges to the Comment entity.
+func (_c *UserCreate) AddComments(v ...*Comment) *UserCreate {
+	ids := make([]uint64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddCommentIDs(ids...)
 }
 
 // SetArticlesID sets the "articles" edge to the Article entity by ID.
@@ -473,6 +489,22 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(userstat.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.CommentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CommentsTable,
+			Columns: []string{user.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(comment.FieldID, field.TypeUint64),
 			},
 		}
 		for _, k := range nodes {

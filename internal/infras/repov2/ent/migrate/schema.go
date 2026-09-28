@@ -70,6 +70,40 @@ var (
 			},
 		},
 	}
+	// CommentColumns holds the columns for the "comment" table.
+	CommentColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUint64, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "parent_id", Type: field.TypeUint64, Default: 0},
+		{Name: "root_id", Type: field.TypeUint64, Default: 0},
+		{Name: "reply_to_id", Type: field.TypeUint64, Default: 0},
+		{Name: "content", Type: field.TypeString},
+		{Name: "like_count", Type: field.TypeUint32, Default: 0},
+		{Name: "child_count", Type: field.TypeUint32, Default: 0},
+		{Name: "article_id", Type: field.TypeUint64},
+		{Name: "user_id", Type: field.TypeUint64},
+	}
+	// CommentTable holds the schema information for the "comment" table.
+	CommentTable = &schema.Table{
+		Name:       "comment",
+		Columns:    CommentColumns,
+		PrimaryKey: []*schema.Column{CommentColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "comment_article_comments",
+				Columns:    []*schema.Column{CommentColumns[9]},
+				RefColumns: []*schema.Column{ArticleColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "comment_user_comments",
+				Columns:    []*schema.Column{CommentColumns[10]},
+				RefColumns: []*schema.Column{UserColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// InteractionCountColumns holds the columns for the "interaction_count" table.
 	InteractionCountColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUint64, Increment: true},
@@ -149,6 +183,7 @@ var (
 	Tables = []*schema.Table{
 		ArticleTable,
 		CategoryTable,
+		CommentTable,
 		InteractionCountTable,
 		UserTable,
 		UserStatTable,
@@ -163,6 +198,11 @@ func init() {
 	}
 	CategoryTable.Annotation = &entsql.Annotation{
 		Table: "category",
+	}
+	CommentTable.ForeignKeys[0].RefTable = ArticleTable
+	CommentTable.ForeignKeys[1].RefTable = UserTable
+	CommentTable.Annotation = &entsql.Annotation{
+		Table: "comment",
 	}
 	InteractionCountTable.Annotation = &entsql.Annotation{
 		Table: "interaction_count",

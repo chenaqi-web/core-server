@@ -68,7 +68,7 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 		return nil, err
 	}
 	articleRPC := rpc.NewArticleRPC(articleService)
-	commentRepo := repo.NewCommentRepo(dbClient)
+	commentRepo := repov2.NewCommentRepo(entClient)
 	commentService, err := application.NewCommentService(log, commentRepo, userRepo, countRepo, cfg)
 	if err != nil {
 		return nil, err

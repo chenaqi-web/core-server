@@ -5,11 +5,9 @@ package ent
 import (
 	"context"
 	"core-server/internal/infras/repov2/ent/article"
-	"core-server/internal/infras/repov2/ent/category"
 	"core-server/internal/infras/repov2/ent/comment"
 	"core-server/internal/infras/repov2/ent/predicate"
 	"core-server/internal/infras/repov2/ent/user"
-	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -19,55 +17,54 @@ import (
 	"entgo.io/ent/schema/field"
 )
 
-// ArticleQuery is the builder for querying Article entities.
-type ArticleQuery struct {
+// CommentQuery is the builder for querying Comment entities.
+type CommentQuery struct {
 	config
-	ctx          *QueryContext
-	order        []article.OrderOption
-	inters       []Interceptor
-	predicates   []predicate.Article
-	withComments *CommentQuery
-	withUser     *UserQuery
-	withCategory *CategoryQuery
+	ctx         *QueryContext
+	order       []comment.OrderOption
+	inters      []Interceptor
+	predicates  []predicate.Comment
+	withArticle *ArticleQuery
+	withUser    *UserQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
 }
 
-// Where adds a new predicate for the ArticleQuery builder.
-func (_q *ArticleQuery) Where(ps ...predicate.Article) *ArticleQuery {
+// Where adds a new predicate for the CommentQuery builder.
+func (_q *CommentQuery) Where(ps ...predicate.Comment) *CommentQuery {
 	_q.predicates = append(_q.predicates, ps...)
 	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (_q *ArticleQuery) Limit(limit int) *ArticleQuery {
+func (_q *CommentQuery) Limit(limit int) *CommentQuery {
 	_q.ctx.Limit = &limit
 	return _q
 }
 
 // Offset to start from.
-func (_q *ArticleQuery) Offset(offset int) *ArticleQuery {
+func (_q *CommentQuery) Offset(offset int) *CommentQuery {
 	_q.ctx.Offset = &offset
 	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (_q *ArticleQuery) Unique(unique bool) *ArticleQuery {
+func (_q *CommentQuery) Unique(unique bool) *CommentQuery {
 	_q.ctx.Unique = &unique
 	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (_q *ArticleQuery) Order(o ...article.OrderOption) *ArticleQuery {
+func (_q *CommentQuery) Order(o ...comment.OrderOption) *CommentQuery {
 	_q.order = append(_q.order, o...)
 	return _q
 }
 
-// QueryComments chains the current query on the "comments" edge.
-func (_q *ArticleQuery) QueryComments() *CommentQuery {
-	query := (&CommentClient{config: _q.config}).Query()
+// QueryArticle chains the current query on the "article" edge.
+func (_q *CommentQuery) QueryArticle() *ArticleQuery {
+	query := (&ArticleClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -77,9 +74,9 @@ func (_q *ArticleQuery) QueryComments() *CommentQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(article.Table, article.FieldID, selector),
-			sqlgraph.To(comment.Table, comment.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, article.CommentsTable, article.CommentsColumn),
+			sqlgraph.From(comment.Table, comment.FieldID, selector),
+			sqlgraph.To(article.Table, article.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, comment.ArticleTable, comment.ArticleColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -88,7 +85,7 @@ func (_q *ArticleQuery) QueryComments() *CommentQuery {
 }
 
 // QueryUser chains the current query on the "user" edge.
-func (_q *ArticleQuery) QueryUser() *UserQuery {
+func (_q *CommentQuery) QueryUser() *UserQuery {
 	query := (&UserClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
@@ -99,9 +96,9 @@ func (_q *ArticleQuery) QueryUser() *UserQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(article.Table, article.FieldID, selector),
+			sqlgraph.From(comment.Table, comment.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.O2O, true, article.UserTable, article.UserColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, comment.UserTable, comment.UserColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -109,43 +106,21 @@ func (_q *ArticleQuery) QueryUser() *UserQuery {
 	return query
 }
 
-// QueryCategory chains the current query on the "category" edge.
-func (_q *ArticleQuery) QueryCategory() *CategoryQuery {
-	query := (&CategoryClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(article.Table, article.FieldID, selector),
-			sqlgraph.To(category.Table, category.FieldID),
-			sqlgraph.Edge(sqlgraph.O2O, true, article.CategoryTable, article.CategoryColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// First returns the first Article entity from the query.
-// Returns a *NotFoundError when no Article was found.
-func (_q *ArticleQuery) First(ctx context.Context) (*Article, error) {
+// First returns the first Comment entity from the query.
+// Returns a *NotFoundError when no Comment was found.
+func (_q *CommentQuery) First(ctx context.Context) (*Comment, error) {
 	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
-		return nil, &NotFoundError{article.Label}
+		return nil, &NotFoundError{comment.Label}
 	}
 	return nodes[0], nil
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (_q *ArticleQuery) FirstX(ctx context.Context) *Article {
+func (_q *CommentQuery) FirstX(ctx context.Context) *Comment {
 	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -153,22 +128,22 @@ func (_q *ArticleQuery) FirstX(ctx context.Context) *Article {
 	return node
 }
 
-// FirstID returns the first Article ID from the query.
-// Returns a *NotFoundError when no Article ID was found.
-func (_q *ArticleQuery) FirstID(ctx context.Context) (id uint64, err error) {
+// FirstID returns the first Comment ID from the query.
+// Returns a *NotFoundError when no Comment ID was found.
+func (_q *CommentQuery) FirstID(ctx context.Context) (id uint64, err error) {
 	var ids []uint64
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
-		err = &NotFoundError{article.Label}
+		err = &NotFoundError{comment.Label}
 		return
 	}
 	return ids[0], nil
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *ArticleQuery) FirstIDX(ctx context.Context) uint64 {
+func (_q *CommentQuery) FirstIDX(ctx context.Context) uint64 {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -176,10 +151,10 @@ func (_q *ArticleQuery) FirstIDX(ctx context.Context) uint64 {
 	return id
 }
 
-// Only returns a single Article entity found by the query, ensuring it only returns one.
-// Returns a *NotSingularError when more than one Article entity is found.
-// Returns a *NotFoundError when no Article entities are found.
-func (_q *ArticleQuery) Only(ctx context.Context) (*Article, error) {
+// Only returns a single Comment entity found by the query, ensuring it only returns one.
+// Returns a *NotSingularError when more than one Comment entity is found.
+// Returns a *NotFoundError when no Comment entities are found.
+func (_q *CommentQuery) Only(ctx context.Context) (*Comment, error) {
 	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
@@ -188,14 +163,14 @@ func (_q *ArticleQuery) Only(ctx context.Context) (*Article, error) {
 	case 1:
 		return nodes[0], nil
 	case 0:
-		return nil, &NotFoundError{article.Label}
+		return nil, &NotFoundError{comment.Label}
 	default:
-		return nil, &NotSingularError{article.Label}
+		return nil, &NotSingularError{comment.Label}
 	}
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (_q *ArticleQuery) OnlyX(ctx context.Context) *Article {
+func (_q *CommentQuery) OnlyX(ctx context.Context) *Comment {
 	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
@@ -203,10 +178,10 @@ func (_q *ArticleQuery) OnlyX(ctx context.Context) *Article {
 	return node
 }
 
-// OnlyID is like Only, but returns the only Article ID in the query.
-// Returns a *NotSingularError when more than one Article ID is found.
+// OnlyID is like Only, but returns the only Comment ID in the query.
+// Returns a *NotSingularError when more than one Comment ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *ArticleQuery) OnlyID(ctx context.Context) (id uint64, err error) {
+func (_q *CommentQuery) OnlyID(ctx context.Context) (id uint64, err error) {
 	var ids []uint64
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
@@ -215,15 +190,15 @@ func (_q *ArticleQuery) OnlyID(ctx context.Context) (id uint64, err error) {
 	case 1:
 		id = ids[0]
 	case 0:
-		err = &NotFoundError{article.Label}
+		err = &NotFoundError{comment.Label}
 	default:
-		err = &NotSingularError{article.Label}
+		err = &NotSingularError{comment.Label}
 	}
 	return
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *ArticleQuery) OnlyIDX(ctx context.Context) uint64 {
+func (_q *CommentQuery) OnlyIDX(ctx context.Context) uint64 {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -231,18 +206,18 @@ func (_q *ArticleQuery) OnlyIDX(ctx context.Context) uint64 {
 	return id
 }
 
-// All executes the query and returns a list of Articles.
-func (_q *ArticleQuery) All(ctx context.Context) ([]*Article, error) {
+// All executes the query and returns a list of Comments.
+func (_q *CommentQuery) All(ctx context.Context) ([]*Comment, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
-	qr := querierAll[[]*Article, *ArticleQuery]()
-	return withInterceptors[[]*Article](ctx, _q, qr, _q.inters)
+	qr := querierAll[[]*Comment, *CommentQuery]()
+	return withInterceptors[[]*Comment](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (_q *ArticleQuery) AllX(ctx context.Context) []*Article {
+func (_q *CommentQuery) AllX(ctx context.Context) []*Comment {
 	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
@@ -250,20 +225,20 @@ func (_q *ArticleQuery) AllX(ctx context.Context) []*Article {
 	return nodes
 }
 
-// IDs executes the query and returns a list of Article IDs.
-func (_q *ArticleQuery) IDs(ctx context.Context) (ids []uint64, err error) {
+// IDs executes the query and returns a list of Comment IDs.
+func (_q *CommentQuery) IDs(ctx context.Context) (ids []uint64, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
-	if err = _q.Select(article.FieldID).Scan(ctx, &ids); err != nil {
+	if err = _q.Select(comment.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *ArticleQuery) IDsX(ctx context.Context) []uint64 {
+func (_q *CommentQuery) IDsX(ctx context.Context) []uint64 {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -272,16 +247,16 @@ func (_q *ArticleQuery) IDsX(ctx context.Context) []uint64 {
 }
 
 // Count returns the count of the given query.
-func (_q *ArticleQuery) Count(ctx context.Context) (int, error) {
+func (_q *CommentQuery) Count(ctx context.Context) (int, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, _q, querierCount[*ArticleQuery](), _q.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*CommentQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (_q *ArticleQuery) CountX(ctx context.Context) int {
+func (_q *CommentQuery) CountX(ctx context.Context) int {
 	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
@@ -290,7 +265,7 @@ func (_q *ArticleQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (_q *ArticleQuery) Exist(ctx context.Context) (bool, error) {
+func (_q *CommentQuery) Exist(ctx context.Context) (bool, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
 	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
@@ -303,7 +278,7 @@ func (_q *ArticleQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (_q *ArticleQuery) ExistX(ctx context.Context) bool {
+func (_q *CommentQuery) ExistX(ctx context.Context) bool {
 	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
@@ -311,57 +286,45 @@ func (_q *ArticleQuery) ExistX(ctx context.Context) bool {
 	return exist
 }
 
-// Clone returns a duplicate of the ArticleQuery builder, including all associated steps. It can be
+// Clone returns a duplicate of the CommentQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (_q *ArticleQuery) Clone() *ArticleQuery {
+func (_q *CommentQuery) Clone() *CommentQuery {
 	if _q == nil {
 		return nil
 	}
-	return &ArticleQuery{
-		config:       _q.config,
-		ctx:          _q.ctx.Clone(),
-		order:        append([]article.OrderOption{}, _q.order...),
-		inters:       append([]Interceptor{}, _q.inters...),
-		predicates:   append([]predicate.Article{}, _q.predicates...),
-		withComments: _q.withComments.Clone(),
-		withUser:     _q.withUser.Clone(),
-		withCategory: _q.withCategory.Clone(),
+	return &CommentQuery{
+		config:      _q.config,
+		ctx:         _q.ctx.Clone(),
+		order:       append([]comment.OrderOption{}, _q.order...),
+		inters:      append([]Interceptor{}, _q.inters...),
+		predicates:  append([]predicate.Comment{}, _q.predicates...),
+		withArticle: _q.withArticle.Clone(),
+		withUser:    _q.withUser.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
 }
 
-// WithComments tells the query-builder to eager-load the nodes that are connected to
-// the "comments" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *ArticleQuery) WithComments(opts ...func(*CommentQuery)) *ArticleQuery {
-	query := (&CommentClient{config: _q.config}).Query()
+// WithArticle tells the query-builder to eager-load the nodes that are connected to
+// the "article" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *CommentQuery) WithArticle(opts ...func(*ArticleQuery)) *CommentQuery {
+	query := (&ArticleClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	_q.withComments = query
+	_q.withArticle = query
 	return _q
 }
 
 // WithUser tells the query-builder to eager-load the nodes that are connected to
 // the "user" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *ArticleQuery) WithUser(opts ...func(*UserQuery)) *ArticleQuery {
+func (_q *CommentQuery) WithUser(opts ...func(*UserQuery)) *CommentQuery {
 	query := (&UserClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
 	_q.withUser = query
-	return _q
-}
-
-// WithCategory tells the query-builder to eager-load the nodes that are connected to
-// the "category" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *ArticleQuery) WithCategory(opts ...func(*CategoryQuery)) *ArticleQuery {
-	query := (&CategoryClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withCategory = query
 	return _q
 }
 
@@ -375,15 +338,15 @@ func (_q *ArticleQuery) WithCategory(opts ...func(*CategoryQuery)) *ArticleQuery
 //		Count int `json:"count,omitempty"`
 //	}
 //
-//	client.Article.Query().
-//		GroupBy(article.FieldCreatedAt).
+//	client.Comment.Query().
+//		GroupBy(comment.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (_q *ArticleQuery) GroupBy(field string, fields ...string) *ArticleGroupBy {
+func (_q *CommentQuery) GroupBy(field string, fields ...string) *CommentGroupBy {
 	_q.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &ArticleGroupBy{build: _q}
+	grbuild := &CommentGroupBy{build: _q}
 	grbuild.flds = &_q.ctx.Fields
-	grbuild.label = article.Label
+	grbuild.label = comment.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
 }
@@ -397,23 +360,23 @@ func (_q *ArticleQuery) GroupBy(field string, fields ...string) *ArticleGroupBy 
 //		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
-//	client.Article.Query().
-//		Select(article.FieldCreatedAt).
+//	client.Comment.Query().
+//		Select(comment.FieldCreatedAt).
 //		Scan(ctx, &v)
-func (_q *ArticleQuery) Select(fields ...string) *ArticleSelect {
+func (_q *CommentQuery) Select(fields ...string) *CommentSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
-	sbuild := &ArticleSelect{ArticleQuery: _q}
-	sbuild.label = article.Label
+	sbuild := &CommentSelect{CommentQuery: _q}
+	sbuild.label = comment.Label
 	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
-// Aggregate returns a ArticleSelect configured with the given aggregations.
-func (_q *ArticleQuery) Aggregate(fns ...AggregateFunc) *ArticleSelect {
+// Aggregate returns a CommentSelect configured with the given aggregations.
+func (_q *CommentQuery) Aggregate(fns ...AggregateFunc) *CommentSelect {
 	return _q.Select().Aggregate(fns...)
 }
 
-func (_q *ArticleQuery) prepareQuery(ctx context.Context) error {
+func (_q *CommentQuery) prepareQuery(ctx context.Context) error {
 	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
@@ -425,7 +388,7 @@ func (_q *ArticleQuery) prepareQuery(ctx context.Context) error {
 		}
 	}
 	for _, f := range _q.ctx.Fields {
-		if !article.ValidColumn(f) {
+		if !comment.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
@@ -439,21 +402,20 @@ func (_q *ArticleQuery) prepareQuery(ctx context.Context) error {
 	return nil
 }
 
-func (_q *ArticleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Article, error) {
+func (_q *CommentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Comment, error) {
 	var (
-		nodes       = []*Article{}
+		nodes       = []*Comment{}
 		_spec       = _q.querySpec()
-		loadedTypes = [3]bool{
-			_q.withComments != nil,
+		loadedTypes = [2]bool{
+			_q.withArticle != nil,
 			_q.withUser != nil,
-			_q.withCategory != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
-		return (*Article).scanValues(nil, columns)
+		return (*Comment).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &Article{config: _q.config}
+		node := &Comment{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -467,63 +429,55 @@ func (_q *ArticleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Arti
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := _q.withComments; query != nil {
-		if err := _q.loadComments(ctx, query, nodes,
-			func(n *Article) { n.Edges.Comments = []*Comment{} },
-			func(n *Article, e *Comment) { n.Edges.Comments = append(n.Edges.Comments, e) }); err != nil {
+	if query := _q.withArticle; query != nil {
+		if err := _q.loadArticle(ctx, query, nodes, nil,
+			func(n *Comment, e *Article) { n.Edges.Article = e }); err != nil {
 			return nil, err
 		}
 	}
 	if query := _q.withUser; query != nil {
 		if err := _q.loadUser(ctx, query, nodes, nil,
-			func(n *Article, e *User) { n.Edges.User = e }); err != nil {
-			return nil, err
-		}
-	}
-	if query := _q.withCategory; query != nil {
-		if err := _q.loadCategory(ctx, query, nodes, nil,
-			func(n *Article, e *Category) { n.Edges.Category = e }); err != nil {
+			func(n *Comment, e *User) { n.Edges.User = e }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (_q *ArticleQuery) loadComments(ctx context.Context, query *CommentQuery, nodes []*Article, init func(*Article), assign func(*Article, *Comment)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[uint64]*Article)
+func (_q *CommentQuery) loadArticle(ctx context.Context, query *ArticleQuery, nodes []*Comment, init func(*Comment), assign func(*Comment, *Article)) error {
+	ids := make([]uint64, 0, len(nodes))
+	nodeids := make(map[uint64][]*Comment)
 	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
+		fk := nodes[i].ArticleID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
 		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(comment.FieldArticleID)
+	if len(ids) == 0 {
+		return nil
 	}
-	query.Where(predicate.Comment(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(article.CommentsColumn), fks...))
-	}))
+	query.Where(article.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.ArticleID
-		node, ok := nodeids[fk]
+		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "article_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "article_id" returned %v`, n.ID)
 		}
-		assign(node, n)
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
 	}
 	return nil
 }
-func (_q *ArticleQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*Article, init func(*Article), assign func(*Article, *User)) error {
+func (_q *CommentQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*Comment, init func(*Comment), assign func(*Comment, *User)) error {
 	ids := make([]uint64, 0, len(nodes))
-	nodeids := make(map[uint64][]*Article)
+	nodeids := make(map[uint64][]*Comment)
 	for i := range nodes {
-		fk := nodes[i].AuthorID
+		fk := nodes[i].UserID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -540,36 +494,7 @@ func (_q *ArticleQuery) loadUser(ctx context.Context, query *UserQuery, nodes []
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "author_id" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (_q *ArticleQuery) loadCategory(ctx context.Context, query *CategoryQuery, nodes []*Article, init func(*Article), assign func(*Article, *Category)) error {
-	ids := make([]uint64, 0, len(nodes))
-	nodeids := make(map[uint64][]*Article)
-	for i := range nodes {
-		fk := nodes[i].CategoryID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(category.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "category_id" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "user_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -578,7 +503,7 @@ func (_q *ArticleQuery) loadCategory(ctx context.Context, query *CategoryQuery, 
 	return nil
 }
 
-func (_q *ArticleQuery) sqlCount(ctx context.Context) (int, error) {
+func (_q *CommentQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
 	_spec.Node.Columns = _q.ctx.Fields
 	if len(_q.ctx.Fields) > 0 {
@@ -587,8 +512,8 @@ func (_q *ArticleQuery) sqlCount(ctx context.Context) (int, error) {
 	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (_q *ArticleQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(article.Table, article.Columns, sqlgraph.NewFieldSpec(article.FieldID, field.TypeUint64))
+func (_q *CommentQuery) querySpec() *sqlgraph.QuerySpec {
+	_spec := sqlgraph.NewQuerySpec(comment.Table, comment.Columns, sqlgraph.NewFieldSpec(comment.FieldID, field.TypeUint64))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -597,17 +522,17 @@ func (_q *ArticleQuery) querySpec() *sqlgraph.QuerySpec {
 	}
 	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, article.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, comment.FieldID)
 		for i := range fields {
-			if fields[i] != article.FieldID {
+			if fields[i] != comment.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if _q.withUser != nil {
-			_spec.Node.AddColumnOnce(article.FieldAuthorID)
+		if _q.withArticle != nil {
+			_spec.Node.AddColumnOnce(comment.FieldArticleID)
 		}
-		if _q.withCategory != nil {
-			_spec.Node.AddColumnOnce(article.FieldCategoryID)
+		if _q.withUser != nil {
+			_spec.Node.AddColumnOnce(comment.FieldUserID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {
@@ -633,12 +558,12 @@ func (_q *ArticleQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (_q *ArticleQuery) sqlQuery(ctx context.Context) *sql.Selector {
+func (_q *CommentQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(_q.driver.Dialect())
-	t1 := builder.Table(article.Table)
+	t1 := builder.Table(comment.Table)
 	columns := _q.ctx.Fields
 	if len(columns) == 0 {
-		columns = article.Columns
+		columns = comment.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if _q.sql != nil {
@@ -665,28 +590,28 @@ func (_q *ArticleQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	return selector
 }
 
-// ArticleGroupBy is the group-by builder for Article entities.
-type ArticleGroupBy struct {
+// CommentGroupBy is the group-by builder for Comment entities.
+type CommentGroupBy struct {
 	selector
-	build *ArticleQuery
+	build *CommentQuery
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (_g *ArticleGroupBy) Aggregate(fns ...AggregateFunc) *ArticleGroupBy {
+func (_g *CommentGroupBy) Aggregate(fns ...AggregateFunc) *CommentGroupBy {
 	_g.fns = append(_g.fns, fns...)
 	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_g *ArticleGroupBy) Scan(ctx context.Context, v any) error {
+func (_g *CommentGroupBy) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
 	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*ArticleQuery, *ArticleGroupBy](ctx, _g.build, _g, _g.build.inters, v)
+	return scanWithInterceptors[*CommentQuery, *CommentGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (_g *ArticleGroupBy) sqlScan(ctx context.Context, root *ArticleQuery, v any) error {
+func (_g *CommentGroupBy) sqlScan(ctx context.Context, root *CommentQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
 	aggregation := make([]string, 0, len(_g.fns))
 	for _, fn := range _g.fns {
@@ -713,28 +638,28 @@ func (_g *ArticleGroupBy) sqlScan(ctx context.Context, root *ArticleQuery, v any
 	return sql.ScanSlice(rows, v)
 }
 
-// ArticleSelect is the builder for selecting fields of Article entities.
-type ArticleSelect struct {
-	*ArticleQuery
+// CommentSelect is the builder for selecting fields of Comment entities.
+type CommentSelect struct {
+	*CommentQuery
 	selector
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (_s *ArticleSelect) Aggregate(fns ...AggregateFunc) *ArticleSelect {
+func (_s *CommentSelect) Aggregate(fns ...AggregateFunc) *CommentSelect {
 	_s.fns = append(_s.fns, fns...)
 	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_s *ArticleSelect) Scan(ctx context.Context, v any) error {
+func (_s *CommentSelect) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
 	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*ArticleQuery, *ArticleSelect](ctx, _s.ArticleQuery, _s, _s.inters, v)
+	return scanWithInterceptors[*CommentQuery, *CommentSelect](ctx, _s.CommentQuery, _s, _s.inters, v)
 }
 
-func (_s *ArticleSelect) sqlScan(ctx context.Context, root *ArticleQuery, v any) error {
+func (_s *CommentSelect) sqlScan(ctx context.Context, root *CommentQuery, v any) error {
 	selector := root.sqlQuery(ctx)
 	aggregation := make([]string, 0, len(_s.fns))
 	for _, fn := range _s.fns {

@@ -49,6 +49,7 @@ func (Article) Fields() []ent.Field {
 // article.go
 func (Article) Edges() []ent.Edge {
 	return []ent.Edge{
+		edge.To("comments", Comment.Type),
 		// 文章属于一个作者
 		edge.From("user", User.Type).
 			Ref("articles").    // User 里的边叫 "articles"，这里表示的是反向边
