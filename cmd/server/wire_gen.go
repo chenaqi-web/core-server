@@ -12,7 +12,6 @@ import (
 	"core-server/internal/infras/cache"
 	"core-server/internal/infras/clog"
 	"core-server/internal/infras/mq/kafka"
-	"core-server/internal/infras/repo"
 	"core-server/internal/infras/repov2"
 	"core-server/internal/jobs/job-dbsync"
 	"core-server/internal/rpc"
@@ -21,7 +20,7 @@ import (
 // Injectors from wire.go:
 
 func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
-	dbClient, err := repo.NewDBClient(cfg)
+	entClient, err := repov2.NewEntClient(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -39,10 +38,6 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 		return nil, err
 	}
 	kafkaManager := kafka.NewKafkaManager(cfg, topicManager)
-	entClient, err := repov2.NewEntClient(cfg)
-	if err != nil {
-		return nil, err
-	}
 	likeRepo := repov2.NewLikeRepo(entClient)
 	countRepo := repov2.NewCountRepo(entClient)
 	userRepo := repov2.NewUserRepo(entClient)
@@ -75,7 +70,7 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 	}
 	commentRPC := rpc.NewCommentRPC(commentService)
 	userRPC := rpc.NewUserRPC(userService)
-	server, err := rpc.NewServer(cfg, dbClient, cacheClient, syncProducer, kafkaManager, messageQueueConsumer, authRPC, likeRPC, categoryRPC, articleRPC, commentRPC, userRPC)
+	server, err := rpc.NewServer(cfg, entClient, cacheClient, syncProducer, kafkaManager, messageQueueConsumer, authRPC, likeRPC, categoryRPC, articleRPC, commentRPC, userRPC)
 	if err != nil {
 		return nil, err
 	}

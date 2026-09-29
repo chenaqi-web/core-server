@@ -68,32 +68,24 @@ func (s *CommentService) CreateComment(ctx context.Context, req *dto.CreateComme
 }
 
 func (s *CommentService) CreateReply(ctx context.Context, req *dto.CreateReplyRequest) (bool, error) {
+	// 1.首先校验父评论是否存在
+	rootComment, err := s.repo.GetByID(ctx, req.ParentID)
+	if err != nil {
+		return false, ErrCommentNotFound
+	}
+
+	//2. 存在则判断传入数据是否正确
+	if req.ReplyToID != 0 && req.ReplyToID != rootComment.Comment.UserID {
+		return false, ErrCommentNotFound
+	}
+
 	// 开启事务进行修改
-	err := s.repo.WithTransaction(ctx, func(ctx context.Context) error {
-		rootComment, err := s.repo.GetByID(ctx, req.ParentID)
-		if err != nil {
-			return err
-		}
-		if rootComment == nil || rootComment.Comment == nil || !rootComment.Comment.IsTopLevel() || rootComment.Comment.ArticleID != req.ArticleID {
-			return ErrCommentNotFound
-		}
-
-		if req.ReplyToID != 0 && req.ReplyToID != rootComment.Comment.ID {
-			replyToComment, err := s.repo.GetByID(ctx, req.ReplyToID)
-			if err != nil {
-				return err
-			}
-			if replyToComment == nil || replyToComment.Comment == nil || replyToComment.Comment.ArticleID != req.ArticleID || replyToComment.Comment.ParentID != rootComment.Comment.ID {
-				return ErrCommentNotFound
-			}
-		}
-
+	err = s.repo.WithTransaction(ctx, func(ctx context.Context) error {
 		_, err = s.repo.CreateReply(ctx, &entity.Comment{
 			ArticleID: req.ArticleID,
 			UserID:    req.UserID,
-			// All replies are second-level comments under the top-level comment.
-			ParentID:  rootComment.Comment.ID,
-			RootID:    rootComment.Comment.ID,
+			ParentID:  rootComment.Comment.ID,     // 这个是父评论id
+			RootID:    rootComment.Comment.RootID, // 这个代表顶级评论id，
 			ReplyToID: req.ReplyToID,
 			Content:   req.Content,
 		})

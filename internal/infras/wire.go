@@ -5,15 +5,12 @@ import (
 	"core-server/internal/infras/cache"
 	"core-server/internal/infras/clog"
 	"core-server/internal/infras/mq/kafka"
-	"core-server/internal/infras/repo"
 	"core-server/internal/infras/repov2"
 
 	"github.com/google/wire"
 )
 
 var RepoProviderSet = wire.NewSet(
-	repo.NewDBClient,
-
 	// v2 ent 版本
 	repov2.NewEntClient,
 	repov2.NewLikeRepo,

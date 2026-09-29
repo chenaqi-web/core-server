@@ -5,6 +5,7 @@ import (
 	"core-server/internal/config"
 	"core-server/internal/infras/repov2/ent"
 	"fmt"
+	"log"
 
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
@@ -31,17 +32,15 @@ func NewEntClient(cfg *config.Config) (*EntClient, error) {
 	//if os.Getenv("ENV_LOCAL_TEST") != "" {
 	//	client = client.Debug()
 	//}
-
+	log.Println("mysql connected successfully")
 	return &EntClient{
 		db:     ent.NewClient(ent.Driver(drv)),
 		driver: drv,
 	}, nil
 }
 
-func (c *EntClient) Close() {
-	if err := c.db.Close(); err != nil {
-		fmt.Printf("fail to close sql connection: %v\n", err)
-	}
+func (c *EntClient) Close() error {
+	return c.db.Close()
 }
 
 func (b *EntClient) WithTransaction(ctx context.Context, fn func(ctx context.Context) error) (err error) {
