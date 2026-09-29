@@ -20,19 +20,19 @@ func NewCommentRepo(client *DBClient) *CommentRepo {
 }
 
 const commentSelectColumns = `
-id, article_id, user_id, parent_id, root_id, reply_to_id,
+id, article_id, user_id, root_id, reply_to_id,
 content, like_count, child_count, created_at, deleted_at`
 
 func (r *CommentRepo) CreateComment(ctx context.Context, comment *entity.Comment) (uint64, error) {
 	now := time.Now()
 	const query = `
 INSERT INTO comment
-    (article_id, user_id, parent_id, root_id, reply_to_id,
+    (article_id, user_id, root_id, reply_to_id,
      content, like_count, child_count, created_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
 
 	result, err := r.db(ctx).ExecContext(ctx, query,
-		comment.ArticleID, comment.UserID, comment.ParentID, comment.RootID,
+		comment.ArticleID, comment.UserID, comment.RootID,
 		comment.ReplyToID, comment.Content, comment.LikeCount, comment.ChildCount, now,
 	)
 	if err != nil {
@@ -49,12 +49,12 @@ func (r *CommentRepo) CreateReply(ctx context.Context, comment *entity.Comment) 
 	now := time.Now()
 	const query = `
 INSERT INTO comment
-    (article_id, user_id, parent_id, root_id, reply_to_id,
+    (article_id, user_id, root_id, reply_to_id,
      content, like_count, child_count, created_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
 
 	result, err := r.db(ctx).ExecContext(ctx, query,
-		comment.ArticleID, comment.UserID, comment.ParentID, comment.RootID,
+		comment.ArticleID, comment.UserID, comment.RootID,
 		comment.ReplyToID, comment.Content, comment.LikeCount, comment.ChildCount, now,
 	)
 	if err != nil {
@@ -116,13 +116,13 @@ WHERE id = ? AND user_id = ? AND deleted_at IS NULL`
 	return nil
 }
 
-func (r *CommentRepo) SoftDeleteRepliesByParent(ctx context.Context, parentID uint64) (int64, error) {
+func (r *CommentRepo) SoftDeleteRepliesByRoot(ctx context.Context, rootID uint64) (int64, error) {
 	now := time.Now()
 	const query = `
 UPDATE comment
 SET deleted_at = ?
-WHERE parent_id = ? AND deleted_at IS NULL`
-	result, err := r.db(ctx).ExecContext(ctx, query, now, parentID)
+WHERE root_id = ? AND deleted_at IS NULL`
+	result, err := r.db(ctx).ExecContext(ctx, query, now, rootID)
 	if err != nil {
 		return 0, err
 	}
@@ -151,7 +151,7 @@ func (r *CommentRepo) ListTopByArticle(ctx context.Context, articleID uint64, of
 	var items []*entity.Comment
 	query := fmt.Sprintf(`
 SELECT %s FROM comment
-WHERE article_id = ? AND parent_id = 0 AND deleted_at IS NULL
+WHERE article_id = ? AND root_id = 0 AND deleted_at IS NULL
 ORDER BY created_at DESC
 LIMIT ?, ?`, commentSelectColumns)
 
@@ -161,15 +161,15 @@ LIMIT ?, ?`, commentSelectColumns)
 	return items, nil
 }
 
-func (r *CommentRepo) ListRepliesByParent(ctx context.Context, parentID uint64, offset, limit int) ([]*entity.Comment, error) {
+func (r *CommentRepo) ListRepliesByRoot(ctx context.Context, rootID uint64, offset, limit int) ([]*entity.Comment, error) {
 	var items []*entity.Comment
 	query := fmt.Sprintf(`
 SELECT %s FROM comment
-WHERE parent_id = ? AND deleted_at IS NULL
+WHERE root_id = ? AND deleted_at IS NULL
 ORDER BY created_at ASC
 LIMIT ?, ?`, commentSelectColumns)
 
-	if err := r.db(ctx).SelectContext(ctx, &items, query, parentID, offset, limit); err != nil {
+	if err := r.db(ctx).SelectContext(ctx, &items, query, rootID, offset, limit); err != nil {
 		return nil, err
 	}
 	return items, nil

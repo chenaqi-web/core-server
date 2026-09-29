@@ -21,7 +21,6 @@ func (r *CommentRepo) CreateComment(ctx context.Context, value *entity.Comment) 
 	node, err := r.DB(ctx).Comment.Create().
 		SetArticleID(value.ArticleID).
 		SetUserID(value.UserID).
-		SetParentID(value.ParentID).
 		SetRootID(value.RootID).
 		SetReplyToID(value.ReplyToID).
 		SetContent(value.Content).
@@ -82,9 +81,9 @@ func (r *CommentRepo) SoftDelete(ctx context.Context, id, userID uint64) error {
 	return nil
 }
 
-func (r *CommentRepo) SoftDeleteRepliesByParent(ctx context.Context, parentID uint64) (int64, error) {
+func (r *CommentRepo) SoftDeleteRepliesByRoot(ctx context.Context, rootID uint64) (int64, error) {
 	affected, err := r.DB(ctx).Comment.Update().
-		Where(comment.ParentIDEQ(parentID), comment.DeletedAtIsNil()).
+		Where(comment.RootIDEQ(rootID), comment.DeletedAtIsNil()).
 		SetDeletedAt(time.Now()).
 		Save(ctx)
 	return int64(affected), err
@@ -106,7 +105,7 @@ func (r *CommentRepo) DecrementChildCount(ctx context.Context, rootID uint64) er
 
 func (r *CommentRepo) ListTopByArticle(ctx context.Context, articleID uint64, offset, limit int) ([]*aggregate.CommentAggregate, error) {
 	nodes, err := r.DB(ctx).Comment.Query().
-		Where(comment.ArticleIDEQ(articleID), comment.ParentIDEQ(0), comment.DeletedAtIsNil()).
+		Where(comment.ArticleIDEQ(articleID), comment.RootIDEQ(0), comment.DeletedAtIsNil()).
 		WithUser().
 		WithArticle().
 		Order(ent.Desc(comment.FieldCreatedAt)).
@@ -119,9 +118,9 @@ func (r *CommentRepo) ListTopByArticle(ctx context.Context, articleID uint64, of
 	return toEntityCommentAggregates(nodes), nil
 }
 
-func (r *CommentRepo) ListRepliesByParent(ctx context.Context, parentID uint64, offset, limit int) ([]*aggregate.CommentAggregate, error) {
+func (r *CommentRepo) ListRepliesByRoot(ctx context.Context, rootID uint64, offset, limit int) ([]*aggregate.CommentAggregate, error) {
 	nodes, err := r.DB(ctx).Comment.Query().
-		Where(comment.ParentIDEQ(parentID), comment.DeletedAtIsNil()).
+		Where(comment.RootIDEQ(rootID), comment.DeletedAtIsNil()).
 		WithUser().
 		WithArticle().
 		Order(ent.Asc(comment.FieldCreatedAt)).

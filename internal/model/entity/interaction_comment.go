@@ -9,7 +9,6 @@ type Comment struct {
 	ID         uint64       `db:"id" json:"id"`
 	ArticleID  uint64       `db:"article_id" json:"articleId"`
 	UserID     uint64       `db:"user_id" json:"userId"`
-	ParentID   uint64       `db:"parent_id" json:"parentId"`
 	RootID     uint64       `db:"root_id" json:"rootId"`
 	ReplyToID  uint64       `db:"reply_to_id" json:"replyToId"`
 	Content    string       `db:"content" json:"content"`
@@ -24,5 +23,5 @@ func (Comment) TableName() string {
 }
 
 func (c *Comment) IsTopLevel() bool {
-	return c.ParentID == 0
+	return c.RootID == 0
 }

@@ -22,8 +22,6 @@ const (
 	FieldArticleID = "article_id"
 	// FieldUserID holds the string denoting the user_id field in the database.
 	FieldUserID = "user_id"
-	// FieldParentID holds the string denoting the parent_id field in the database.
-	FieldParentID = "parent_id"
 	// FieldRootID holds the string denoting the root_id field in the database.
 	FieldRootID = "root_id"
 	// FieldReplyToID holds the string denoting the reply_to_id field in the database.
@@ -63,7 +61,6 @@ var Columns = []string{
 	FieldDeletedAt,
 	FieldArticleID,
 	FieldUserID,
-	FieldParentID,
 	FieldRootID,
 	FieldReplyToID,
 	FieldContent,
@@ -84,8 +81,6 @@ func ValidColumn(column string) bool {
 var (
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
-	// DefaultParentID holds the default value on creation for the "parent_id" field.
-	DefaultParentID uint64
 	// DefaultRootID holds the default value on creation for the "root_id" field.
 	DefaultRootID uint64
 	// DefaultReplyToID holds the default value on creation for the "reply_to_id" field.
@@ -122,11 +117,6 @@ func ByArticleID(opts ...sql.OrderTermOption) OrderOption {
 // ByUserID orders the results by the user_id field.
 func ByUserID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUserID, opts...).ToFunc()
-}
-
-// ByParentID orders the results by the parent_id field.
-func ByParentID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldParentID, opts...).ToFunc()
 }
 
 // ByRootID orders the results by the root_id field.

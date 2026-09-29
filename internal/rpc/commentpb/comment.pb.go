@@ -26,7 +26,6 @@ type CommentInfo struct {
 	Id              uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	ArticleId       uint64                 `protobuf:"varint,2,opt,name=articleId,proto3" json:"articleId,omitempty"`
 	UserId          uint64                 `protobuf:"varint,3,opt,name=userId,proto3" json:"userId,omitempty"`
-	ParentId        uint64                 `protobuf:"varint,4,opt,name=parentId,proto3" json:"parentId,omitempty"`
 	RootId          uint64                 `protobuf:"varint,5,opt,name=rootId,proto3" json:"rootId,omitempty"`
 	ReplyToId       uint64                 `protobuf:"varint,6,opt,name=replyToId,proto3" json:"replyToId,omitempty"`
 	Content         string                 `protobuf:"bytes,8,opt,name=content,proto3" json:"content,omitempty"`
@@ -88,13 +87,6 @@ func (x *CommentInfo) GetArticleId() uint64 {
 func (x *CommentInfo) GetUserId() uint64 {
 	if x != nil {
 		return x.UserId
-	}
-	return 0
-}
-
-func (x *CommentInfo) GetParentId() uint64 {
-	if x != nil {
-		return x.ParentId
 	}
 	return 0
 }
@@ -611,7 +603,7 @@ func (x *GetArticleCommentsResp) GetSize() int32 {
 
 type GetCommentRepliesReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ParentId      uint64                 `protobuf:"varint,1,opt,name=parentId,proto3" json:"parentId,omitempty"`
+	RootId        uint64                 `protobuf:"varint,1,opt,name=rootId,proto3" json:"rootId,omitempty"`
 	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
 	Size          int32                  `protobuf:"varint,3,opt,name=size,proto3" json:"size,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -648,9 +640,9 @@ func (*GetCommentRepliesReq) Descriptor() ([]byte, []int) {
 	return file_comment_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *GetCommentRepliesReq) GetParentId() uint64 {
+func (x *GetCommentRepliesReq) GetRootId() uint64 {
 	if x != nil {
-		return x.ParentId
+		return x.RootId
 	}
 	return 0
 }
@@ -733,12 +725,11 @@ var File_comment_proto protoreflect.FileDescriptor
 
 const file_comment_proto_rawDesc = "" +
 	"\n" +
-	"\rcomment.proto\x12\acomment\"\x9b\x03\n" +
+	"\rcomment.proto\x12\acomment\"\xff\x02\n" +
 	"\vCommentInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x1c\n" +
 	"\tarticleId\x18\x02 \x01(\x04R\tarticleId\x12\x16\n" +
-	"\x06userId\x18\x03 \x01(\x04R\x06userId\x12\x1a\n" +
-	"\bparentId\x18\x04 \x01(\x04R\bparentId\x12\x16\n" +
+	"\x06userId\x18\x03 \x01(\x04R\x06userId\x12\x16\n" +
 	"\x06rootId\x18\x05 \x01(\x04R\x06rootId\x12\x1c\n" +
 	"\treplyToId\x18\x06 \x01(\x04R\treplyToId\x12\x18\n" +
 	"\acontent\x18\b \x01(\tR\acontent\x12\x1c\n" +
@@ -780,9 +771,9 @@ const file_comment_proto_rawDesc = "" +
 	"\x16GetArticleCommentsResp\x120\n" +
 	"\bcomments\x18\x01 \x03(\v2\x14.comment.CommentInfoR\bcomments\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x12\n" +
-	"\x04size\x18\x03 \x01(\x05R\x04size\"Z\n" +
-	"\x14GetCommentRepliesReq\x12\x1a\n" +
-	"\bparentId\x18\x01 \x01(\x04R\bparentId\x12\x12\n" +
+	"\x04size\x18\x03 \x01(\x05R\x04size\"V\n" +
+	"\x14GetCommentRepliesReq\x12\x16\n" +
+	"\x06rootId\x18\x01 \x01(\x04R\x06rootId\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x12\n" +
 	"\x04size\x18\x03 \x01(\x05R\x04size\"o\n" +
 	"\x15GetCommentRepliesResp\x12.\n" +

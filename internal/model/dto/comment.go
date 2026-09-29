@@ -30,7 +30,7 @@ func CreateCommentRequestFromPB(req *commentpb.CreateCommentReq) *CreateCommentR
 
 type CreateReplyRequest struct {
 	ArticleID uint64
-	ParentID  uint64
+	RootID    uint64
 	UserID    uint64
 	ReplyToID uint64
 	Content   string
@@ -42,7 +42,7 @@ func CreateReplyRequestFromPB(req *commentpb.CreateReplyReq) *CreateReplyRequest
 	}
 	return &CreateReplyRequest{
 		ArticleID: req.GetArticleId(),
-		ParentID:  req.GetRootId(),
+		RootID:    req.GetRootId(),
 		UserID:    req.GetUserId(),
 		ReplyToID: req.GetReplyToId(),
 		Content:   req.GetContent(),
@@ -69,9 +69,9 @@ type GetArticleCommentsResponse struct {
 }
 
 type GetCommentRepliesRequest struct {
-	ParentID uint64
-	Page     int32
-	Size     int32
+	RootID uint64
+	Page   int32
+	Size   int32
 }
 
 type GetCommentRepliesResponse struct {
@@ -84,7 +84,6 @@ type CommentInfoDTO struct {
 	ID              uint64
 	ArticleID       uint64
 	UserID          uint64
-	ParentID        uint64
 	RootID          uint64
 	ReplyToID       uint64
 	ReplyToUserName string
@@ -133,9 +132,9 @@ func GetCommentRepliesRequestFromPB(req *commentpb.GetCommentRepliesReq) *GetCom
 		return nil
 	}
 	return &GetCommentRepliesRequest{
-		ParentID: req.GetParentId(),
-		Page:     req.GetPage(),
-		Size:     req.GetSize(),
+		RootID: req.GetRootId(),
+		Page:   req.GetPage(),
+		Size:   req.GetSize(),
 	}
 }
 
@@ -158,7 +157,6 @@ func CommentInfoFromEntity(c *entity.Comment, author *entity.User) *CommentInfoD
 		ID:         c.ID,
 		ArticleID:  c.ArticleID,
 		UserID:     c.UserID,
-		ParentID:   c.ParentID,
 		RootID:     c.RootID,
 		ReplyToID:  c.ReplyToID,
 		Content:    c.Content,
@@ -181,7 +179,6 @@ func CommentInfoToPB(info *CommentInfoDTO) *commentpb.CommentInfo {
 		Id:              info.ID,
 		ArticleId:       info.ArticleID,
 		UserId:          info.UserID,
-		ParentId:        info.ParentID,
 		RootId:          info.RootID,
 		ReplyToId:       info.ReplyToID,
 		ReplyToUserName: info.ReplyToUserName,

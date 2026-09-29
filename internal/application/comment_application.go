@@ -69,7 +69,7 @@ func (s *CommentService) CreateComment(ctx context.Context, req *dto.CreateComme
 
 func (s *CommentService) CreateReply(ctx context.Context, req *dto.CreateReplyRequest) (bool, error) {
 	// 1.首先校验父评论是否存在
-	rootComment, err := s.repo.GetByID(ctx, req.ParentID)
+	rootComment, err := s.repo.GetByID(ctx, req.RootID)
 	if err != nil {
 		return false, ErrCommentNotFound
 	}
@@ -84,8 +84,7 @@ func (s *CommentService) CreateReply(ctx context.Context, req *dto.CreateReplyRe
 		_, err = s.repo.CreateReply(ctx, &entity.Comment{
 			ArticleID: req.ArticleID,
 			UserID:    req.UserID,
-			ParentID:  rootComment.Comment.ID,     // 这个是父评论id
-			RootID:    rootComment.Comment.RootID, // 这个代表顶级评论id，
+			RootID:    rootComment.Comment.ID,
 			ReplyToID: req.ReplyToID,
 			Content:   req.Content,
 		})
@@ -133,12 +132,12 @@ func (s *CommentService) DeleteComment(ctx context.Context, req *dto.DeleteComme
 		// 3.判断是不是根评论(其实也可以异步删除的)
 		deletedCount := int64(1)
 		if comment.IsTopLevel() {
-			replyCount, err := s.repo.SoftDeleteRepliesByParent(ctx, comment.ID)
+			replyCount, err := s.repo.SoftDeleteRepliesByRoot(ctx, comment.ID)
 			if err != nil {
 				return err
 			}
 			deletedCount += replyCount
-		} else if err := s.repo.DecrementChildCount(ctx, comment.ParentID); err != nil {
+		} else if err := s.repo.DecrementChildCount(ctx, comment.RootID); err != nil {
 			return err
 		}
 
@@ -194,7 +193,7 @@ func (s *CommentService) GetCommentReplies(ctx context.Context, req *dto.GetComm
 	size := Size(int(req.Size))
 	offset := (page - 1) * size
 
-	replies, err := s.repo.ListRepliesByParent(ctx, req.ParentID, offset, size)
+	replies, err := s.repo.ListRepliesByRoot(ctx, req.RootID, offset, size)
 	if err != nil {
 		s.log.Error(err.Error())
 		return nil, err

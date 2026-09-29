@@ -27,8 +27,6 @@ type Comment struct {
 	ArticleID uint64 `json:"article_id,omitempty"`
 	// UserID holds the value of the "user_id" field.
 	UserID uint64 `json:"user_id,omitempty"`
-	// ParentID holds the value of the "parent_id" field.
-	ParentID uint64 `json:"parent_id,omitempty"`
 	// RootID holds the value of the "root_id" field.
 	RootID uint64 `json:"root_id,omitempty"`
 	// ReplyToID holds the value of the "reply_to_id" field.
@@ -83,7 +81,7 @@ func (*Comment) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case comment.FieldID, comment.FieldArticleID, comment.FieldUserID, comment.FieldParentID, comment.FieldRootID, comment.FieldReplyToID, comment.FieldLikeCount, comment.FieldChildCount:
+		case comment.FieldID, comment.FieldArticleID, comment.FieldUserID, comment.FieldRootID, comment.FieldReplyToID, comment.FieldLikeCount, comment.FieldChildCount:
 			values[i] = new(sql.NullInt64)
 		case comment.FieldContent:
 			values[i] = new(sql.NullString)
@@ -134,12 +132,6 @@ func (_m *Comment) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field user_id", values[i])
 			} else if value.Valid {
 				_m.UserID = uint64(value.Int64)
-			}
-		case comment.FieldParentID:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field parent_id", values[i])
-			} else if value.Valid {
-				_m.ParentID = uint64(value.Int64)
 			}
 		case comment.FieldRootID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -230,9 +222,6 @@ func (_m *Comment) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("user_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.UserID))
-	builder.WriteString(", ")
-	builder.WriteString("parent_id=")
-	builder.WriteString(fmt.Sprintf("%v", _m.ParentID))
 	builder.WriteString(", ")
 	builder.WriteString("root_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.RootID))

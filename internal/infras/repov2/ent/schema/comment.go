@@ -24,7 +24,6 @@ func (Comment) Fields() []ent.Field {
 		field.Time("deleted_at").Optional().Nillable(),
 		field.Uint64("article_id"),
 		field.Uint64("user_id"),
-		field.Uint64("parent_id").Default(0),
 		field.Uint64("root_id").Default(0),
 		field.Uint64("reply_to_id").Default(0),
 		field.String("content"),

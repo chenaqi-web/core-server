@@ -3,7 +3,6 @@ CREATE TABLE `comment`
     `id`            bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
     `article_id`    bigint unsigned NOT NULL DEFAULT '0' COMMENT '文章ID',
     `user_id`       bigint unsigned NOT NULL DEFAULT '0' COMMENT '评论用户ID',
-    `parent_id`     bigint unsigned NOT NULL DEFAULT '0' COMMENT '父评论ID',
     `root_id`       bigint unsigned NOT NULL DEFAULT '0' COMMENT '根评论ID',
     `reply_to_id`   bigint unsigned NOT NULL DEFAULT '0' COMMENT '回复目标用户ID',
     `content`       text            NOT NULL COMMENT '评论内容',

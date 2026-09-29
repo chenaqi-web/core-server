@@ -62,20 +62,6 @@ func (_c *CommentCreate) SetUserID(v uint64) *CommentCreate {
 	return _c
 }
 
-// SetParentID sets the "parent_id" field.
-func (_c *CommentCreate) SetParentID(v uint64) *CommentCreate {
-	_c.mutation.SetParentID(v)
-	return _c
-}
-
-// SetNillableParentID sets the "parent_id" field if the given value is not nil.
-func (_c *CommentCreate) SetNillableParentID(v *uint64) *CommentCreate {
-	if v != nil {
-		_c.SetParentID(*v)
-	}
-	return _c
-}
-
 // SetRootID sets the "root_id" field.
 func (_c *CommentCreate) SetRootID(v uint64) *CommentCreate {
 	_c.mutation.SetRootID(v)
@@ -193,10 +179,6 @@ func (_c *CommentCreate) defaults() {
 		v := comment.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := _c.mutation.ParentID(); !ok {
-		v := comment.DefaultParentID
-		_c.mutation.SetParentID(v)
-	}
 	if _, ok := _c.mutation.RootID(); !ok {
 		v := comment.DefaultRootID
 		_c.mutation.SetRootID(v)
@@ -225,9 +207,6 @@ func (_c *CommentCreate) check() error {
 	}
 	if _, ok := _c.mutation.UserID(); !ok {
 		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "Comment.user_id"`)}
-	}
-	if _, ok := _c.mutation.ParentID(); !ok {
-		return &ValidationError{Name: "parent_id", err: errors.New(`ent: missing required field "Comment.parent_id"`)}
 	}
 	if _, ok := _c.mutation.RootID(); !ok {
 		return &ValidationError{Name: "root_id", err: errors.New(`ent: missing required field "Comment.root_id"`)}
@@ -289,10 +268,6 @@ func (_c *CommentCreate) createSpec() (*Comment, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.DeletedAt(); ok {
 		_spec.SetField(comment.FieldDeletedAt, field.TypeTime, value)
 		_node.DeletedAt = &value
-	}
-	if value, ok := _c.mutation.ParentID(); ok {
-		_spec.SetField(comment.FieldParentID, field.TypeUint64, value)
-		_node.ParentID = value
 	}
 	if value, ok := _c.mutation.RootID(); ok {
 		_spec.SetField(comment.FieldRootID, field.TypeUint64, value)

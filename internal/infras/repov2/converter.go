@@ -127,7 +127,6 @@ func toEntityComment(node *ent.Comment) *entity.Comment {
 		ID:         node.ID,
 		ArticleID:  node.ArticleID,
 		UserID:     node.UserID,
-		ParentID:   node.ParentID,
 		RootID:     node.RootID,
 		ReplyToID:  node.ReplyToID,
 		Content:    node.Content,

@@ -92,27 +92,6 @@ func (_u *CommentUpdate) SetNillableUserID(v *uint64) *CommentUpdate {
 	return _u
 }
 
-// SetParentID sets the "parent_id" field.
-func (_u *CommentUpdate) SetParentID(v uint64) *CommentUpdate {
-	_u.mutation.ResetParentID()
-	_u.mutation.SetParentID(v)
-	return _u
-}
-
-// SetNillableParentID sets the "parent_id" field if the given value is not nil.
-func (_u *CommentUpdate) SetNillableParentID(v *uint64) *CommentUpdate {
-	if v != nil {
-		_u.SetParentID(*v)
-	}
-	return _u
-}
-
-// AddParentID adds value to the "parent_id" field.
-func (_u *CommentUpdate) AddParentID(v int64) *CommentUpdate {
-	_u.mutation.AddParentID(v)
-	return _u
-}
-
 // SetRootID sets the "root_id" field.
 func (_u *CommentUpdate) SetRootID(v uint64) *CommentUpdate {
 	_u.mutation.ResetRootID()
@@ -297,12 +276,6 @@ func (_u *CommentUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.DeletedAtCleared() {
 		_spec.ClearField(comment.FieldDeletedAt, field.TypeTime)
 	}
-	if value, ok := _u.mutation.ParentID(); ok {
-		_spec.SetField(comment.FieldParentID, field.TypeUint64, value)
-	}
-	if value, ok := _u.mutation.AddedParentID(); ok {
-		_spec.AddField(comment.FieldParentID, field.TypeUint64, value)
-	}
 	if value, ok := _u.mutation.RootID(); ok {
 		_spec.SetField(comment.FieldRootID, field.TypeUint64, value)
 	}
@@ -467,27 +440,6 @@ func (_u *CommentUpdateOne) SetNillableUserID(v *uint64) *CommentUpdateOne {
 	if v != nil {
 		_u.SetUserID(*v)
 	}
-	return _u
-}
-
-// SetParentID sets the "parent_id" field.
-func (_u *CommentUpdateOne) SetParentID(v uint64) *CommentUpdateOne {
-	_u.mutation.ResetParentID()
-	_u.mutation.SetParentID(v)
-	return _u
-}
-
-// SetNillableParentID sets the "parent_id" field if the given value is not nil.
-func (_u *CommentUpdateOne) SetNillableParentID(v *uint64) *CommentUpdateOne {
-	if v != nil {
-		_u.SetParentID(*v)
-	}
-	return _u
-}
-
-// AddParentID adds value to the "parent_id" field.
-func (_u *CommentUpdateOne) AddParentID(v int64) *CommentUpdateOne {
-	_u.mutation.AddParentID(v)
 	return _u
 }
 
@@ -704,12 +656,6 @@ func (_u *CommentUpdateOne) sqlSave(ctx context.Context) (_node *Comment, err er
 	}
 	if _u.mutation.DeletedAtCleared() {
 		_spec.ClearField(comment.FieldDeletedAt, field.TypeTime)
-	}
-	if value, ok := _u.mutation.ParentID(); ok {
-		_spec.SetField(comment.FieldParentID, field.TypeUint64, value)
-	}
-	if value, ok := _u.mutation.AddedParentID(); ok {
-		_spec.AddField(comment.FieldParentID, field.TypeUint64, value)
 	}
 	if value, ok := _u.mutation.RootID(); ok {
 		_spec.SetField(comment.FieldRootID, field.TypeUint64, value)

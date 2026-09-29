@@ -75,7 +75,6 @@ var (
 		{Name: "id", Type: field.TypeUint64, Increment: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "parent_id", Type: field.TypeUint64, Default: 0},
 		{Name: "root_id", Type: field.TypeUint64, Default: 0},
 		{Name: "reply_to_id", Type: field.TypeUint64, Default: 0},
 		{Name: "content", Type: field.TypeString},
@@ -92,13 +91,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "comment_article_comments",
-				Columns:    []*schema.Column{CommentColumns[9]},
+				Columns:    []*schema.Column{CommentColumns[8]},
 				RefColumns: []*schema.Column{ArticleColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "comment_user_comments",
-				Columns:    []*schema.Column{CommentColumns[10]},
+				Columns:    []*schema.Column{CommentColumns[9]},
 				RefColumns: []*schema.Column{UserColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

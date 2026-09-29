@@ -7,7 +7,6 @@ message CommentInfo {
   uint64 id = 1;
   uint64 articleId = 2;
   uint64 userId = 3;
-  uint64 parentId = 4;
   uint64 rootId = 5;
   uint64 replyToId = 6;
   string content = 8;
@@ -60,7 +59,7 @@ message GetArticleCommentsResp {
 }
 
 message GetCommentRepliesReq {
-  uint64 parentId = 1;
+  uint64 rootId = 1;
   int32 page = 2;
   int32 size = 3;
 }
