@@ -20,6 +20,8 @@ type Tx struct {
 	Comment *CommentClient
 	// InteractionCount is the client for interacting with the InteractionCount builders.
 	InteractionCount *InteractionCountClient
+	// InteractionLike is the client for interacting with the InteractionLike builders.
+	InteractionLike *InteractionLikeClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserStat is the client for interacting with the UserStat builders.
@@ -159,6 +161,7 @@ func (tx *Tx) init() {
 	tx.Category = NewCategoryClient(tx.config)
 	tx.Comment = NewCommentClient(tx.config)
 	tx.InteractionCount = NewInteractionCountClient(tx.config)
+	tx.InteractionLike = NewInteractionLikeClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserStat = NewUserStatClient(tx.config)
 }

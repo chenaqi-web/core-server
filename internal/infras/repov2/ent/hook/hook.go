@@ -56,6 +56,18 @@ func (f InteractionCountFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.V
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.InteractionCountMutation", m)
 }
 
+// The InteractionLikeFunc type is an adapter to allow the use of ordinary
+// function as InteractionLike mutator.
+type InteractionLikeFunc func(context.Context, *ent.InteractionLikeMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f InteractionLikeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.InteractionLikeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.InteractionLikeMutation", m)
+}
+
 // The UserFunc type is an adapter to allow the use of ordinary
 // function as User mutator.
 type UserFunc func(context.Context, *ent.UserMutation) (ent.Value, error)

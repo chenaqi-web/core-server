@@ -110,8 +110,8 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "object_id", Type: field.TypeUint64},
-		{Name: "object_type", Type: field.TypeEnum, Enums: []string{"article"}},
-		{Name: "interaction_type", Type: field.TypeEnum, Enums: []string{"like", "view", "favor"}},
+		{Name: "object_type", Type: field.TypeEnum, Enums: []string{"article", "comment", "life"}},
+		{Name: "interaction_type", Type: field.TypeEnum, Enums: []string{"like", "comment", "view", "favor"}},
 		{Name: "count", Type: field.TypeInt, Default: 0},
 	}
 	// InteractionCountTable holds the schema information for the "interaction_count" table.
@@ -124,6 +124,30 @@ var (
 				Name:    "uk_object",
 				Unique:  true,
 				Columns: []*schema.Column{InteractionCountColumns[3], InteractionCountColumns[4], InteractionCountColumns[5]},
+			},
+		},
+	}
+	// InteractionLikeColumns holds the columns for the "interaction_like" table.
+	InteractionLikeColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUint64, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "user_id", Type: field.TypeUint64},
+		{Name: "object_type", Type: field.TypeEnum, Enums: []string{"article", "comment", "life"}},
+		{Name: "object_id", Type: field.TypeUint64},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"unknown", "thumb_up", "nothing"}, Default: "nothing"},
+		{Name: "version", Type: field.TypeInt64, Default: 0},
+	}
+	// InteractionLikeTable holds the schema information for the "interaction_like" table.
+	InteractionLikeTable = &schema.Table{
+		Name:       "interaction_like",
+		Columns:    InteractionLikeColumns,
+		PrimaryKey: []*schema.Column{InteractionLikeColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "uk_like_user_object",
+				Unique:  true,
+				Columns: []*schema.Column{InteractionLikeColumns[3], InteractionLikeColumns[4], InteractionLikeColumns[5]},
 			},
 		},
 	}
@@ -185,6 +209,7 @@ var (
 		CategoryTable,
 		CommentTable,
 		InteractionCountTable,
+		InteractionLikeTable,
 		UserTable,
 		UserStatTable,
 	}
@@ -206,6 +231,9 @@ func init() {
 	}
 	InteractionCountTable.Annotation = &entsql.Annotation{
 		Table: "interaction_count",
+	}
+	InteractionLikeTable.Annotation = &entsql.Annotation{
+		Table: "interaction_like",
 	}
 	UserTable.Annotation = &entsql.Annotation{
 		Table: "user",

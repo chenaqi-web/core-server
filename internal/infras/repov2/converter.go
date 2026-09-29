@@ -149,20 +149,50 @@ func toEntityComments(nodes []*ent.Comment) []*entity.Comment {
 	return items
 }
 
-func commentEntities(items []*aggregate.CommentAggregate) []*entity.Comment {
-	comments := make([]*entity.Comment, 0, len(items))
-	for _, item := range items {
-		if item != nil && item.Comment != nil {
-			comments = append(comments, item.Comment)
-		}
-	}
-	return comments
-}
-
 func toEntityCommentAggregates(nodes []*ent.Comment) []*aggregate.CommentAggregate {
 	items := make([]*aggregate.CommentAggregate, 0, len(nodes))
 	for _, node := range nodes {
 		items = append(items, aggregate.NewCommentAggregate(toEntityComment(node), toEntityUser(node.Edges.User)))
+	}
+	return items
+}
+
+func toEntityInteractionLike(node *ent.InteractionLike) *entity.InteractionLike {
+	if node == nil {
+		return nil
+	}
+	return &entity.InteractionLike{
+		ID:         node.ID,
+		CreatedAt:  node.CreatedAt,
+		UpdatedAt:  node.UpdatedAt,
+		UserID:     node.UserID,
+		ObjectType: enum.ParseObjectType(node.ObjectType.String()),
+		ObjectID:   node.ObjectID,
+		Status:     entity.ParseLikeStatusType(node.Status.String()),
+		Version:    node.Version,
+	}
+}
+
+func toEntityInteractionLikes(nodes []*ent.InteractionLike) []*entity.InteractionLike {
+	items := make([]*entity.InteractionLike, 0, len(nodes))
+	for _, node := range nodes {
+		items = append(items, toEntityInteractionLike(node))
+	}
+	return items
+}
+
+func toEntityInteractionCounts(nodes []*ent.InteractionCount) []*entity.InteractionCount {
+	items := make([]*entity.InteractionCount, 0, len(nodes))
+	for _, node := range nodes {
+		items = append(items, &entity.InteractionCount{
+			ID:              node.ID,
+			CreatedAt:       node.CreatedAt,
+			UpdatedAt:       node.UpdatedAt,
+			ObjectType:      enum.ParseObjectType(node.ObjectType.String()),
+			ObjectID:        node.ObjectID,
+			InteractionType: enum.ParseInteractionType(node.InteractionType.String()),
+			Count:           int64(node.Count),
+		})
 	}
 	return items
 }

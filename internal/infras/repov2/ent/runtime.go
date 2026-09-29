@@ -7,6 +7,7 @@ import (
 	"core-server/internal/infras/repov2/ent/category"
 	"core-server/internal/infras/repov2/ent/comment"
 	"core-server/internal/infras/repov2/ent/interactioncount"
+	"core-server/internal/infras/repov2/ent/interactionlike"
 	"core-server/internal/infras/repov2/ent/schema"
 	"core-server/internal/infras/repov2/ent/user"
 	"core-server/internal/infras/repov2/ent/userstat"
@@ -123,6 +124,22 @@ func init() {
 	interactioncountDescCount := interactioncountFields[6].Descriptor()
 	// interactioncount.DefaultCount holds the default value on creation for the count field.
 	interactioncount.DefaultCount = interactioncountDescCount.Default.(int)
+	interactionlikeFields := schema.InteractionLike{}.Fields()
+	_ = interactionlikeFields
+	// interactionlikeDescCreatedAt is the schema descriptor for created_at field.
+	interactionlikeDescCreatedAt := interactionlikeFields[1].Descriptor()
+	// interactionlike.DefaultCreatedAt holds the default value on creation for the created_at field.
+	interactionlike.DefaultCreatedAt = interactionlikeDescCreatedAt.Default.(func() time.Time)
+	// interactionlikeDescUpdatedAt is the schema descriptor for updated_at field.
+	interactionlikeDescUpdatedAt := interactionlikeFields[2].Descriptor()
+	// interactionlike.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	interactionlike.DefaultUpdatedAt = interactionlikeDescUpdatedAt.Default.(func() time.Time)
+	// interactionlike.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	interactionlike.UpdateDefaultUpdatedAt = interactionlikeDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// interactionlikeDescVersion is the schema descriptor for version field.
+	interactionlikeDescVersion := interactionlikeFields[7].Descriptor()
+	// interactionlike.DefaultVersion holds the default value on creation for the version field.
+	interactionlike.DefaultVersion = interactionlikeDescVersion.Default.(int64)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescCreatedAt is the schema descriptor for created_at field.

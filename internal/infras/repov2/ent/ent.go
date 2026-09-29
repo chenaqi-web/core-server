@@ -8,6 +8,7 @@ import (
 	"core-server/internal/infras/repov2/ent/category"
 	"core-server/internal/infras/repov2/ent/comment"
 	"core-server/internal/infras/repov2/ent/interactioncount"
+	"core-server/internal/infras/repov2/ent/interactionlike"
 	"core-server/internal/infras/repov2/ent/user"
 	"core-server/internal/infras/repov2/ent/userstat"
 	"errors"
@@ -82,6 +83,7 @@ func checkColumn(t, c string) error {
 			category.Table:         category.ValidColumn,
 			comment.Table:          comment.ValidColumn,
 			interactioncount.Table: interactioncount.ValidColumn,
+			interactionlike.Table:  interactionlike.ValidColumn,
 			user.Table:             user.ValidColumn,
 			userstat.Table:         userstat.ValidColumn,
 		})

@@ -23,7 +23,7 @@ type InteractionCount struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// 对象ID 例如文章ID
 	ObjectID uint64 `json:"object_id,omitempty"`
-	// 对象类型 例如文章
+	// 对象类型
 	ObjectType interactioncount.ObjectType `json:"object_type,omitempty"`
 	// 交互类型
 	InteractionType interactioncount.InteractionType `json:"interaction_type,omitempty"`

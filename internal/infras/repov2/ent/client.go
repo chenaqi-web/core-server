@@ -15,6 +15,7 @@ import (
 	"core-server/internal/infras/repov2/ent/category"
 	"core-server/internal/infras/repov2/ent/comment"
 	"core-server/internal/infras/repov2/ent/interactioncount"
+	"core-server/internal/infras/repov2/ent/interactionlike"
 	"core-server/internal/infras/repov2/ent/user"
 	"core-server/internal/infras/repov2/ent/userstat"
 
@@ -37,6 +38,8 @@ type Client struct {
 	Comment *CommentClient
 	// InteractionCount is the client for interacting with the InteractionCount builders.
 	InteractionCount *InteractionCountClient
+	// InteractionLike is the client for interacting with the InteractionLike builders.
+	InteractionLike *InteractionLikeClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserStat is the client for interacting with the UserStat builders.
@@ -56,6 +59,7 @@ func (c *Client) init() {
 	c.Category = NewCategoryClient(c.config)
 	c.Comment = NewCommentClient(c.config)
 	c.InteractionCount = NewInteractionCountClient(c.config)
+	c.InteractionLike = NewInteractionLikeClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.UserStat = NewUserStatClient(c.config)
 }
@@ -154,6 +158,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Category:         NewCategoryClient(cfg),
 		Comment:          NewCommentClient(cfg),
 		InteractionCount: NewInteractionCountClient(cfg),
+		InteractionLike:  NewInteractionLikeClient(cfg),
 		User:             NewUserClient(cfg),
 		UserStat:         NewUserStatClient(cfg),
 	}, nil
@@ -179,6 +184,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Category:         NewCategoryClient(cfg),
 		Comment:          NewCommentClient(cfg),
 		InteractionCount: NewInteractionCountClient(cfg),
+		InteractionLike:  NewInteractionLikeClient(cfg),
 		User:             NewUserClient(cfg),
 		UserStat:         NewUserStatClient(cfg),
 	}, nil
@@ -210,7 +216,8 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Article, c.Category, c.Comment, c.InteractionCount, c.User, c.UserStat,
+		c.Article, c.Category, c.Comment, c.InteractionCount, c.InteractionLike, c.User,
+		c.UserStat,
 	} {
 		n.Use(hooks...)
 	}
@@ -220,7 +227,8 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Article, c.Category, c.Comment, c.InteractionCount, c.User, c.UserStat,
+		c.Article, c.Category, c.Comment, c.InteractionCount, c.InteractionLike, c.User,
+		c.UserStat,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -237,6 +245,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Comment.mutate(ctx, m)
 	case *InteractionCountMutation:
 		return c.InteractionCount.mutate(ctx, m)
+	case *InteractionLikeMutation:
+		return c.InteractionLike.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	case *UserStatMutation:
@@ -874,6 +884,139 @@ func (c *InteractionCountClient) mutate(ctx context.Context, m *InteractionCount
 	}
 }
 
+// InteractionLikeClient is a client for the InteractionLike schema.
+type InteractionLikeClient struct {
+	config
+}
+
+// NewInteractionLikeClient returns a client for the InteractionLike from the given config.
+func NewInteractionLikeClient(c config) *InteractionLikeClient {
+	return &InteractionLikeClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `interactionlike.Hooks(f(g(h())))`.
+func (c *InteractionLikeClient) Use(hooks ...Hook) {
+	c.hooks.InteractionLike = append(c.hooks.InteractionLike, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `interactionlike.Intercept(f(g(h())))`.
+func (c *InteractionLikeClient) Intercept(interceptors ...Interceptor) {
+	c.inters.InteractionLike = append(c.inters.InteractionLike, interceptors...)
+}
+
+// Create returns a builder for creating a InteractionLike entity.
+func (c *InteractionLikeClient) Create() *InteractionLikeCreate {
+	mutation := newInteractionLikeMutation(c.config, OpCreate)
+	return &InteractionLikeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of InteractionLike entities.
+func (c *InteractionLikeClient) CreateBulk(builders ...*InteractionLikeCreate) *InteractionLikeCreateBulk {
+	return &InteractionLikeCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *InteractionLikeClient) MapCreateBulk(slice any, setFunc func(*InteractionLikeCreate, int)) *InteractionLikeCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &InteractionLikeCreateBulk{err: fmt.Errorf("calling to InteractionLikeClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*InteractionLikeCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &InteractionLikeCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for InteractionLike.
+func (c *InteractionLikeClient) Update() *InteractionLikeUpdate {
+	mutation := newInteractionLikeMutation(c.config, OpUpdate)
+	return &InteractionLikeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *InteractionLikeClient) UpdateOne(_m *InteractionLike) *InteractionLikeUpdateOne {
+	mutation := newInteractionLikeMutation(c.config, OpUpdateOne, withInteractionLike(_m))
+	return &InteractionLikeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *InteractionLikeClient) UpdateOneID(id uint64) *InteractionLikeUpdateOne {
+	mutation := newInteractionLikeMutation(c.config, OpUpdateOne, withInteractionLikeID(id))
+	return &InteractionLikeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for InteractionLike.
+func (c *InteractionLikeClient) Delete() *InteractionLikeDelete {
+	mutation := newInteractionLikeMutation(c.config, OpDelete)
+	return &InteractionLikeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *InteractionLikeClient) DeleteOne(_m *InteractionLike) *InteractionLikeDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *InteractionLikeClient) DeleteOneID(id uint64) *InteractionLikeDeleteOne {
+	builder := c.Delete().Where(interactionlike.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &InteractionLikeDeleteOne{builder}
+}
+
+// Query returns a query builder for InteractionLike.
+func (c *InteractionLikeClient) Query() *InteractionLikeQuery {
+	return &InteractionLikeQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeInteractionLike},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a InteractionLike entity by its id.
+func (c *InteractionLikeClient) Get(ctx context.Context, id uint64) (*InteractionLike, error) {
+	return c.Query().Where(interactionlike.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *InteractionLikeClient) GetX(ctx context.Context, id uint64) *InteractionLike {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *InteractionLikeClient) Hooks() []Hook {
+	return c.hooks.InteractionLike
+}
+
+// Interceptors returns the client interceptors.
+func (c *InteractionLikeClient) Interceptors() []Interceptor {
+	return c.inters.InteractionLike
+}
+
+func (c *InteractionLikeClient) mutate(ctx context.Context, m *InteractionLikeMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&InteractionLikeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&InteractionLikeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&InteractionLikeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&InteractionLikeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown InteractionLike mutation op: %q", m.Op())
+	}
+}
+
 // UserClient is a client for the User schema.
 type UserClient struct {
 	config
@@ -1207,9 +1350,11 @@ func (c *UserStatClient) mutate(ctx context.Context, m *UserStatMutation) (Value
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Article, Category, Comment, InteractionCount, User, UserStat []ent.Hook
+		Article, Category, Comment, InteractionCount, InteractionLike, User,
+		UserStat []ent.Hook
 	}
 	inters struct {
-		Article, Category, Comment, InteractionCount, User, UserStat []ent.Interceptor
+		Article, Category, Comment, InteractionCount, InteractionLike, User,
+		UserStat []ent.Interceptor
 	}
 )

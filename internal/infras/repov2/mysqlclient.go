@@ -6,11 +6,13 @@ import (
 	"core-server/internal/infras/repov2/ent"
 	"fmt"
 
+	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 )
 
 type EntClient struct {
-	db *ent.Client
+	db     *ent.Client
+	driver dialect.Driver
 }
 
 func NewEntClient(cfg *config.Config) (*EntClient, error) {
@@ -31,7 +33,8 @@ func NewEntClient(cfg *config.Config) (*EntClient, error) {
 	//}
 
 	return &EntClient{
-		db: ent.NewClient(ent.Driver(drv)),
+		db:     ent.NewClient(ent.Driver(drv)),
+		driver: drv,
 	}, nil
 }
 

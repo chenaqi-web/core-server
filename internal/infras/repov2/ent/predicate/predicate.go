@@ -18,6 +18,9 @@ type Comment func(*sql.Selector)
 // InteractionCount is the predicate function for interactioncount builders.
 type InteractionCount func(*sql.Selector)
 
+// InteractionLike is the predicate function for interactionlike builders.
+type InteractionLike func(*sql.Selector)
+
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
 

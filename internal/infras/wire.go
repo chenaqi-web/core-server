@@ -13,22 +13,19 @@ import (
 
 var RepoProviderSet = wire.NewSet(
 	repo.NewDBClient,
-	repo.NewLikeRepo,
-	repo.NewCountRepo,
-	//repo.NewUserRepo,
-	//repo.NewArticleRepo,
-	//repo.NewCommentRepo,
 
 	// v2 ent 版本
 	repov2.NewEntClient,
+	repov2.NewLikeRepo,
+	repov2.NewCountRepo,
 	repov2.NewUserRepo,
 	repov2.NewCategoryRepo,
 	repov2.NewArticleRepo,
 	repov2.NewCommentRepo,
 	// todo 新操作
 
-	wire.Bind(new(domain.LikeRepoDomain), new(*repo.LikeRepo)),
-	wire.Bind(new(domain.CountRepoDomain), new(*repo.CountRepo)),
+	wire.Bind(new(domain.LikeRepoDomain), new(*repov2.LikeRepo)),
+	wire.Bind(new(domain.CountRepoDomain), new(*repov2.CountRepo)),
 	wire.Bind(new(domain.UserRepoDomain), new(*repov2.UserRepo)),
 	wire.Bind(new(domain.CategoryRepoDomain), new(*repov2.CategoryRepo)),
 	wire.Bind(new(domain.ArticleRepoDomain), new(*repov2.ArticleRepo)),

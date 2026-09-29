@@ -8,6 +8,7 @@ import (
 	"core-server/internal/infras/repov2/ent/category"
 	"core-server/internal/infras/repov2/ent/comment"
 	"core-server/internal/infras/repov2/ent/interactioncount"
+	"core-server/internal/infras/repov2/ent/interactionlike"
 	"core-server/internal/infras/repov2/ent/predicate"
 	"core-server/internal/infras/repov2/ent/user"
 	"core-server/internal/infras/repov2/ent/userstat"
@@ -33,6 +34,7 @@ const (
 	TypeCategory         = "Category"
 	TypeComment          = "Comment"
 	TypeInteractionCount = "InteractionCount"
+	TypeInteractionLike  = "InteractionLike"
 	TypeUser             = "User"
 	TypeUserStat         = "UserStat"
 )
@@ -3927,6 +3929,764 @@ func (m *InteractionCountMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *InteractionCountMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown InteractionCount edge %s", name)
+}
+
+// InteractionLikeMutation represents an operation that mutates the InteractionLike nodes in the graph.
+type InteractionLikeMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *uint64
+	created_at    *time.Time
+	updated_at    *time.Time
+	user_id       *uint64
+	adduser_id    *int64
+	object_type   *interactionlike.ObjectType
+	object_id     *uint64
+	addobject_id  *int64
+	status        *interactionlike.Status
+	version       *int64
+	addversion    *int64
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*InteractionLike, error)
+	predicates    []predicate.InteractionLike
+}
+
+var _ ent.Mutation = (*InteractionLikeMutation)(nil)
+
+// interactionlikeOption allows management of the mutation configuration using functional options.
+type interactionlikeOption func(*InteractionLikeMutation)
+
+// newInteractionLikeMutation creates new mutation for the InteractionLike entity.
+func newInteractionLikeMutation(c config, op Op, opts ...interactionlikeOption) *InteractionLikeMutation {
+	m := &InteractionLikeMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeInteractionLike,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withInteractionLikeID sets the ID field of the mutation.
+func withInteractionLikeID(id uint64) interactionlikeOption {
+	return func(m *InteractionLikeMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *InteractionLike
+		)
+		m.oldValue = func(ctx context.Context) (*InteractionLike, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().InteractionLike.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withInteractionLike sets the old InteractionLike of the mutation.
+func withInteractionLike(node *InteractionLike) interactionlikeOption {
+	return func(m *InteractionLikeMutation) {
+		m.oldValue = func(context.Context) (*InteractionLike, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m InteractionLikeMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m InteractionLikeMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of InteractionLike entities.
+func (m *InteractionLikeMutation) SetID(id uint64) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *InteractionLikeMutation) ID() (id uint64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *InteractionLikeMutation) IDs(ctx context.Context) ([]uint64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uint64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().InteractionLike.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *InteractionLikeMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *InteractionLikeMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the InteractionLike entity.
+// If the InteractionLike object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InteractionLikeMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *InteractionLikeMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *InteractionLikeMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *InteractionLikeMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the InteractionLike entity.
+// If the InteractionLike object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InteractionLikeMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *InteractionLikeMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetUserID sets the "user_id" field.
+func (m *InteractionLikeMutation) SetUserID(u uint64) {
+	m.user_id = &u
+	m.adduser_id = nil
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *InteractionLikeMutation) UserID() (r uint64, exists bool) {
+	v := m.user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the InteractionLike entity.
+// If the InteractionLike object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InteractionLikeMutation) OldUserID(ctx context.Context) (v uint64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// AddUserID adds u to the "user_id" field.
+func (m *InteractionLikeMutation) AddUserID(u int64) {
+	if m.adduser_id != nil {
+		*m.adduser_id += u
+	} else {
+		m.adduser_id = &u
+	}
+}
+
+// AddedUserID returns the value that was added to the "user_id" field in this mutation.
+func (m *InteractionLikeMutation) AddedUserID() (r int64, exists bool) {
+	v := m.adduser_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *InteractionLikeMutation) ResetUserID() {
+	m.user_id = nil
+	m.adduser_id = nil
+}
+
+// SetObjectType sets the "object_type" field.
+func (m *InteractionLikeMutation) SetObjectType(it interactionlike.ObjectType) {
+	m.object_type = &it
+}
+
+// ObjectType returns the value of the "object_type" field in the mutation.
+func (m *InteractionLikeMutation) ObjectType() (r interactionlike.ObjectType, exists bool) {
+	v := m.object_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldObjectType returns the old "object_type" field's value of the InteractionLike entity.
+// If the InteractionLike object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InteractionLikeMutation) OldObjectType(ctx context.Context) (v interactionlike.ObjectType, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldObjectType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldObjectType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldObjectType: %w", err)
+	}
+	return oldValue.ObjectType, nil
+}
+
+// ResetObjectType resets all changes to the "object_type" field.
+func (m *InteractionLikeMutation) ResetObjectType() {
+	m.object_type = nil
+}
+
+// SetObjectID sets the "object_id" field.
+func (m *InteractionLikeMutation) SetObjectID(u uint64) {
+	m.object_id = &u
+	m.addobject_id = nil
+}
+
+// ObjectID returns the value of the "object_id" field in the mutation.
+func (m *InteractionLikeMutation) ObjectID() (r uint64, exists bool) {
+	v := m.object_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldObjectID returns the old "object_id" field's value of the InteractionLike entity.
+// If the InteractionLike object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InteractionLikeMutation) OldObjectID(ctx context.Context) (v uint64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldObjectID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldObjectID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldObjectID: %w", err)
+	}
+	return oldValue.ObjectID, nil
+}
+
+// AddObjectID adds u to the "object_id" field.
+func (m *InteractionLikeMutation) AddObjectID(u int64) {
+	if m.addobject_id != nil {
+		*m.addobject_id += u
+	} else {
+		m.addobject_id = &u
+	}
+}
+
+// AddedObjectID returns the value that was added to the "object_id" field in this mutation.
+func (m *InteractionLikeMutation) AddedObjectID() (r int64, exists bool) {
+	v := m.addobject_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetObjectID resets all changes to the "object_id" field.
+func (m *InteractionLikeMutation) ResetObjectID() {
+	m.object_id = nil
+	m.addobject_id = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *InteractionLikeMutation) SetStatus(i interactionlike.Status) {
+	m.status = &i
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *InteractionLikeMutation) Status() (r interactionlike.Status, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the InteractionLike entity.
+// If the InteractionLike object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InteractionLikeMutation) OldStatus(ctx context.Context) (v interactionlike.Status, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *InteractionLikeMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetVersion sets the "version" field.
+func (m *InteractionLikeMutation) SetVersion(i int64) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *InteractionLikeMutation) Version() (r int64, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the InteractionLike entity.
+// If the InteractionLike object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InteractionLikeMutation) OldVersion(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *InteractionLikeMutation) AddVersion(i int64) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *InteractionLikeMutation) AddedVersion() (r int64, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *InteractionLikeMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// Where appends a list predicates to the InteractionLikeMutation builder.
+func (m *InteractionLikeMutation) Where(ps ...predicate.InteractionLike) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the InteractionLikeMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *InteractionLikeMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.InteractionLike, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *InteractionLikeMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *InteractionLikeMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (InteractionLike).
+func (m *InteractionLikeMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *InteractionLikeMutation) Fields() []string {
+	fields := make([]string, 0, 7)
+	if m.created_at != nil {
+		fields = append(fields, interactionlike.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, interactionlike.FieldUpdatedAt)
+	}
+	if m.user_id != nil {
+		fields = append(fields, interactionlike.FieldUserID)
+	}
+	if m.object_type != nil {
+		fields = append(fields, interactionlike.FieldObjectType)
+	}
+	if m.object_id != nil {
+		fields = append(fields, interactionlike.FieldObjectID)
+	}
+	if m.status != nil {
+		fields = append(fields, interactionlike.FieldStatus)
+	}
+	if m.version != nil {
+		fields = append(fields, interactionlike.FieldVersion)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *InteractionLikeMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case interactionlike.FieldCreatedAt:
+		return m.CreatedAt()
+	case interactionlike.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case interactionlike.FieldUserID:
+		return m.UserID()
+	case interactionlike.FieldObjectType:
+		return m.ObjectType()
+	case interactionlike.FieldObjectID:
+		return m.ObjectID()
+	case interactionlike.FieldStatus:
+		return m.Status()
+	case interactionlike.FieldVersion:
+		return m.Version()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *InteractionLikeMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case interactionlike.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case interactionlike.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case interactionlike.FieldUserID:
+		return m.OldUserID(ctx)
+	case interactionlike.FieldObjectType:
+		return m.OldObjectType(ctx)
+	case interactionlike.FieldObjectID:
+		return m.OldObjectID(ctx)
+	case interactionlike.FieldStatus:
+		return m.OldStatus(ctx)
+	case interactionlike.FieldVersion:
+		return m.OldVersion(ctx)
+	}
+	return nil, fmt.Errorf("unknown InteractionLike field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *InteractionLikeMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case interactionlike.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case interactionlike.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case interactionlike.FieldUserID:
+		v, ok := value.(uint64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case interactionlike.FieldObjectType:
+		v, ok := value.(interactionlike.ObjectType)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetObjectType(v)
+		return nil
+	case interactionlike.FieldObjectID:
+		v, ok := value.(uint64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetObjectID(v)
+		return nil
+	case interactionlike.FieldStatus:
+		v, ok := value.(interactionlike.Status)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case interactionlike.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	}
+	return fmt.Errorf("unknown InteractionLike field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *InteractionLikeMutation) AddedFields() []string {
+	var fields []string
+	if m.adduser_id != nil {
+		fields = append(fields, interactionlike.FieldUserID)
+	}
+	if m.addobject_id != nil {
+		fields = append(fields, interactionlike.FieldObjectID)
+	}
+	if m.addversion != nil {
+		fields = append(fields, interactionlike.FieldVersion)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *InteractionLikeMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case interactionlike.FieldUserID:
+		return m.AddedUserID()
+	case interactionlike.FieldObjectID:
+		return m.AddedObjectID()
+	case interactionlike.FieldVersion:
+		return m.AddedVersion()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *InteractionLikeMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case interactionlike.FieldUserID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUserID(v)
+		return nil
+	case interactionlike.FieldObjectID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddObjectID(v)
+		return nil
+	case interactionlike.FieldVersion:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	}
+	return fmt.Errorf("unknown InteractionLike numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *InteractionLikeMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *InteractionLikeMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *InteractionLikeMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown InteractionLike nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *InteractionLikeMutation) ResetField(name string) error {
+	switch name {
+	case interactionlike.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case interactionlike.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case interactionlike.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case interactionlike.FieldObjectType:
+		m.ResetObjectType()
+		return nil
+	case interactionlike.FieldObjectID:
+		m.ResetObjectID()
+		return nil
+	case interactionlike.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case interactionlike.FieldVersion:
+		m.ResetVersion()
+		return nil
+	}
+	return fmt.Errorf("unknown InteractionLike field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *InteractionLikeMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *InteractionLikeMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *InteractionLikeMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *InteractionLikeMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *InteractionLikeMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *InteractionLikeMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *InteractionLikeMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown InteractionLike unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *InteractionLikeMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown InteractionLike edge %s", name)
 }
 
 // UserMutation represents an operation that mutates the User nodes in the graph.

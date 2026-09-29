@@ -31,8 +31,8 @@ func (InteractionCount) Fields() []ent.Field {
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 
 		field.Uint64("object_id").Comment("对象ID 例如文章ID"),
-		field.Enum("object_type").Values("article").Immutable().Comment("对象类型 例如文章"),
-		field.Enum("interaction_type").Values("like", "view", "favor").Immutable().Comment("交互类型"),
+		field.Enum("object_type").Values("article", "comment", "life").Immutable().Comment("对象类型"),
+		field.Enum("interaction_type").Values("like", "comment", "view", "favor").Immutable().Comment("交互类型"),
 		field.Int("count").Default(0).Comment("计数值"),
 	}
 }

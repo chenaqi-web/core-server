@@ -39,12 +39,12 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 		return nil, err
 	}
 	kafkaManager := kafka.NewKafkaManager(cfg, topicManager)
-	likeRepo := repo.NewLikeRepo(dbClient)
-	countRepo := repo.NewCountRepo(dbClient)
 	entClient, err := repov2.NewEntClient(cfg)
 	if err != nil {
 		return nil, err
 	}
+	likeRepo := repov2.NewLikeRepo(entClient)
+	countRepo := repov2.NewCountRepo(entClient)
 	userRepo := repov2.NewUserRepo(entClient)
 	iLikeCache := cache.NewILikeCache(cacheClient)
 	messageQueueConsumer := jobdbsync.NewMessageQueueConsumer(cfg, log, syncProducer, kafkaManager, cacheClient, likeRepo, countRepo, userRepo, iLikeCache)
