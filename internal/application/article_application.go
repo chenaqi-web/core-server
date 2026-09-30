@@ -124,7 +124,7 @@ func (s *ArticleService) ListMyArticles(ctx context.Context, req *dto.ListMyArti
 	size := Size(req.PageSize)
 	offset := (page - 1) * size
 
-	articles, err := s.ArtRepo.ListByAuthor(ctx, req.AuthorID, offset, size)
+	articles, err := s.ArtRepo.ListByAuthor(ctx, req.AuthorID, offset, size, req.IsPublished)
 	if err != nil {
 		s.log.Error(err.Error())
 		return nil, err

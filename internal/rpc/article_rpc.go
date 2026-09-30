@@ -105,7 +105,12 @@ func (a *ArticleRPC) DeleteArticle(ctx context.Context, req *articlepb.DeleteArt
 }
 
 func (a *ArticleRPC) ListMyArticles(ctx context.Context, req *articlepb.ListMyArticlesRequest) (*articlepb.ListMyArticlesResponse, error) {
-	res, err := a.ArticleService.ListMyArticles(ctx, &dto.ListMyArticlesRequest{AuthorID: req.GetAuthorID(), Page: int(req.GetPage()), PageSize: int(req.GetPageSize())})
+	res, err := a.ArticleService.ListMyArticles(ctx, &dto.ListMyArticlesRequest{
+		AuthorID:    req.GetAuthorID(),
+		Page:        int(req.GetPage()),
+		PageSize:    int(req.GetPageSize()),
+		IsPublished: req.IsPublished,
+	})
 	if err != nil {
 		return nil, err
 	}

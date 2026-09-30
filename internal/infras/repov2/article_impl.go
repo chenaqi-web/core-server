@@ -10,6 +10,7 @@ import (
 
 	"core-server/internal/infras/repov2/ent"
 	"core-server/internal/infras/repov2/ent/article"
+	"core-server/internal/infras/repov2/ent/predicate"
 	"core-server/internal/model/entity"
 )
 
@@ -33,7 +34,7 @@ func (r *ArticleRepo) Create(ctx context.Context, value *entity.Article) error {
 		return errors.New("user not found")
 	}
 
-	_, err := r.DB(ctx).Article.Create().
+	create := r.DB(ctx).Article.Create().
 		SetTitle(value.Title).
 		SetSummary(value.Summary).
 		SetContent(value.Content).
@@ -41,8 +42,12 @@ func (r *ArticleRepo) Create(ctx context.Context, value *entity.Article) error {
 		SetAuthorID(value.AuthorID).
 		SetCategoryID(value.CategoryID).
 		SetIsTop(value.IsTop).
-		SetIsPublished(value.IsPublished).
-		Save(ctx)
+		SetIsPublished(value.IsPublished)
+	if value.PublishedAt.Valid {
+		create.SetPublishedAt(value.PublishedAt.Time)
+	}
+
+	_, err := create.Save(ctx)
 
 	if err != nil {
 		return err
@@ -58,12 +63,23 @@ func (r *ArticleRepo) Edit(ctx context.Context, value *entity.Article) error {
 		SetSummary(value.Summary).
 		SetContent(value.Content).
 		SetCoverImage(value.CoverImage).
-		SetAuthorID(value.AuthorID).
 		SetCategoryID(value.CategoryID).
+		SetIsPublished(value.IsPublished).
 		SetIsTop(value.IsTop).
-		Where(article.IDEQ(value.ID), article.DeletedAtIsNil())
+		Where(article.IDEQ(value.ID), article.AuthorIDEQ(value.AuthorID), article.DeletedAtIsNil())
+	if value.IsPublished {
+		update.SetPublishedAt(time.Now())
+	} else {
+		update.ClearPublishedAt()
+	}
 
-	_, err := update.Save(ctx)
+	affected, err := update.Save(ctx)
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return ErrNotFound
+	}
 	return err
 }
 
@@ -138,10 +154,18 @@ func (r *ArticleRepo) List(ctx context.Context, page, pageSize int) ([]*aggregat
 	return toEntityArticleAggregates(nodes), nil
 }
 
-// ListByAuthor 分页查询某个作者的文章（无法查看草稿和私密文章） 按 ID 倒序
-func (r *ArticleRepo) ListByAuthor(ctx context.Context, authorID uint64, offset, limit int) ([]*aggregate.ArticleAggregate, error) {
+// ListByAuthor 分页查询某个作者的文章，可按发布状态筛选，按 ID 倒序
+func (r *ArticleRepo) ListByAuthor(ctx context.Context, authorID uint64, offset, limit int, isPublished *bool) ([]*aggregate.ArticleAggregate, error) {
+	predicates := []predicate.Article{
+		article.AuthorIDEQ(authorID),
+		article.DeletedAtIsNil(),
+	}
+	if isPublished != nil {
+		predicates = append(predicates, article.IsPublishedEQ(*isPublished))
+	}
+
 	nodes, err := r.DB(ctx).Article.Query().
-		Where(article.AuthorIDEQ(authorID), article.DeletedAtIsNil(), article.IsPublishedEQ(true)).
+		Where(predicates...).
 		WithCategory().
 		WithUser().
 		Order(ent.Desc(article.FieldID)).

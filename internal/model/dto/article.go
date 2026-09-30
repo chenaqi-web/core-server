@@ -82,9 +82,10 @@ type ListArticlesRequest struct {
 	PageSize int
 }
 type ListMyArticlesRequest struct {
-	AuthorID uint64
-	Page     int
-	PageSize int
+	AuthorID    uint64
+	Page        int
+	PageSize    int
+	IsPublished *bool
 }
 type ListArticlesByCategoryRequest struct {
 	CategoryID uint64
