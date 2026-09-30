@@ -91,12 +91,28 @@ message EditorArticleResponse {
   uint64 articleID = 2;    // 文章ID
 }
 
+message PublishDraftRequest {
+  uint64 id = 1;
+  uint64 authorID = 2;
+}
+message PublishDraftResponse {
+  bool success = 1;
+}
+
 message DeleteArticleRequest {
   uint64 id = 1;
   uint64 UserID = 2; // 请求者用户ID，用于校验是否有权限删除
   string Role = 3;
 }
 message DeleteArticleResponse {
+  bool success = 1;
+}
+
+message DeleteDraftRequest {
+  uint64 id = 1;
+  uint64 authorID = 2;
+}
+message DeleteDraftResponse {
   bool success = 1;
 }
 
@@ -108,6 +124,7 @@ message ListMyArticlesRequest {
 }
 message ListMyArticlesResponse {
   repeated Article articles = 1;
+  uint64 total = 2;
 }
 
 message ListByCategoryRequest {
@@ -132,6 +149,7 @@ message SearchArticlesResponse {
 service ArticleService {
   rpc CreateArticle(CreateArticleRequest) returns (CreateArticleResponse) {};
   rpc EditorArticle(EditorArticleRequest) returns (EditorArticleResponse) {};
+  rpc PublishDraft(PublishDraftRequest) returns (PublishDraftResponse) {};
   rpc GetArticle(GetArticleRequest) returns (GetArticleResponse) {};
   rpc ListArticles(ListArticlesRequest) returns (ListArticlesResponse) {};
   rpc ListMyArticles(ListMyArticlesRequest) returns (ListMyArticlesResponse) {};
@@ -140,6 +158,7 @@ service ArticleService {
   // 搜索文章（标题/摘要/正文）
   rpc SearchArticles(SearchArticlesRequest) returns (SearchArticlesResponse) {};
   rpc DeleteArticle(DeleteArticleRequest) returns (DeleteArticleResponse) {};
+  rpc DeleteDraft(DeleteDraftRequest) returns (DeleteDraftResponse) {};
 }
 
 

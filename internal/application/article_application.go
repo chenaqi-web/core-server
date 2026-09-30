@@ -54,7 +54,15 @@ func (s *ArticleService) CreateArticle(ctx context.Context, req *dto.CreateArtic
 		}
 	}
 
-	if err := s.ArtRepo.Create(ctx, a); err != nil {
+	if err := s.ArtRepo.WithTransaction(ctx, func(ctx context.Context) error {
+		if err := s.ArtRepo.Create(ctx, a); err != nil {
+			return err
+		}
+		if a.IsPublished {
+			return s.userRepo.IncrementArticleCount(ctx, a.AuthorID)
+		}
+		return nil
+	}); err != nil {
 		s.log.Error("CreateArticle error", zap.Error(err))
 		return err
 	}
@@ -82,12 +90,45 @@ func (s *ArticleService) EditorArticle(ctx context.Context, req *dto.EditorArtic
 
 func (s *ArticleService) DeleteArticle(ctx context.Context, req *dto.DelArticleRequest) error {
 	// 这个删除是包含管理员删除的
-	if err := s.ArtRepo.DeleteByID(ctx, req.ID, req.UserID, req.Role); err != nil {
+	if err := s.ArtRepo.WithTransaction(ctx, func(ctx context.Context) error {
+		res, err := s.ArtRepo.DeleteByID(ctx, req.ID, req.UserID, req.Role)
+		if err != nil {
+			return err
+		}
+		return s.userRepo.DecrementArticleCount(ctx, res.Article.AuthorID)
+	}); err != nil {
 		s.log.Error("DeleteArticle error", zap.Error(err))
 		return err
 	}
 	return nil
 }
+
+// =====================================================================================================================
+// 草稿箱
+
+func (s *ArticleService) PublishDraft(ctx context.Context, req *dto.PublishDraftRequest) error {
+	if err := s.ArtRepo.WithTransaction(ctx, func(ctx context.Context) error {
+		if err := s.ArtRepo.PublishDraft(ctx, req.ID, req.AuthorID); err != nil {
+			return err
+		}
+		return s.userRepo.IncrementArticleCount(ctx, req.AuthorID)
+	}); err != nil {
+		s.log.Error("PublishDraft error", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+func (s *ArticleService) DeleteDraft(ctx context.Context, req *dto.DeleteDraftRequest) error {
+	if err := s.ArtRepo.DeleteDraftByID(ctx, req.ID, req.AuthorID); err != nil {
+		s.log.Error("DeleteDraft error", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+// =====================================================================================================================
+// 列表函数
 
 func (s *ArticleService) GetArticle(ctx context.Context, id uint64) (*dto.GetArticleResponse, error) {
 	res, err := s.ArtRepo.GetByID(ctx, id)
@@ -101,9 +142,6 @@ func (s *ArticleService) GetArticle(ctx context.Context, id uint64) (*dto.GetArt
 
 	return dto.ToGetArticleResponse(res), nil
 }
-
-// =====================================================================================================================
-// 列表函数
 
 func (s *ArticleService) ListArticles(ctx context.Context, req *dto.ListArticlesRequest) (*dto.ListArticlesResponse, error) {
 	page := Page(req.Page)
@@ -129,8 +167,13 @@ func (s *ArticleService) ListMyArticles(ctx context.Context, req *dto.ListMyArti
 		s.log.Error(err.Error())
 		return nil, err
 	}
+	total, err := s.ArtRepo.CountByAuthor(ctx, req.AuthorID, req.IsPublished)
+	if err != nil {
+		s.log.Error(err.Error())
+		return nil, err
+	}
 
-	return dto.ToListMyArticlesResponse(articles), nil
+	return dto.ToListMyArticlesResponse(articles, total), nil
 }
 
 func (s *ArticleService) ListArticlesByCategory(ctx context.Context, req *dto.ListArticlesByCategoryRequest) (*dto.ListArticlesByCategoryResponse, error) {

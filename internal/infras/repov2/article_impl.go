@@ -83,19 +83,61 @@ func (r *ArticleRepo) Edit(ctx context.Context, value *entity.Article) error {
 	return err
 }
 
-// DeleteByID 软删除文章；authorID 为 0 时表示管理员删除，不再校验作者
-func (r *ArticleRepo) DeleteByID(ctx context.Context, id, authorID uint64, role string) error {
-	now := time.Now()
-	update := r.DB(ctx).Article.Update().
-		Where(article.IDEQ(id), article.DeletedAtIsNil()).
-		SetDeletedAt(now)
+func (r *ArticleRepo) PublishDraft(ctx context.Context, id, authorID uint64) error {
+	affected, err := r.DB(ctx).Article.Update().
+		Where(article.IDEQ(id), article.AuthorIDEQ(authorID), article.IsPublishedEQ(false), article.DeletedAtIsNil()).
+		SetIsPublished(true).
+		SetPublishedAt(time.Now()).
+		Save(ctx)
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
 
-	// 非管理员删除时，额外校验文章归属
+func (r *ArticleRepo) DeleteByID(ctx context.Context, id, authorID uint64, role string) (*aggregate.ArticleAggregate, error) {
+	now := time.Now()
+	predicates := []predicate.Article{
+		article.IDEQ(id),
+		article.IsPublishedEQ(true),
+		article.DeletedAtIsNil(),
+	}
 	if role != enum.UserRoleAdmin.String() {
-		update = update.Where(article.AuthorIDEQ(authorID))
+		predicates = append(predicates, article.AuthorIDEQ(authorID))
 	}
 
-	affected, err := update.Save(ctx)
+	node, err := r.DB(ctx).Article.Query().
+		Where(predicates...).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	affected, err := r.DB(ctx).Article.Update().
+		Where(predicates...).
+		SetDeletedAt(now).
+		Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if affected == 0 {
+		return nil, ErrNotFound
+	}
+	return toEntityArticleAggregate(node), nil
+}
+
+func (r *ArticleRepo) DeleteDraftByID(ctx context.Context, id, authorID uint64) error {
+	now := time.Now()
+	affected, err := r.DB(ctx).Article.Update().
+		Where(article.IDEQ(id), article.AuthorIDEQ(authorID), article.IsPublishedEQ(false), article.DeletedAtIsNil()).
+		SetDeletedAt(now).
+		Save(ctx)
 	if err != nil {
 		return err
 	}
@@ -109,6 +151,21 @@ func (r *ArticleRepo) DeleteByID(ctx context.Context, id, authorID uint64, role 
 func (r *ArticleRepo) GetByID(ctx context.Context, id uint64) (*aggregate.ArticleAggregate, error) {
 	node, err := r.DB(ctx).Article.Query().
 		Where(article.IDEQ(id), article.DeletedAtIsNil(), article.IsPublishedEQ(true)).
+		WithCategory().
+		WithUser().
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return toEntityArticleAggregate(node), nil
+}
+
+func (r *ArticleRepo) GetByIDForManage(ctx context.Context, id uint64) (*aggregate.ArticleAggregate, error) {
+	node, err := r.DB(ctx).Article.Query().
+		Where(article.IDEQ(id), article.DeletedAtIsNil()).
 		WithCategory().
 		WithUser().
 		Only(ctx)
@@ -176,6 +233,24 @@ func (r *ArticleRepo) ListByAuthor(ctx context.Context, authorID uint64, offset,
 		return nil, err
 	}
 	return toEntityArticleAggregates(nodes), nil
+}
+
+func (r *ArticleRepo) CountByAuthor(ctx context.Context, authorID uint64, isPublished *bool) (uint64, error) {
+	predicates := []predicate.Article{
+		article.AuthorIDEQ(authorID),
+		article.DeletedAtIsNil(),
+	}
+	if isPublished != nil {
+		predicates = append(predicates, article.IsPublishedEQ(*isPublished))
+	}
+
+	total, err := r.DB(ctx).Article.Query().
+		Where(predicates...).
+		Count(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return uint64(total), nil
 }
 
 // ListMe 查看自己的全部文章 (含草稿和私密文章)

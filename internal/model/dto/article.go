@@ -34,6 +34,16 @@ type DelArticleRequest struct {
 	Role   string
 }
 
+type PublishDraftRequest struct {
+	ID       uint64
+	AuthorID uint64
+}
+
+type DeleteDraftRequest struct {
+	ID       uint64
+	AuthorID uint64
+}
+
 type ArticleMsg struct {
 	ID          uint64
 	Title       string
@@ -69,6 +79,7 @@ type ListArticlesResponse struct {
 }
 type ListMyArticlesResponse struct {
 	Articles []*ArticleMsg
+	Total    uint64
 }
 type ListArticlesByCategoryResponse struct {
 	Articles []*ArticleMsg
@@ -154,8 +165,8 @@ func ToListArticlesResponse(aggs []*aggregate.ArticleAggregate) *ListArticlesRes
 	return &ListArticlesResponse{Articles: ToArticleResponses(aggs)}
 }
 
-func ToListMyArticlesResponse(aggs []*aggregate.ArticleAggregate) *ListMyArticlesResponse {
-	return &ListMyArticlesResponse{Articles: ToArticleResponses(aggs)}
+func ToListMyArticlesResponse(aggs []*aggregate.ArticleAggregate, total uint64) *ListMyArticlesResponse {
+	return &ListMyArticlesResponse{Articles: ToArticleResponses(aggs), Total: total}
 }
 
 func ToListArticlesByCategoryResponse(aggs []*aggregate.ArticleAggregate) *ListArticlesByCategoryResponse {

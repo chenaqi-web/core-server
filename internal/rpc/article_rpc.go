@@ -55,6 +55,16 @@ func (a *ArticleRPC) EditorArticle(ctx context.Context, req *articlepb.EditorArt
 	}, nil
 }
 
+func (a *ArticleRPC) PublishDraft(ctx context.Context, req *articlepb.PublishDraftRequest) (*articlepb.PublishDraftResponse, error) {
+	if err := a.ArticleService.PublishDraft(ctx, &dto.PublishDraftRequest{
+		ID:       req.GetId(),
+		AuthorID: req.GetAuthorID(),
+	}); err != nil {
+		return nil, err
+	}
+	return &articlepb.PublishDraftResponse{Success: true}, nil
+}
+
 func (a *ArticleRPC) GetArticle(ctx context.Context, req *articlepb.GetArticleRequest) (*articlepb.GetArticleResponse, error) {
 	res, err := a.ArticleService.GetArticle(ctx, req.GetId())
 	if err != nil {
@@ -104,6 +114,16 @@ func (a *ArticleRPC) DeleteArticle(ctx context.Context, req *articlepb.DeleteArt
 	return &articlepb.DeleteArticleResponse{Success: true}, nil
 }
 
+func (a *ArticleRPC) DeleteDraft(ctx context.Context, req *articlepb.DeleteDraftRequest) (*articlepb.DeleteDraftResponse, error) {
+	if err := a.ArticleService.DeleteDraft(ctx, &dto.DeleteDraftRequest{
+		ID:       req.GetId(),
+		AuthorID: req.GetAuthorID(),
+	}); err != nil {
+		return nil, err
+	}
+	return &articlepb.DeleteDraftResponse{Success: true}, nil
+}
+
 func (a *ArticleRPC) ListMyArticles(ctx context.Context, req *articlepb.ListMyArticlesRequest) (*articlepb.ListMyArticlesResponse, error) {
 	res, err := a.ArticleService.ListMyArticles(ctx, &dto.ListMyArticlesRequest{
 		AuthorID:    req.GetAuthorID(),
@@ -114,7 +134,7 @@ func (a *ArticleRPC) ListMyArticles(ctx context.Context, req *articlepb.ListMyAr
 	if err != nil {
 		return nil, err
 	}
-	return &articlepb.ListMyArticlesResponse{Articles: toArticlePBList(res.Articles)}, nil
+	return &articlepb.ListMyArticlesResponse{Articles: toArticlePBList(res.Articles), Total: res.Total}, nil
 }
 
 func (a *ArticleRPC) ListByCategory(ctx context.Context, req *articlepb.ListByCategoryRequest) (*articlepb.ListByCategoryResponse, error) {

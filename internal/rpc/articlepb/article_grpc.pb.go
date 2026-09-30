@@ -24,12 +24,14 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	ArticleService_CreateArticle_FullMethodName  = "/article.ArticleService/CreateArticle"
 	ArticleService_EditorArticle_FullMethodName  = "/article.ArticleService/EditorArticle"
+	ArticleService_PublishDraft_FullMethodName   = "/article.ArticleService/PublishDraft"
 	ArticleService_GetArticle_FullMethodName     = "/article.ArticleService/GetArticle"
 	ArticleService_ListArticles_FullMethodName   = "/article.ArticleService/ListArticles"
 	ArticleService_ListMyArticles_FullMethodName = "/article.ArticleService/ListMyArticles"
 	ArticleService_ListByCategory_FullMethodName = "/article.ArticleService/ListByCategory"
 	ArticleService_SearchArticles_FullMethodName = "/article.ArticleService/SearchArticles"
 	ArticleService_DeleteArticle_FullMethodName  = "/article.ArticleService/DeleteArticle"
+	ArticleService_DeleteDraft_FullMethodName    = "/article.ArticleService/DeleteDraft"
 )
 
 // ArticleServiceClient is the client API for ArticleService service.
@@ -38,6 +40,7 @@ const (
 type ArticleServiceClient interface {
 	CreateArticle(ctx context.Context, in *CreateArticleRequest, opts ...grpc.CallOption) (*CreateArticleResponse, error)
 	EditorArticle(ctx context.Context, in *EditorArticleRequest, opts ...grpc.CallOption) (*EditorArticleResponse, error)
+	PublishDraft(ctx context.Context, in *PublishDraftRequest, opts ...grpc.CallOption) (*PublishDraftResponse, error)
 	GetArticle(ctx context.Context, in *GetArticleRequest, opts ...grpc.CallOption) (*GetArticleResponse, error)
 	ListArticles(ctx context.Context, in *ListArticlesRequest, opts ...grpc.CallOption) (*ListArticlesResponse, error)
 	ListMyArticles(ctx context.Context, in *ListMyArticlesRequest, opts ...grpc.CallOption) (*ListMyArticlesResponse, error)
@@ -46,6 +49,7 @@ type ArticleServiceClient interface {
 	// 搜索文章（标题/摘要/正文）
 	SearchArticles(ctx context.Context, in *SearchArticlesRequest, opts ...grpc.CallOption) (*SearchArticlesResponse, error)
 	DeleteArticle(ctx context.Context, in *DeleteArticleRequest, opts ...grpc.CallOption) (*DeleteArticleResponse, error)
+	DeleteDraft(ctx context.Context, in *DeleteDraftRequest, opts ...grpc.CallOption) (*DeleteDraftResponse, error)
 }
 
 type articleServiceClient struct {
@@ -70,6 +74,16 @@ func (c *articleServiceClient) EditorArticle(ctx context.Context, in *EditorArti
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(EditorArticleResponse)
 	err := c.cc.Invoke(ctx, ArticleService_EditorArticle_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *articleServiceClient) PublishDraft(ctx context.Context, in *PublishDraftRequest, opts ...grpc.CallOption) (*PublishDraftResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PublishDraftResponse)
+	err := c.cc.Invoke(ctx, ArticleService_PublishDraft_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -136,12 +150,23 @@ func (c *articleServiceClient) DeleteArticle(ctx context.Context, in *DeleteArti
 	return out, nil
 }
 
+func (c *articleServiceClient) DeleteDraft(ctx context.Context, in *DeleteDraftRequest, opts ...grpc.CallOption) (*DeleteDraftResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteDraftResponse)
+	err := c.cc.Invoke(ctx, ArticleService_DeleteDraft_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ArticleServiceServer is the server API for ArticleService service.
 // All implementations must embed UnimplementedArticleServiceServer
 // for forward compatibility.
 type ArticleServiceServer interface {
 	CreateArticle(context.Context, *CreateArticleRequest) (*CreateArticleResponse, error)
 	EditorArticle(context.Context, *EditorArticleRequest) (*EditorArticleResponse, error)
+	PublishDraft(context.Context, *PublishDraftRequest) (*PublishDraftResponse, error)
 	GetArticle(context.Context, *GetArticleRequest) (*GetArticleResponse, error)
 	ListArticles(context.Context, *ListArticlesRequest) (*ListArticlesResponse, error)
 	ListMyArticles(context.Context, *ListMyArticlesRequest) (*ListMyArticlesResponse, error)
@@ -150,6 +175,7 @@ type ArticleServiceServer interface {
 	// 搜索文章（标题/摘要/正文）
 	SearchArticles(context.Context, *SearchArticlesRequest) (*SearchArticlesResponse, error)
 	DeleteArticle(context.Context, *DeleteArticleRequest) (*DeleteArticleResponse, error)
+	DeleteDraft(context.Context, *DeleteDraftRequest) (*DeleteDraftResponse, error)
 	mustEmbedUnimplementedArticleServiceServer()
 }
 
@@ -165,6 +191,9 @@ func (UnimplementedArticleServiceServer) CreateArticle(context.Context, *CreateA
 }
 func (UnimplementedArticleServiceServer) EditorArticle(context.Context, *EditorArticleRequest) (*EditorArticleResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method EditorArticle not implemented")
+}
+func (UnimplementedArticleServiceServer) PublishDraft(context.Context, *PublishDraftRequest) (*PublishDraftResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method PublishDraft not implemented")
 }
 func (UnimplementedArticleServiceServer) GetArticle(context.Context, *GetArticleRequest) (*GetArticleResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetArticle not implemented")
@@ -183,6 +212,9 @@ func (UnimplementedArticleServiceServer) SearchArticles(context.Context, *Search
 }
 func (UnimplementedArticleServiceServer) DeleteArticle(context.Context, *DeleteArticleRequest) (*DeleteArticleResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteArticle not implemented")
+}
+func (UnimplementedArticleServiceServer) DeleteDraft(context.Context, *DeleteDraftRequest) (*DeleteDraftResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteDraft not implemented")
 }
 func (UnimplementedArticleServiceServer) mustEmbedUnimplementedArticleServiceServer() {}
 func (UnimplementedArticleServiceServer) testEmbeddedByValue()                        {}
@@ -237,6 +269,24 @@ func _ArticleService_EditorArticle_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ArticleServiceServer).EditorArticle(ctx, req.(*EditorArticleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ArticleService_PublishDraft_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PublishDraftRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ArticleServiceServer).PublishDraft(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ArticleService_PublishDraft_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ArticleServiceServer).PublishDraft(ctx, req.(*PublishDraftRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -349,6 +399,24 @@ func _ArticleService_DeleteArticle_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ArticleService_DeleteDraft_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteDraftRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ArticleServiceServer).DeleteDraft(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ArticleService_DeleteDraft_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ArticleServiceServer).DeleteDraft(ctx, req.(*DeleteDraftRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ArticleService_ServiceDesc is the grpc.ServiceDesc for ArticleService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -363,6 +431,10 @@ var ArticleService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "EditorArticle",
 			Handler:    _ArticleService_EditorArticle_Handler,
+		},
+		{
+			MethodName: "PublishDraft",
+			Handler:    _ArticleService_PublishDraft_Handler,
 		},
 		{
 			MethodName: "GetArticle",
@@ -387,6 +459,10 @@ var ArticleService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteArticle",
 			Handler:    _ArticleService_DeleteArticle_Handler,
+		},
+		{
+			MethodName: "DeleteDraft",
+			Handler:    _ArticleService_DeleteDraft_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -173,6 +173,25 @@ WHERE id = ? AND deleted_at IS NULL`
 	return err
 }
 
+func (r *UserRepo) IncrementArticleCount(ctx context.Context, userID uint64) error {
+	const query = `
+UPDATE user_stat
+SET article_count = article_count + 1, updated_at = NOW(3)
+WHERE user_id = ? AND deleted_at IS NULL`
+	_, err := r.db(ctx).ExecContext(ctx, query, userID)
+	return err
+}
+
+func (r *UserRepo) DecrementArticleCount(ctx context.Context, userID uint64) error {
+	const query = `
+UPDATE user_stat
+SET article_count = CASE WHEN article_count > 0 THEN article_count - 1 ELSE 0 END,
+    updated_at = NOW(3)
+WHERE user_id = ? AND deleted_at IS NULL`
+	_, err := r.db(ctx).ExecContext(ctx, query, userID)
+	return err
+}
+
 func (r *UserRepo) SetReceiveLikeCount(ctx context.Context, userID uint64, count int64) error {
 	const query = `
 UPDATE user

@@ -36,6 +36,8 @@ type UserRepo interface {
 	SetReceiveLikeCount(ctx context.Context, userID uint64, count int64) error
 	IncrementLikeCount(ctx context.Context, userID uint64) error
 	DecrementLikeCount(ctx context.Context, userID uint64) error
+	IncrementArticleCount(ctx context.Context, userID uint64) error
+	DecrementArticleCount(ctx context.Context, userID uint64) error
 }
 
 type UserRepoDomain interface {

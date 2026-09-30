@@ -2,9 +2,11 @@ package repo
 
 import (
 	"context"
+	"core-server/internal/model/aggregate"
 	"time"
 
 	"core-server/internal/model/entity"
+	"core-server/internal/model/enum"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -16,6 +18,26 @@ type ArticleRepo struct {
 func (r *ArticleRepo) Edit(ctx context.Context, value *entity.Article) error {
 	//TODO implement me
 	panic("implement me")
+}
+
+func (r *ArticleRepo) PublishDraft(ctx context.Context, id, authorID uint64) error {
+	const query = `
+UPDATE blog_article
+SET is_published = 1, published_at = ?, updated_at = ?
+WHERE id = ? AND author_id = ? AND is_published = 0 AND deleted_at IS NULL`
+	now := time.Now()
+	result, err := r.db(ctx).ExecContext(ctx, query, now, now, id, authorID)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return ErrNotFound
+	}
+	return nil
 }
 
 func NewArticleRepo(client *DBClient) *ArticleRepo {
@@ -48,19 +70,52 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	return err
 }
 
-func (r *ArticleRepo) DeleteByID(ctx context.Context, id, authorID uint64) error {
-	now := time.Now()
+func (r *ArticleRepo) DeleteByID(ctx context.Context, id, authorID uint64, role string) (*aggregate.ArticleAggregate, error) {
+	var deleted entity.Article
 	query := `
-UPDATE blog_article 
-SET deleted_at = ?, updated_at = ? 
-WHERE id = ? 
-  AND deleted_at IS NULL`
-	args := []any{now, now, id}
-	if authorID != 0 {
+SELECT id, created_at, updated_at, deleted_at, title, summary, content, cover_image, author_id, category_id, is_top, is_published, view_count, like_count, favor_count, comment_count, published_at
+FROM blog_article
+WHERE id = ? AND is_published = 1 AND deleted_at IS NULL`
+	args := []any{id}
+	if role != enum.UserRoleAdmin.String() {
 		query += " AND author_id = ?"
 		args = append(args, authorID)
 	}
-	result, err := r.db(ctx).ExecContext(ctx, query, args...)
+	if err := r.db(ctx).GetContext(ctx, &deleted, query, args...); err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
+	update := `
+UPDATE blog_article 
+SET deleted_at = ?, updated_at = ? 
+WHERE id = ? AND is_published = 1 AND deleted_at IS NULL`
+	updateArgs := []any{now, now, id}
+	if role != enum.UserRoleAdmin.String() {
+		update += " AND author_id = ?"
+		updateArgs = append(updateArgs, authorID)
+	}
+	result, err := r.db(ctx).ExecContext(ctx, update, updateArgs...)
+	if err != nil {
+		return nil, err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return nil, err
+	}
+	if rowsAffected == 0 {
+		return nil, ErrNotFound
+	}
+	return &aggregate.ArticleAggregate{Article: &deleted}, nil
+}
+
+func (r *ArticleRepo) DeleteDraftByID(ctx context.Context, id, authorID uint64) error {
+	now := time.Now()
+	const query = `
+UPDATE blog_article
+SET deleted_at = ?, updated_at = ?
+WHERE id = ? AND author_id = ? AND is_published = 0 AND deleted_at IS NULL`
+	result, err := r.db(ctx).ExecContext(ctx, query, now, now, id, authorID)
 	if err != nil {
 		return err
 	}
@@ -140,6 +195,20 @@ LIMIT ?, ?`
 		return nil, err
 	}
 	return items, nil
+}
+
+func (r *ArticleRepo) CountByAuthor(ctx context.Context, authorID uint64, isPublished *bool) (uint64, error) {
+	var total uint64
+	query := `SELECT COUNT(*) FROM blog_article WHERE author_id = ? AND deleted_at IS NULL`
+	args := []any{authorID}
+	if isPublished != nil {
+		query += " AND is_published = ?"
+		args = append(args, *isPublished)
+	}
+	if err := r.db(ctx).GetContext(ctx, &total, query, args...); err != nil {
+		return 0, err
+	}
+	return total, nil
 }
 
 func (r *ArticleRepo) ListByCategory(ctx context.Context, categoryID uint64, offset, limit int) ([]*entity.Article, error) {

@@ -200,6 +200,20 @@ func (r *UserRepo) DecrementLikeCount(ctx context.Context, userID uint64) error 
 		Exec(ctx)
 }
 
+func (r *UserRepo) IncrementArticleCount(ctx context.Context, userID uint64) error {
+	return r.DB(ctx).UserStat.Update().
+		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil()).
+		AddArticleCount(1).
+		Exec(ctx)
+}
+
+func (r *UserRepo) DecrementArticleCount(ctx context.Context, userID uint64) error {
+	return r.DB(ctx).UserStat.Update().
+		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil(), userstat.ArticleCountGT(0)).
+		AddArticleCount(-1).
+		Exec(ctx)
+}
+
 func (r *UserRepo) SetReceiveLikeCount(ctx context.Context, userID uint64, count int64) error {
 	if count < 0 {
 		count = 0
