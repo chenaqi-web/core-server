@@ -36,6 +36,8 @@ const (
 	FieldFavorCount = "favor_count"
 	// FieldReceiveFavorCount holds the string denoting the receive_favor_count field in the database.
 	FieldReceiveFavorCount = "receive_favor_count"
+	// FieldCommentCount holds the string denoting the comment_count field in the database.
+	FieldCommentCount = "comment_count"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
 	// Table holds the table name of the userstat in the database.
@@ -63,6 +65,7 @@ var Columns = []string{
 	FieldReceiveLikeCount,
 	FieldFavorCount,
 	FieldReceiveFavorCount,
+	FieldCommentCount,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -94,6 +97,8 @@ var (
 	DefaultFavorCount uint64
 	// DefaultReceiveFavorCount holds the default value on creation for the "receive_favor_count" field.
 	DefaultReceiveFavorCount uint64
+	// DefaultCommentCount holds the default value on creation for the "comment_count" field.
+	DefaultCommentCount uint64
 )
 
 // OrderOption defines the ordering options for the UserStat queries.
@@ -157,6 +162,11 @@ func ByFavorCount(opts ...sql.OrderTermOption) OrderOption {
 // ByReceiveFavorCount orders the results by the receive_favor_count field.
 func ByReceiveFavorCount(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldReceiveFavorCount, opts...).ToFunc()
+}
+
+// ByCommentCount orders the results by the comment_count field.
+func ByCommentCount(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCommentCount, opts...).ToFunc()
 }
 
 // ByUserField orders the results by user field.

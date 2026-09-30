@@ -31,7 +31,7 @@ message CreateCommentResp {
 message CreateReplyReq {
   uint64 rootId = 1;       // 一级评论ID
   uint64 userId = 2;
-  uint64 replyToId = 3;    // @回复目标用户
+  uint64 replyToId = 3;    // 被回复的评论ID
   string content = 4;
   uint64 articleId = 5;     // 文章ID
 }

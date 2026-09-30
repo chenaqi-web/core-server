@@ -70,22 +70,22 @@ func (s *CommentService) CreateComment(ctx context.Context, req *dto.CreateComme
 func (s *CommentService) CreateReply(ctx context.Context, req *dto.CreateReplyRequest) (bool, error) {
 	// 1.首先校验父评论是否存在
 	rootComment, err := s.repo.GetByID(ctx, req.RootID)
-	if err != nil {
+	if err != nil || rootComment == nil || rootComment.Comment == nil || !rootComment.Comment.IsTopLevel() {
 		return false, ErrCommentNotFound
 	}
 
-	//2. 存在则判断传入数据是否正确
-	if req.ReplyToID != 0 && req.ReplyToID != rootComment.Comment.UserID {
-		return false, ErrCommentNotFound
+	replyToID := req.ReplyToID
+	if replyToID == 0 {
+		replyToID = rootComment.Comment.ID
 	}
 
 	// 开启事务进行修改
 	err = s.repo.WithTransaction(ctx, func(ctx context.Context) error {
 		_, err = s.repo.CreateReply(ctx, &entity.Comment{
-			ArticleID: req.ArticleID,
+			ArticleID: rootComment.Comment.ArticleID,
 			UserID:    req.UserID,
 			RootID:    rootComment.Comment.ID,
-			ReplyToID: req.ReplyToID,
+			ReplyToID: replyToID,
 			Content:   req.Content,
 		})
 		if err != nil {
@@ -97,7 +97,7 @@ func (s *CommentService) CreateReply(ctx context.Context, req *dto.CreateReplyRe
 
 		count := &entity.InteractionCount{
 			ObjectType:      enum.ObjectTypeArticle,
-			ObjectID:        req.ArticleID,
+			ObjectID:        rootComment.Comment.ArticleID,
 			InteractionType: enum.InteractionTypeComment,
 		}
 		return s.countRepo.Upsert(ctx, count, 1)

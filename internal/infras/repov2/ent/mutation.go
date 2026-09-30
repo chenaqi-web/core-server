@@ -5857,6 +5857,8 @@ type UserStatMutation struct {
 	addfavor_count         *int64
 	receive_favor_count    *uint64
 	addreceive_favor_count *int64
+	comment_count          *uint64
+	addcomment_count       *int64
 	clearedFields          map[string]struct{}
 	user                   *uint64
 	cleareduser            bool
@@ -6526,6 +6528,62 @@ func (m *UserStatMutation) ResetReceiveFavorCount() {
 	m.addreceive_favor_count = nil
 }
 
+// SetCommentCount sets the "comment_count" field.
+func (m *UserStatMutation) SetCommentCount(u uint64) {
+	m.comment_count = &u
+	m.addcomment_count = nil
+}
+
+// CommentCount returns the value of the "comment_count" field in the mutation.
+func (m *UserStatMutation) CommentCount() (r uint64, exists bool) {
+	v := m.comment_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCommentCount returns the old "comment_count" field's value of the UserStat entity.
+// If the UserStat object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserStatMutation) OldCommentCount(ctx context.Context) (v uint64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCommentCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCommentCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCommentCount: %w", err)
+	}
+	return oldValue.CommentCount, nil
+}
+
+// AddCommentCount adds u to the "comment_count" field.
+func (m *UserStatMutation) AddCommentCount(u int64) {
+	if m.addcomment_count != nil {
+		*m.addcomment_count += u
+	} else {
+		m.addcomment_count = &u
+	}
+}
+
+// AddedCommentCount returns the value that was added to the "comment_count" field in this mutation.
+func (m *UserStatMutation) AddedCommentCount() (r int64, exists bool) {
+	v := m.addcomment_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetCommentCount resets all changes to the "comment_count" field.
+func (m *UserStatMutation) ResetCommentCount() {
+	m.comment_count = nil
+	m.addcomment_count = nil
+}
+
 // ClearUser clears the "user" edge to the User entity.
 func (m *UserStatMutation) ClearUser() {
 	m.cleareduser = true
@@ -6587,7 +6645,7 @@ func (m *UserStatMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserStatMutation) Fields() []string {
-	fields := make([]string, 0, 11)
+	fields := make([]string, 0, 12)
 	if m.created_at != nil {
 		fields = append(fields, userstat.FieldCreatedAt)
 	}
@@ -6621,6 +6679,9 @@ func (m *UserStatMutation) Fields() []string {
 	if m.receive_favor_count != nil {
 		fields = append(fields, userstat.FieldReceiveFavorCount)
 	}
+	if m.comment_count != nil {
+		fields = append(fields, userstat.FieldCommentCount)
+	}
 	return fields
 }
 
@@ -6651,6 +6712,8 @@ func (m *UserStatMutation) Field(name string) (ent.Value, bool) {
 		return m.FavorCount()
 	case userstat.FieldReceiveFavorCount:
 		return m.ReceiveFavorCount()
+	case userstat.FieldCommentCount:
+		return m.CommentCount()
 	}
 	return nil, false
 }
@@ -6682,6 +6745,8 @@ func (m *UserStatMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldFavorCount(ctx)
 	case userstat.FieldReceiveFavorCount:
 		return m.OldReceiveFavorCount(ctx)
+	case userstat.FieldCommentCount:
+		return m.OldCommentCount(ctx)
 	}
 	return nil, fmt.Errorf("unknown UserStat field %s", name)
 }
@@ -6768,6 +6833,13 @@ func (m *UserStatMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetReceiveFavorCount(v)
 		return nil
+	case userstat.FieldCommentCount:
+		v, ok := value.(uint64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCommentCount(v)
+		return nil
 	}
 	return fmt.Errorf("unknown UserStat field %s", name)
 }
@@ -6797,6 +6869,9 @@ func (m *UserStatMutation) AddedFields() []string {
 	if m.addreceive_favor_count != nil {
 		fields = append(fields, userstat.FieldReceiveFavorCount)
 	}
+	if m.addcomment_count != nil {
+		fields = append(fields, userstat.FieldCommentCount)
+	}
 	return fields
 }
 
@@ -6819,6 +6894,8 @@ func (m *UserStatMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedFavorCount()
 	case userstat.FieldReceiveFavorCount:
 		return m.AddedReceiveFavorCount()
+	case userstat.FieldCommentCount:
+		return m.AddedCommentCount()
 	}
 	return nil, false
 }
@@ -6876,6 +6953,13 @@ func (m *UserStatMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddReceiveFavorCount(v)
+		return nil
+	case userstat.FieldCommentCount:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCommentCount(v)
 		return nil
 	}
 	return fmt.Errorf("unknown UserStat numeric field %s", name)
@@ -6951,6 +7035,9 @@ func (m *UserStatMutation) ResetField(name string) error {
 		return nil
 	case userstat.FieldReceiveFavorCount:
 		m.ResetReceiveFavorCount()
+		return nil
+	case userstat.FieldCommentCount:
+		m.ResetCommentCount()
 		return nil
 	}
 	return fmt.Errorf("unknown UserStat field %s", name)

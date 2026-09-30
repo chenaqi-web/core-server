@@ -33,6 +33,7 @@ func (UserStat) Fields() []ent.Field {
 		field.Uint64("receive_like_count").Default(0).Comment("收到的点赞总数"),
 		field.Uint64("favor_count").Default(0).Comment("收藏的数量"),
 		field.Uint64("receive_favor_count").Default(0).Comment("被收藏的总数"),
+		field.Uint64("comment_count").Default(0).Comment("评论总数"),
 	}
 }
 func (UserStat) Edges() []ent.Edge {

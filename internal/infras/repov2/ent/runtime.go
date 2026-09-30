@@ -212,4 +212,8 @@ func init() {
 	userstatDescReceiveFavorCount := userstatFields[10].Descriptor()
 	// userstat.DefaultReceiveFavorCount holds the default value on creation for the receive_favor_count field.
 	userstat.DefaultReceiveFavorCount = userstatDescReceiveFavorCount.Default.(uint64)
+	// userstatDescCommentCount is the schema descriptor for comment_count field.
+	userstatDescCommentCount := userstatFields[11].Descriptor()
+	// userstat.DefaultCommentCount holds the default value on creation for the comment_count field.
+	userstat.DefaultCommentCount = userstatDescCommentCount.Default.(uint64)
 }

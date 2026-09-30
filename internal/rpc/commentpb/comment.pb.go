@@ -269,7 +269,7 @@ type CreateReplyReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	RootId        uint64                 `protobuf:"varint,1,opt,name=rootId,proto3" json:"rootId,omitempty"` // 一级评论ID
 	UserId        uint64                 `protobuf:"varint,2,opt,name=userId,proto3" json:"userId,omitempty"`
-	ReplyToId     uint64                 `protobuf:"varint,3,opt,name=replyToId,proto3" json:"replyToId,omitempty"` // @回复目标用户
+	ReplyToId     uint64                 `protobuf:"varint,3,opt,name=replyToId,proto3" json:"replyToId,omitempty"` // 被回复的评论ID
 	Content       string                 `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty"`
 	ArticleId     uint64                 `protobuf:"varint,5,opt,name=articleId,proto3" json:"articleId,omitempty"` // 文章ID
 	unknownFields protoimpl.UnknownFields

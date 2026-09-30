@@ -167,6 +167,20 @@ func (_c *UserStatCreate) SetNillableReceiveFavorCount(v *uint64) *UserStatCreat
 	return _c
 }
 
+// SetCommentCount sets the "comment_count" field.
+func (_c *UserStatCreate) SetCommentCount(v uint64) *UserStatCreate {
+	_c.mutation.SetCommentCount(v)
+	return _c
+}
+
+// SetNillableCommentCount sets the "comment_count" field if the given value is not nil.
+func (_c *UserStatCreate) SetNillableCommentCount(v *uint64) *UserStatCreate {
+	if v != nil {
+		_c.SetCommentCount(*v)
+	}
+	return _c
+}
+
 // SetUser sets the "user" edge to the User entity.
 func (_c *UserStatCreate) SetUser(v *User) *UserStatCreate {
 	return _c.SetUserID(v.ID)
@@ -239,6 +253,10 @@ func (_c *UserStatCreate) defaults() {
 		v := userstat.DefaultReceiveFavorCount
 		_c.mutation.SetReceiveFavorCount(v)
 	}
+	if _, ok := _c.mutation.CommentCount(); !ok {
+		v := userstat.DefaultCommentCount
+		_c.mutation.SetCommentCount(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -269,6 +287,9 @@ func (_c *UserStatCreate) check() error {
 	}
 	if _, ok := _c.mutation.ReceiveFavorCount(); !ok {
 		return &ValidationError{Name: "receive_favor_count", err: errors.New(`ent: missing required field "UserStat.receive_favor_count"`)}
+	}
+	if _, ok := _c.mutation.CommentCount(); !ok {
+		return &ValidationError{Name: "comment_count", err: errors.New(`ent: missing required field "UserStat.comment_count"`)}
 	}
 	if len(_c.mutation.UserIDs()) == 0 {
 		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "UserStat.user"`)}
@@ -338,6 +359,10 @@ func (_c *UserStatCreate) createSpec() (*UserStat, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.ReceiveFavorCount(); ok {
 		_spec.SetField(userstat.FieldReceiveFavorCount, field.TypeUint64, value)
 		_node.ReceiveFavorCount = value
+	}
+	if value, ok := _c.mutation.CommentCount(); ok {
+		_spec.SetField(userstat.FieldCommentCount, field.TypeUint64, value)
+		_node.CommentCount = value
 	}
 	if nodes := _c.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

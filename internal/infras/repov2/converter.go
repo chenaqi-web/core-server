@@ -56,6 +56,7 @@ func toEntityUserStat(stat *ent.UserStat) *entity.UserStat {
 		ReceiveLikeCount:  stat.ReceiveLikeCount,
 		FavorCount:        stat.FavorCount,
 		ReceiveFavorCount: stat.ReceiveFavorCount,
+		CommentCount:      stat.CommentCount,
 	}
 }
 

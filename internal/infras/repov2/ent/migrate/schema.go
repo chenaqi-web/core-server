@@ -186,6 +186,7 @@ var (
 		{Name: "receive_like_count", Type: field.TypeUint64, Default: 0},
 		{Name: "favor_count", Type: field.TypeUint64, Default: 0},
 		{Name: "receive_favor_count", Type: field.TypeUint64, Default: 0},
+		{Name: "comment_count", Type: field.TypeUint64, Default: 0},
 		{Name: "user_id", Type: field.TypeUint64, Unique: true},
 	}
 	// UserStatTable holds the schema information for the "user_stat" table.
@@ -196,7 +197,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "user_stat_user_stat",
-				Columns:    []*schema.Column{UserStatColumns[11]},
+				Columns:    []*schema.Column{UserStatColumns[12]},
 				RefColumns: []*schema.Column{UserColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

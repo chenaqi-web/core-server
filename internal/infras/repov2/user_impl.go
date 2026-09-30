@@ -80,6 +80,7 @@ func (r *UserRepo) CreateUser(ctx context.Context, value *entity.User) error {
 			SetReceiveLikeCount(0).
 			SetFavorCount(0).
 			SetReceiveFavorCount(0).
+			SetCommentCount(0).
 			Save(ctx)
 		if err != nil {
 			return err

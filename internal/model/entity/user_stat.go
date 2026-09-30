@@ -13,4 +13,6 @@ type UserStat struct {
 
 	FavorCount        uint64 `db:"favor_count"`
 	ReceiveFavorCount uint64 `db:"receive_favor_count"`
+
+	CommentCount uint64 `db:"comment_count"`
 }

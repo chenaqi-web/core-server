@@ -40,6 +40,8 @@ type UserStat struct {
 	FavorCount uint64 `json:"favor_count,omitempty"`
 	// 被收藏的总数
 	ReceiveFavorCount uint64 `json:"receive_favor_count,omitempty"`
+	// 评论总数
+	CommentCount uint64 `json:"comment_count,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserStatQuery when eager-loading is set.
 	Edges        UserStatEdges `json:"edges"`
@@ -71,7 +73,7 @@ func (*UserStat) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case userstat.FieldID, userstat.FieldUserID, userstat.FieldArticleCount, userstat.FieldFollowersCount, userstat.FieldFollowingCount, userstat.FieldLikeCount, userstat.FieldReceiveLikeCount, userstat.FieldFavorCount, userstat.FieldReceiveFavorCount:
+		case userstat.FieldID, userstat.FieldUserID, userstat.FieldArticleCount, userstat.FieldFollowersCount, userstat.FieldFollowingCount, userstat.FieldLikeCount, userstat.FieldReceiveLikeCount, userstat.FieldFavorCount, userstat.FieldReceiveFavorCount, userstat.FieldCommentCount:
 			values[i] = new(sql.NullInt64)
 		case userstat.FieldCreatedAt, userstat.FieldUpdatedAt, userstat.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
@@ -163,6 +165,12 @@ func (_m *UserStat) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.ReceiveFavorCount = uint64(value.Int64)
 			}
+		case userstat.FieldCommentCount:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field comment_count", values[i])
+			} else if value.Valid {
+				_m.CommentCount = uint64(value.Int64)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -238,6 +246,9 @@ func (_m *UserStat) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("receive_favor_count=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ReceiveFavorCount))
+	builder.WriteString(", ")
+	builder.WriteString("comment_count=")
+	builder.WriteString(fmt.Sprintf("%v", _m.CommentCount))
 	builder.WriteByte(')')
 	return builder.String()
 }
