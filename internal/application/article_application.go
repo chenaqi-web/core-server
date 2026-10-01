@@ -14,10 +14,11 @@ import (
 )
 
 type ArticleService struct {
-	log      *clog.Log
-	cfg      *config.Config
-	ArtRepo  domain.ArticleRepoDomain
-	userRepo domain.UserRepoDomain
+	log          *clog.Log
+	cfg          *config.Config
+	ArtRepo      domain.ArticleRepoDomain
+	userRepo     domain.UserRepoDomain
+	countService *CountService
 }
 
 func NewArticleService(
@@ -25,12 +26,14 @@ func NewArticleService(
 	cfg *config.Config,
 	ArtRepo domain.ArticleRepoDomain,
 	userRepo domain.UserRepoDomain,
+	countService *CountService,
 ) (*ArticleService, error) {
 	return &ArticleService{
-		cfg:      cfg,
-		log:      log,
-		ArtRepo:  ArtRepo,
-		userRepo: userRepo,
+		cfg:          cfg,
+		log:          log,
+		ArtRepo:      ArtRepo,
+		userRepo:     userRepo,
+		countService: countService,
 	}, nil
 }
 
@@ -136,9 +139,16 @@ func (s *ArticleService) GetArticle(ctx context.Context, id uint64) (*dto.GetArt
 		s.log.Error("GetArticle info", zap.Error(err))
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
+
+	counts, err := s.countService.GetArticleInteractionCount(ctx, id)
+	if err != nil {
+		s.log.Error("GetArticle count", zap.Error(err))
+		return nil, err
 	}
+	res.Article.FavorCount = counts.FavorCount
+	res.Article.LikeCount = counts.LikeCount
+	res.Article.ViewCount = counts.ViewCount
+	res.Article.CommentCount = counts.CommentCount
 
 	return dto.ToGetArticleResponse(res), nil
 }

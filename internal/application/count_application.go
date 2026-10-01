@@ -27,7 +27,6 @@ func NewCountService(
 	}
 }
 
-// IncrementArticleView 增加博客的浏览量
 func (s *CountService) IncrementArticleView(ctx context.Context, articleID uint64) error {
 	if err := s.repo.Upsert(ctx, &entity.InteractionCount{
 		ObjectType:      enum.ObjectTypeArticle,
@@ -40,8 +39,6 @@ func (s *CountService) IncrementArticleView(ctx context.Context, articleID uint6
 	return nil
 }
 
-// GetArticleInteractionCount 拿到博客的3维(浏览，点赞，评论数量)
-// todo 后续点赞应该优先从缓存中提取,大量点赞的情况下发送到kafka异步消费，写入数据库比较慢
 func (s *CountService) GetArticleInteractionCount(ctx context.Context, articleID uint64) (*entity.InteractionStats, error) {
 	storedCounts, err := s.repo.GetByObject(ctx, enum.ObjectTypeArticle, articleID)
 	if err != nil {
@@ -57,12 +54,13 @@ func (s *CountService) GetArticleInteractionCount(ctx context.Context, articleID
 			counts.CommentCount = uint64(count.Count)
 		case enum.InteractionTypeView:
 			counts.ViewCount = uint64(count.Count)
+		case enum.InteractionTypeFavor:
+			counts.FavorCount = uint64(count.Count)
 		}
 	}
 	return counts, nil
 }
 
-// BatchGetArticleInteractionCounts 批量获取文章的三维(主要是服务列表操作的)
 func (s *CountService) BatchGetArticleInteractionCounts(ctx context.Context, articleIDs []uint64) (map[uint64]*entity.InteractionStats, error) {
 	statsByArticleID := make(map[uint64]*entity.InteractionStats, len(articleIDs))
 	for _, articleID := range articleIDs {
@@ -87,15 +85,9 @@ func (s *CountService) BatchGetArticleInteractionCounts(ctx context.Context, art
 			stats.CommentCount = uint64(count.Count)
 		case enum.InteractionTypeView:
 			stats.ViewCount = uint64(count.Count)
+		case enum.InteractionTypeFavor:
+			stats.FavorCount = uint64(count.Count)
 		}
 	}
 	return statsByArticleID, nil
-}
-
-func (s *CountService) AdjustLikeCount(ctx context.Context, objectType string, objectID uint64, delta int64) error {
-	return s.repo.Upsert(ctx, &entity.InteractionCount{
-		ObjectType:      enum.ParseObjectType(objectType),
-		ObjectID:        objectID,
-		InteractionType: enum.InteractionTypeLike,
-	}, delta)
 }
