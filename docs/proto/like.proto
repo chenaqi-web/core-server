@@ -39,13 +39,12 @@ message PageQueryUserLikeListResponse {
   int64 total = 2;
 }
 
-// 查询用户是否点过文章赞
-message HasArticleLikeRequest {
+message HasLikeRequest {
   uint64 userID = 1;
   string objectType = 2;
   uint64 objectID = 3;
 }
-message HasArticleLikeResponse {
+message HasLikeResponse {
   bool isLiked = 1;
 }
 
@@ -53,5 +52,5 @@ service LikeService {
   rpc ThumbUp(ThumbUpRequest) returns (ThumbUpResponse) {};
   rpc CancelThumbUp(CancelThumbUpRequest) returns (CancelThumbUpResponse) {};
   rpc PageQueryUserLikeList(PageQueryUserLikeListRequest) returns (PageQueryUserLikeListResponse) {};
-  rpc HasLike(HasArticleLikeRequest) returns (HasArticleLikeResponse) {};
+  rpc HasLike(HasLikeRequest) returns (HasLikeResponse) {};
 }

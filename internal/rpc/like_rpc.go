@@ -17,12 +17,12 @@ func NewLikeRPC(likeService *application.LikeService) *LikeRPC {
 	return &LikeRPC{LikeService: likeService}
 }
 
-func (l *LikeRPC) HasLike(ctx context.Context, request *likepb.HasArticleLikeRequest) (*likepb.HasArticleLikeResponse, error) {
+func (l *LikeRPC) HasLike(ctx context.Context, request *likepb.HasLikeRequest) (*likepb.HasLikeResponse, error) {
 	isLiked, err := l.LikeService.HasThumbUp(ctx, request.GetUserID(), request.GetObjectType(), request.GetObjectID())
 	if err != nil {
 		return nil, err
 	}
-	return &likepb.HasArticleLikeResponse{IsLiked: isLiked}, nil
+	return &likepb.HasLikeResponse{IsLiked: isLiked}, nil
 }
 
 func (l *LikeRPC) ThumbUp(ctx context.Context, request *likepb.ThumbUpRequest) (*likepb.ThumbUpResponse, error) {

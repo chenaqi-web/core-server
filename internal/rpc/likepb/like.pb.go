@@ -351,8 +351,7 @@ func (x *PageQueryUserLikeListResponse) GetTotal() int64 {
 	return 0
 }
 
-// 查询用户是否点过文章赞
-type HasArticleLikeRequest struct {
+type HasLikeRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserID        uint64                 `protobuf:"varint,1,opt,name=userID,proto3" json:"userID,omitempty"`
 	ObjectType    string                 `protobuf:"bytes,2,opt,name=objectType,proto3" json:"objectType,omitempty"`
@@ -361,20 +360,20 @@ type HasArticleLikeRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *HasArticleLikeRequest) Reset() {
-	*x = HasArticleLikeRequest{}
+func (x *HasLikeRequest) Reset() {
+	*x = HasLikeRequest{}
 	mi := &file_like_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *HasArticleLikeRequest) String() string {
+func (x *HasLikeRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*HasArticleLikeRequest) ProtoMessage() {}
+func (*HasLikeRequest) ProtoMessage() {}
 
-func (x *HasArticleLikeRequest) ProtoReflect() protoreflect.Message {
+func (x *HasLikeRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_like_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -386,53 +385,53 @@ func (x *HasArticleLikeRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use HasArticleLikeRequest.ProtoReflect.Descriptor instead.
-func (*HasArticleLikeRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use HasLikeRequest.ProtoReflect.Descriptor instead.
+func (*HasLikeRequest) Descriptor() ([]byte, []int) {
 	return file_like_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *HasArticleLikeRequest) GetUserID() uint64 {
+func (x *HasLikeRequest) GetUserID() uint64 {
 	if x != nil {
 		return x.UserID
 	}
 	return 0
 }
 
-func (x *HasArticleLikeRequest) GetObjectType() string {
+func (x *HasLikeRequest) GetObjectType() string {
 	if x != nil {
 		return x.ObjectType
 	}
 	return ""
 }
 
-func (x *HasArticleLikeRequest) GetObjectID() uint64 {
+func (x *HasLikeRequest) GetObjectID() uint64 {
 	if x != nil {
 		return x.ObjectID
 	}
 	return 0
 }
 
-type HasArticleLikeResponse struct {
+type HasLikeResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	IsLiked       bool                   `protobuf:"varint,1,opt,name=isLiked,proto3" json:"isLiked,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *HasArticleLikeResponse) Reset() {
-	*x = HasArticleLikeResponse{}
+func (x *HasLikeResponse) Reset() {
+	*x = HasLikeResponse{}
 	mi := &file_like_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *HasArticleLikeResponse) String() string {
+func (x *HasLikeResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*HasArticleLikeResponse) ProtoMessage() {}
+func (*HasLikeResponse) ProtoMessage() {}
 
-func (x *HasArticleLikeResponse) ProtoReflect() protoreflect.Message {
+func (x *HasLikeResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_like_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -444,12 +443,12 @@ func (x *HasArticleLikeResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use HasArticleLikeResponse.ProtoReflect.Descriptor instead.
-func (*HasArticleLikeResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use HasLikeResponse.ProtoReflect.Descriptor instead.
+func (*HasLikeResponse) Descriptor() ([]byte, []int) {
 	return file_like_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *HasArticleLikeResponse) GetIsLiked() bool {
+func (x *HasLikeResponse) GetIsLiked() bool {
 	if x != nil {
 		return x.IsLiked
 	}
@@ -487,20 +486,20 @@ const file_like_proto_rawDesc = "" +
 	"\bpageSize\x18\x04 \x01(\x05R\bpageSize\"c\n" +
 	"\x1dPageQueryUserLikeListResponse\x12,\n" +
 	"\barticles\x18\x01 \x03(\v2\x10.article.ArticleR\barticles\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x03R\x05total\"k\n" +
-	"\x15HasArticleLikeRequest\x12\x16\n" +
+	"\x05total\x18\x02 \x01(\x03R\x05total\"d\n" +
+	"\x0eHasLikeRequest\x12\x16\n" +
 	"\x06userID\x18\x01 \x01(\x04R\x06userID\x12\x1e\n" +
 	"\n" +
 	"objectType\x18\x02 \x01(\tR\n" +
 	"objectType\x12\x1a\n" +
-	"\bobjectID\x18\x03 \x01(\x04R\bobjectID\"2\n" +
-	"\x16HasArticleLikeResponse\x12\x18\n" +
-	"\aisLiked\x18\x01 \x01(\bR\aisLiked2\xbf\x02\n" +
+	"\bobjectID\x18\x03 \x01(\x04R\bobjectID\"+\n" +
+	"\x0fHasLikeResponse\x12\x18\n" +
+	"\aisLiked\x18\x01 \x01(\bR\aisLiked2\xb1\x02\n" +
 	"\vLikeService\x128\n" +
 	"\aThumbUp\x12\x14.like.ThumbUpRequest\x1a\x15.like.ThumbUpResponse\"\x00\x12J\n" +
 	"\rCancelThumbUp\x12\x1a.like.CancelThumbUpRequest\x1a\x1b.like.CancelThumbUpResponse\"\x00\x12b\n" +
-	"\x15PageQueryUserLikeList\x12\".like.PageQueryUserLikeListRequest\x1a#.like.PageQueryUserLikeListResponse\"\x00\x12F\n" +
-	"\aHasLike\x12\x1b.like.HasArticleLikeRequest\x1a\x1c.like.HasArticleLikeResponse\"\x00B(Z&core-server/internal/rpc/likepb;likepbb\x06proto3"
+	"\x15PageQueryUserLikeList\x12\".like.PageQueryUserLikeListRequest\x1a#.like.PageQueryUserLikeListResponse\"\x00\x128\n" +
+	"\aHasLike\x12\x14.like.HasLikeRequest\x1a\x15.like.HasLikeResponse\"\x00B(Z&core-server/internal/rpc/likepb;likepbb\x06proto3"
 
 var (
 	file_like_proto_rawDescOnce sync.Once
@@ -522,8 +521,8 @@ var file_like_proto_goTypes = []any{
 	(*CancelThumbUpResponse)(nil),         // 3: like.CancelThumbUpResponse
 	(*PageQueryUserLikeListRequest)(nil),  // 4: like.PageQueryUserLikeListRequest
 	(*PageQueryUserLikeListResponse)(nil), // 5: like.PageQueryUserLikeListResponse
-	(*HasArticleLikeRequest)(nil),         // 6: like.HasArticleLikeRequest
-	(*HasArticleLikeResponse)(nil),        // 7: like.HasArticleLikeResponse
+	(*HasLikeRequest)(nil),                // 6: like.HasLikeRequest
+	(*HasLikeResponse)(nil),               // 7: like.HasLikeResponse
 	(*articlepb.Article)(nil),             // 8: article.Article
 }
 var file_like_proto_depIdxs = []int32{
@@ -531,11 +530,11 @@ var file_like_proto_depIdxs = []int32{
 	0, // 1: like.LikeService.ThumbUp:input_type -> like.ThumbUpRequest
 	2, // 2: like.LikeService.CancelThumbUp:input_type -> like.CancelThumbUpRequest
 	4, // 3: like.LikeService.PageQueryUserLikeList:input_type -> like.PageQueryUserLikeListRequest
-	6, // 4: like.LikeService.HasLike:input_type -> like.HasArticleLikeRequest
+	6, // 4: like.LikeService.HasLike:input_type -> like.HasLikeRequest
 	1, // 5: like.LikeService.ThumbUp:output_type -> like.ThumbUpResponse
 	3, // 6: like.LikeService.CancelThumbUp:output_type -> like.CancelThumbUpResponse
 	5, // 7: like.LikeService.PageQueryUserLikeList:output_type -> like.PageQueryUserLikeListResponse
-	7, // 8: like.LikeService.HasLike:output_type -> like.HasArticleLikeResponse
+	7, // 8: like.LikeService.HasLike:output_type -> like.HasLikeResponse
 	5, // [5:9] is the sub-list for method output_type
 	1, // [1:5] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name

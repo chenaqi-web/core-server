@@ -32,7 +32,7 @@ type LikeServiceClient interface {
 	ThumbUp(ctx context.Context, in *ThumbUpRequest, opts ...grpc.CallOption) (*ThumbUpResponse, error)
 	CancelThumbUp(ctx context.Context, in *CancelThumbUpRequest, opts ...grpc.CallOption) (*CancelThumbUpResponse, error)
 	PageQueryUserLikeList(ctx context.Context, in *PageQueryUserLikeListRequest, opts ...grpc.CallOption) (*PageQueryUserLikeListResponse, error)
-	HasLike(ctx context.Context, in *HasArticleLikeRequest, opts ...grpc.CallOption) (*HasArticleLikeResponse, error)
+	HasLike(ctx context.Context, in *HasLikeRequest, opts ...grpc.CallOption) (*HasLikeResponse, error)
 }
 
 type likeServiceClient struct {
@@ -73,9 +73,9 @@ func (c *likeServiceClient) PageQueryUserLikeList(ctx context.Context, in *PageQ
 	return out, nil
 }
 
-func (c *likeServiceClient) HasLike(ctx context.Context, in *HasArticleLikeRequest, opts ...grpc.CallOption) (*HasArticleLikeResponse, error) {
+func (c *likeServiceClient) HasLike(ctx context.Context, in *HasLikeRequest, opts ...grpc.CallOption) (*HasLikeResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(HasArticleLikeResponse)
+	out := new(HasLikeResponse)
 	err := c.cc.Invoke(ctx, LikeService_HasLike_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -90,7 +90,7 @@ type LikeServiceServer interface {
 	ThumbUp(context.Context, *ThumbUpRequest) (*ThumbUpResponse, error)
 	CancelThumbUp(context.Context, *CancelThumbUpRequest) (*CancelThumbUpResponse, error)
 	PageQueryUserLikeList(context.Context, *PageQueryUserLikeListRequest) (*PageQueryUserLikeListResponse, error)
-	HasLike(context.Context, *HasArticleLikeRequest) (*HasArticleLikeResponse, error)
+	HasLike(context.Context, *HasLikeRequest) (*HasLikeResponse, error)
 	mustEmbedUnimplementedLikeServiceServer()
 }
 
@@ -110,7 +110,7 @@ func (UnimplementedLikeServiceServer) CancelThumbUp(context.Context, *CancelThum
 func (UnimplementedLikeServiceServer) PageQueryUserLikeList(context.Context, *PageQueryUserLikeListRequest) (*PageQueryUserLikeListResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method PageQueryUserLikeList not implemented")
 }
-func (UnimplementedLikeServiceServer) HasLike(context.Context, *HasArticleLikeRequest) (*HasArticleLikeResponse, error) {
+func (UnimplementedLikeServiceServer) HasLike(context.Context, *HasLikeRequest) (*HasLikeResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method HasLike not implemented")
 }
 func (UnimplementedLikeServiceServer) mustEmbedUnimplementedLikeServiceServer() {}
@@ -189,7 +189,7 @@ func _LikeService_PageQueryUserLikeList_Handler(srv interface{}, ctx context.Con
 }
 
 func _LikeService_HasLike_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(HasArticleLikeRequest)
+	in := new(HasLikeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -201,7 +201,7 @@ func _LikeService_HasLike_Handler(srv interface{}, ctx context.Context, dec func
 		FullMethod: LikeService_HasLike_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LikeServiceServer).HasLike(ctx, req.(*HasArticleLikeRequest))
+		return srv.(LikeServiceServer).HasLike(ctx, req.(*HasLikeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
