@@ -2,79 +2,84 @@ package repo
 
 import (
 	"context"
-	"database/sql"
+	"core-server/internal/config"
+	"core-server/internal/infras/repo/ent"
 	"fmt"
 	"log"
 
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/jmoiron/sqlx"
-
-	"core-server/internal/config"
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 )
 
-type DBClient struct {
-	DB *sqlx.DB
+type EntClient struct {
+	db     *ent.Client
+	driver dialect.Driver
 }
 
-type dbExecutor interface {
-	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
-	GetContext(ctx context.Context, dest any, query string, args ...any) error
-	SelectContext(ctx context.Context, dest any, query string, args ...any) error
-}
+func NewEntClient(cfg *config.Config) (*EntClient, error) {
+	dsn := cfg.Mysql.DSN()
 
-func NewDBClient(cfg *config.Config) (*DBClient, error) {
-	mysqlCfg := cfg.Mysql
-	if mysqlCfg.Host == "" || mysqlCfg.Port == "" || mysqlCfg.DBName == "" {
-		return nil, fmt.Errorf("mysql config is incomplete")
-	}
-
-	db, err := sqlx.Connect("mysql", mysqlCfg.DSN())
+	drv, err := sql.Open("mysql", dsn)
 	if err != nil {
-		return nil, fmt.Errorf("open mysql: %w", err)
+		return nil, err
 	}
 
-	db.SetMaxIdleConns(mysqlCfg.MaxIdleConn)
-	db.SetMaxOpenConns(mysqlCfg.MaxOpenConn)
+	db := drv.DB()
+	db.SetMaxIdleConns(cfg.Mysql.MaxIdleConn)
+	db.SetMaxOpenConns(cfg.Mysql.MaxOpenConn)
 
+	// 开启测试
+	//if os.Getenv("ENV_LOCAL_TEST") != "" {
+	//	client = client.Debug()
+	//}
 	log.Println("mysql connected successfully")
-	return &DBClient{DB: db}, nil
+	return &EntClient{
+		db:     ent.NewClient(ent.Driver(drv)),
+		driver: drv,
+	}, nil
 }
 
-func (c *DBClient) Close() error {
-	return c.DB.Close()
+func (c *EntClient) Close() error {
+	return c.db.Close()
 }
 
-func (c *DBClient) db(ctx context.Context) dbExecutor {
-	if tx, ok := ctx.Value(txContextKey{}).(*sqlx.Tx); ok && tx != nil {
-		return tx
-	}
-	return c.DB
-}
-
-// =====================================================================================================================
-
-// 将事务对象存入上下文
-type txContextKey struct{}
-
-func withTx(ctx context.Context, tx *sqlx.Tx) context.Context {
-	return context.WithValue(ctx, txContextKey{}, tx)
-}
-
-// WithTransaction 事务管理器
-func (c *DBClient) WithTransaction(ctx context.Context, fn func(ctx context.Context) error) error {
-	// 1. 开启事务
-	tx, err := c.DB.BeginTxx(ctx, nil)
+func (b *EntClient) WithTransaction(ctx context.Context, fn func(ctx context.Context) error) (err error) {
+	tx, err := b.db.Tx(ctx)
 	if err != nil {
 		return err
 	}
 
-	//  业务函数可以从中提取事务对象
-	txCtx := withTx(ctx, tx)
-	if err := fn(txCtx); err != nil {
-		// 错误回滚
-		_ = tx.Rollback()
+	defer func() {
+		if v := recover(); v != nil {
+			// 回滚失败也只是记录，不掩盖原始 panic
+			if rerr := tx.Rollback(); rerr != nil {
+				err = fmt.Errorf("rolling back transaction: %w", rerr)
+			}
+			panic(v)
+		}
+	}()
+
+	ctx = ent.NewContext(ctx, tx.Client())
+
+	if err := fn(ctx); err != nil {
+		if rerr := tx.Rollback(); rerr != nil {
+			err = fmt.Errorf("%w: rolling back transaction: %v", err, rerr)
+		}
 		return err
 	}
-	// 成功提交
-	return tx.Commit()
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (b *EntClient) DB(ctx context.Context) *ent.Client {
+	// Transaction contexts carry a transactional Ent client. Normal request
+	// contexts do not, so fall back to the base client for regular operations.
+	if db := ent.FromContext(ctx); db != nil {
+		return db
+	}
+	return b.db
 }

@@ -2,102 +2,99 @@ package repo
 
 import (
 	"context"
-	"database/sql"
-	"errors"
-	"time"
+	"core-server/internal/infras/repo/ent"
+	"core-server/internal/infras/repo/ent/category"
 
 	"core-server/internal/model/entity"
 )
 
 type CategoryRepo struct {
-	*DBClient
+	*EntClient
 }
 
-func NewCategoryRepo(client *DBClient) *CategoryRepo {
-	return &CategoryRepo{DBClient: client}
+func NewCategoryRepo(client *EntClient) *CategoryRepo {
+	return &CategoryRepo{
+		EntClient: client,
+	}
 }
 
-func (r *CategoryRepo) Create(ctx context.Context, category *entity.Category) error {
-	now := time.Now()
-	const query = `
-INSERT INTO category (parent_id, name, created_at, updated_at)
-VALUES (?, ?, ?, ?)`
-
-	result, err := r.db(ctx).ExecContext(ctx, query, category.ParentID, category.Name, now, now)
+func (r *CategoryRepo) CreateType(ctx context.Context, value *entity.Category) error {
+	_, err := r.DB(ctx).Category.Create().
+		SetParentID(entity.RootCategoryParentID).
+		SetName(value.Name).
+		Save(ctx)
 	if err != nil {
 		return err
 	}
-
-	id, err := result.LastInsertId()
-	if err != nil {
-		return err
-	}
-
-	category.ID = uint64(id)
-	category.CreatedAt = now
-	category.UpdatedAt = now
 	return nil
 }
 
-func (r *CategoryRepo) DeleteByID(ctx context.Context, id uint64) error {
-	const query = `
-UPDATE category
-SET deleted_at = NOW(3), updated_at = NOW(3)
-WHERE id = ? AND deleted_at IS NULL`
-
-	result, err := r.db(ctx).ExecContext(ctx, query, id)
-	if err != nil {
+func (r *CategoryRepo) CreateCate(ctx context.Context, value *entity.Category) error {
+	if _, err := r.DB(ctx).Category.Query().
+		Where(category.IDEQ(value.ParentID), category.ParentIDEQ(entity.RootCategoryParentID)).
+		Only(ctx); err != nil {
 		return err
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if rowsAffected == 0 {
+	_, err := r.DB(ctx).Category.Create().
+		SetParentID(value.ParentID).
+		SetName(value.Name).
+		Save(ctx)
+	return err
+}
+
+func (r *CategoryRepo) DeleteCate(ctx context.Context, id uint64) error {
+	err := r.DB(ctx).Category.DeleteOneID(id).Exec(ctx)
+	if ent.IsNotFound(err) {
 		return ErrNotFound
 	}
-	return nil
+	return err
 }
 
-func (r *CategoryRepo) GetByID(ctx context.Context, id uint64) (*entity.Category, error) {
-	var category entity.Category
-	const query = `
-SELECT id, created_at, updated_at, deleted_at, parent_id, name
-FROM category
-WHERE id = ? AND deleted_at IS NULL
-LIMIT 1`
+func (r *CategoryRepo) DeleteType(ctx context.Context, id uint64) error {
+	err := r.WithTransaction(ctx, func(ctx context.Context) error {
+		deleteBuilder := r.DB(ctx).Category.Delete().Where(category.IDEQ(id))
+		deleted, err := deleteBuilder.Exec(ctx)
+		if err != nil {
+			return err
+		}
+		if deleted == 0 {
+			return ErrNotFound
+		}
 
-	err := r.db(ctx).GetContext(ctx, &category, query, id)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil
+		_, err = r.DB(ctx).Category.Delete().
+			Where(category.ParentIDEQ(id)).
+			Exec(ctx)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return err
 	}
+
+	return err
+}
+
+func (r *CategoryRepo) ListType(ctx context.Context) ([]*entity.Category, error) {
+	nodes, err := r.DB(ctx).Category.Query().
+		Where(category.ParentIDEQ(0)).
+		Order(ent.Asc(category.FieldID)).
+		All(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return &category, nil
+	return toEntityCategories(nodes), nil
 }
 
-func (r *CategoryRepo) ListByParentID(ctx context.Context, parentID uint64) ([]*entity.Category, error) {
-	var categories []*entity.Category
-	const query = `
-SELECT id, created_at, updated_at, deleted_at, parent_id, name
-FROM category
-WHERE parent_id = ? AND deleted_at IS NULL
-ORDER BY id ASC`
-
-	if err := r.db(ctx).SelectContext(ctx, &categories, query, parentID); err != nil {
+func (r *CategoryRepo) ListCate(ctx context.Context, parentID uint64) ([]*entity.Category, error) {
+	nodes, err := r.DB(ctx).Category.Query().
+		Where(category.ParentIDEQ(parentID)).
+		Order(ent.Asc(category.FieldID)).
+		All(ctx)
+	if err != nil {
 		return nil, err
 	}
-	return categories, nil
-}
-
-func (r *CategoryRepo) DeleteByParentID(ctx context.Context, parentID uint64) error {
-	const query = `
-UPDATE category
-SET deleted_at = NOW(3), updated_at = NOW(3)
-WHERE parent_id = ? AND deleted_at IS NULL`
-
-	_, err := r.db(ctx).ExecContext(ctx, query, parentID)
-	return err
+	return toEntityCategories(nodes), nil
 }

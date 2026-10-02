@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+// provide user like service
+// 1. add like
+
+import "article.proto";
+
+package favor;
+//import "idl/validate/validate.proto";
+option go_package = "core-server/internal/rpc/favorpb;favorpb";
+
+service FavorService {
+
+}

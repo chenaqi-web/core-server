@@ -2,127 +2,87 @@ package repo
 
 import (
 	"context"
+	stdsql "database/sql"
+	"fmt"
+
+	"core-server/internal/infras/repo/ent"
+	"core-server/internal/infras/repo/ent/interactionlike"
 	"core-server/internal/model/entity"
-	"database/sql"
-	"errors"
 )
 
-type LikeRepo struct {
-	*DBClient
-}
+type LikeRepo struct{ *EntClient }
 
-func NewLikeRepo(client *DBClient) *LikeRepo {
-	return &LikeRepo{DBClient: client}
-}
+func NewLikeRepo(client *EntClient) *LikeRepo { return &LikeRepo{EntClient: client} }
 
-// Upsert 原子写入点赞记录。
-// 语义与原先一致：若已是 thumb_up 且 version >= 入参 version，则跳过；否则插入或更新。
-// 依赖 uk_like_user_object(user_id, object_type, object_id)。
 func (r *LikeRepo) Upsert(ctx context.Context, like *entity.InteractionLike) (int, error) {
-	const sqlQuery = `
-INSERT INTO interaction_like
-  (user_id, object_type, object_id, status, version, created_at, updated_at)
-VALUES
-  (?, ?, ?, ?, ?, NOW(3), NOW(3))
+	const query = `
+INSERT INTO interaction_like (user_id, object_type, object_id, status, version, created_at, updated_at)
+VALUES (?, ?, ?, ?, ?, NOW(3), NOW(3))
 ON DUPLICATE KEY UPDATE
   status = IF(@skip := (status = ? AND version >= VALUES(version)), status, VALUES(status)),
   version = IF(@skip, version, VALUES(version)),
-  updated_at = IF(@skip, updated_at, NOW(3))
-`
-
-	result, err := r.db(ctx).ExecContext(
-		ctx,
-		sqlQuery,
-		like.UserID,
-		like.ObjectType,
-		like.ObjectID,
-		like.Status,
-		like.Version,
-		entity.LikeStatusTypeThumbUp,
-	)
+  updated_at = IF(@skip, updated_at, NOW(3))`
+	driver, ok := r.driver.(interface {
+		ExecContext(context.Context, string, ...any) (stdsql.Result, error)
+	})
+	if !ok {
+		return 0, fmt.Errorf("ent driver does not support ExecContext")
+	}
+	result, err := driver.ExecContext(ctx, query, like.UserID, like.ObjectType.String(), like.ObjectID, like.Status.String(), like.Version, entity.LikeStatusTypeThumbUp.String())
 	if err != nil {
 		return 0, err
 	}
-
-	// MySQL: insert=1, update(有变更)=2, 无变更=0
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
+	affected, err := result.RowsAffected()
+	if err != nil || affected == 0 {
 		return 0, err
-	}
-	if rowsAffected == 0 {
-		return 0, nil
 	}
 	return 1, nil
 }
 
 func (r *LikeRepo) UpdateWithCondition(ctx context.Context, condition string, like *entity.InteractionLike) (int, error) {
-	const sqlQuery = `
-UPDATE interaction_like
-SET status = ?, version = ?, updated_at = NOW(3)
-WHERE user_id = ? AND object_type = ? AND object_id = ? AND status = ? AND version <= ?`
-
-	result, err := r.db(ctx).ExecContext(
-		ctx,
-		sqlQuery,
-		like.Status,
-		like.Version,
-		like.UserID,
-		like.ObjectType,
-		like.ObjectID,
-		condition,
-		like.Version,
-	)
-	if err != nil {
-		return 0, err
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return 0, err
-	}
-	return int(rowsAffected), nil
+	affected, err := r.DB(ctx).InteractionLike.Update().
+		Where(
+			interactionlike.UserIDEQ(like.UserID),
+			interactionlike.ObjectTypeEQ(interactionlike.ObjectType(like.ObjectType.String())),
+			interactionlike.ObjectIDEQ(like.ObjectID),
+			interactionlike.StatusEQ(interactionlike.Status(condition)),
+			interactionlike.VersionLTE(like.Version),
+		).
+		SetStatus(interactionlike.Status(like.Status.String())).
+		SetVersion(like.Version).
+		Save(ctx)
+	return affected, err
 }
 
 func (r *LikeRepo) QueryWithCondition(ctx context.Context, userID uint64, objectType string, objectID uint64, status string) (*entity.InteractionLike, error) {
-	var like entity.InteractionLike
-	const sqlQuery = `
-SELECT id, created_at, updated_at, user_id, object_type, object_id, status, version
-FROM interaction_like
-WHERE user_id = ? AND object_type = ? AND object_id = ? AND status = ?
-LIMIT 1`
-
-	err := r.db(ctx).GetContext(ctx, &like, sqlQuery, userID, objectType, objectID, status)
-	if errors.Is(err, sql.ErrNoRows) {
+	node, err := r.DB(ctx).InteractionLike.Query().
+		Where(interactionlike.UserIDEQ(userID), interactionlike.ObjectTypeEQ(interactionlike.ObjectType(objectType)), interactionlike.ObjectIDEQ(objectID), interactionlike.StatusEQ(interactionlike.Status(status))).
+		Only(ctx)
+	if ent.IsNotFound(err) {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-	return &like, nil
+	return toEntityInteractionLike(node), nil
 }
 
 func (r *LikeRepo) CountUserLiked(ctx context.Context, userID uint64, objectType string) (int64, error) {
-	var count int64
-	const sqlQuery = `
-SELECT COUNT(1)
-FROM interaction_like
-WHERE user_id = ? AND object_type = ? AND status = ?`
-	if err := r.db(ctx).GetContext(ctx, &count, sqlQuery, userID, objectType, entity.LikeStatusTypeThumbUp.String()); err != nil {
-		return 0, err
-	}
-	return count, nil
+	count, err := r.DB(ctx).InteractionLike.Query().
+		Where(interactionlike.UserIDEQ(userID), interactionlike.ObjectTypeEQ(interactionlike.ObjectType(objectType)), interactionlike.StatusEQ(interactionlike.StatusThumbUp)).
+		Count(ctx)
+	return int64(count), err
 }
 
 func (r *LikeRepo) PageQueryLikeObjects(ctx context.Context, userID uint64, objectType string, offset, limit int) ([]*entity.InteractionLike, error) {
-	var items []*entity.InteractionLike
-	const sqlQuery = `
-SELECT id, created_at, updated_at, user_id, object_type, object_id, status, version
-FROM interaction_like
-WHERE user_id = ? AND object_type = ? AND status = ?
-ORDER BY version DESC, updated_at DESC
-LIMIT ?, ?`
-	if err := r.db(ctx).SelectContext(ctx, &items, sqlQuery, userID, objectType, entity.LikeStatusTypeThumbUp.String(), offset, limit); err != nil {
+	nodes, err := r.DB(ctx).InteractionLike.Query().
+		Where(interactionlike.UserIDEQ(userID), interactionlike.ObjectTypeEQ(interactionlike.ObjectType(objectType)), interactionlike.StatusEQ(interactionlike.StatusThumbUp)).
+		Order(ent.Desc(interactionlike.FieldVersion), ent.Desc(interactionlike.FieldUpdatedAt)).
+		Offset(offset).
+		Limit(limit).
+		All(ctx)
+	if err != nil {
 		return nil, err
 	}
-	return items, nil
+	return toEntityInteractionLikes(nodes), nil
 }

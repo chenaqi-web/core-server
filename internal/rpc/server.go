@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"core-server/internal/infras/repo"
 	"core-server/internal/rpc/articlepb"
 	"core-server/internal/rpc/authpb"
 	"core-server/internal/rpc/userpb"
@@ -11,7 +12,6 @@ import (
 	"core-server/internal/config"
 	"core-server/internal/infras/cache"
 	"core-server/internal/infras/mq/kafka"
-	"core-server/internal/infras/repov2"
 	jobdbsync "core-server/internal/jobs/job-dbsync"
 	"core-server/internal/rpc/categorypb"
 	"core-server/internal/rpc/commentpb"
@@ -24,7 +24,7 @@ import (
 type Server struct {
 	cfg          *config.Config
 	Engine       *grpc.Server
-	dbClient     *repov2.EntClient
+	dbClient     *repo.EntClient
 	cacheClient  *cache.CacheClient
 	producer     *kafka.SyncProducer
 	kafkaManager *kafka.KafkaManager
@@ -33,7 +33,7 @@ type Server struct {
 
 func NewServer(
 	cfg *config.Config,
-	dbClient *repov2.EntClient,
+	dbClient *repo.EntClient,
 	cacheClient *cache.CacheClient,
 	producer *kafka.SyncProducer,
 	kafkaManager *kafka.KafkaManager,

@@ -12,7 +12,7 @@ import (
 	"core-server/internal/infras/cache"
 	"core-server/internal/infras/clog"
 	"core-server/internal/infras/mq/kafka"
-	"core-server/internal/infras/repov2"
+	"core-server/internal/infras/repo"
 	"core-server/internal/jobs/job-dbsync"
 	"core-server/internal/rpc"
 )
@@ -20,7 +20,7 @@ import (
 // Injectors from wire.go:
 
 func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
-	entClient, err := repov2.NewEntClient(cfg)
+	entClient, err := repo.NewEntClient(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -38,11 +38,11 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 		return nil, err
 	}
 	kafkaManager := kafka.NewKafkaManager(cfg, topicManager)
-	likeRepo := repov2.NewLikeRepo(entClient)
-	countRepo := repov2.NewCountRepo(entClient)
-	userRepo := repov2.NewUserRepo(entClient)
+	likeRepo := repo.NewLikeRepo(entClient)
+	countRepo := repo.NewCountRepo(entClient)
+	userRepo := repo.NewUserRepo(entClient)
 	iLikeCache := cache.NewILikeCache(cacheClient)
-	articleRepo := repov2.NewArticleRepo(entClient)
+	articleRepo := repo.NewArticleRepo(entClient)
 	messageQueueConsumer := jobdbsync.NewMessageQueueConsumer(cfg, log, syncProducer, kafkaManager, cacheClient, likeRepo, countRepo, userRepo, articleRepo, iLikeCache)
 	userService := application.NewUserService(userRepo, log)
 	authRPC := rpc.NewAuthRPC(userService)
@@ -52,7 +52,7 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 		return nil, err
 	}
 	likeRPC := rpc.NewLikeRPC(likeService)
-	categoryRepo := repov2.NewCategoryRepo(entClient)
+	categoryRepo := repo.NewCategoryRepo(entClient)
 	categoryService, err := application.NewCategoryService(log, categoryRepo, cfg)
 	if err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 		return nil, err
 	}
 	articleRPC := rpc.NewArticleRPC(articleService)
-	commentRepo := repov2.NewCommentRepo(entClient)
+	commentRepo := repo.NewCommentRepo(entClient)
 	commentService, err := application.NewCommentService(log, commentRepo, userRepo, countRepo, cfg)
 	if err != nil {
 		return nil, err

@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+// provide user like service
+// 1. add like
+
+import "article.proto";
+
+package follow;
+//import "idl/validate/validate.proto";
+option go_package = "core-server/internal/rpc/followpb;followpb";
+
+service FollowService {
+
+}

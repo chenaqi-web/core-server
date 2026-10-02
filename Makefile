@@ -14,4 +14,4 @@ generate-proto-rpc:
 		$(PROTO_FILES)
 
 ent:
-	go run -mod=mod entgo.io/ent/cmd/ent generate ./internal/infras/repov2/ent/schema
+	go run -mod=mod entgo.io/ent/cmd/ent generate ./internal/infras/repo/ent/schema

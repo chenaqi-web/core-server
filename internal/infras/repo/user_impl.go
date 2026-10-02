@@ -2,84 +2,156 @@ package repo
 
 import (
 	"context"
-	"database/sql"
-	"errors"
-
-	"github.com/jmoiron/sqlx"
-
+	"core-server/internal/infras/repo/ent"
+	"core-server/internal/infras/repo/ent/user"
+	"core-server/internal/infras/repo/ent/userstat"
+	"core-server/internal/model/aggregate"
 	"core-server/internal/model/entity"
 	"core-server/internal/model/enum"
+	"errors"
 )
 
-const userListColumns = `id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, sex, birthday, signature, like_count, receive_like_count, status`
-
 type UserRepo struct {
-	*DBClient
+	*EntClient
 }
 
-func NewUserRepo(client *DBClient) *UserRepo {
-	return &UserRepo{DBClient: client}
+func NewUserRepo(client *EntClient) *UserRepo {
+	return &UserRepo{
+		EntClient: client,
+	}
 }
 
 func (r *UserRepo) GetByID(ctx context.Context, id uint64) (*entity.User, error) {
-	var u entity.User
-	const query = `
-SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, status, sex, birthday, signature, like_count, receive_like_count
-FROM user
-WHERE id = ? AND deleted_at IS NULL
-LIMIT 1`
-
-	err := r.db(ctx).GetContext(ctx, &u, query, id)
+	node, err := r.db.User.Query().
+		Where(user.IDEQ(id), user.DeletedAtIsNil()).
+		Only(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return &u, nil
+	return toEntityUser(node), nil
 }
 
 func (r *UserRepo) GetByName(ctx context.Context, name string) (*entity.User, error) {
-	var u entity.User
-	const query = `
-SELECT id, created_at, updated_at, deleted_at, name, password, phone, avatar, email, role, status, sex, birthday, signature
-FROM user
-WHERE name = ? AND deleted_at IS NULL
-LIMIT 1`
-
-	err := r.db(ctx).GetContext(ctx, &u, query, name)
+	node, err := r.db.User.Query().
+		Where(user.NameEQ(name), user.DeletedAtIsNil()).
+		Only(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
-	return &u, nil
+	return toEntityUser(node), nil
 }
 
 func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*entity.User, error) {
-	var u entity.User
-	const query = `
-SELECT id, created_at, updated_at, deleted_at, name, password, phone, avatar, email, role, status, sex, birthday, signature
-FROM user
-WHERE email = ? AND deleted_at IS NULL
-LIMIT 1`
+	node, err := r.db.User.Query().
+		Where(user.EmailEQ(email), user.DeletedAtIsNil()).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return toEntityUser(node), nil
+}
 
-	err := r.db(ctx).GetContext(ctx, &u, query, email)
+func (r *UserRepo) CreateUser(ctx context.Context, value *entity.User) error {
+	err := r.WithTransaction(ctx, func(ctx context.Context) error {
+		node, err := r.db.User.Create().
+			SetName(value.Name).
+			SetPassword(value.Password).
+			SetEmail(value.Email).
+			SetRole(user.Role(value.Role.String())).
+			SetStatus(user.Status(value.Status.String())).
+			SetSignature(value.Signature).
+			Save(ctx)
+		if err != nil {
+			return err
+		}
+
+		_, err = r.db.UserStat.Create().
+			SetUserID(node.ID).
+			SetArticleCount(0).
+			SetFollowersCount(0).
+			SetFollowingCount(0).
+			SetLikeCount(0).
+			SetReceiveLikeCount(0).
+			SetFavorCount(0).
+			SetReceiveFavorCount(0).
+			SetCommentCount(0).
+			Save(ctx)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *UserRepo) GetUserMsgByID(ctx context.Context, id uint64) (*aggregate.UserAggregate, error) {
+	node, err := r.db.User.Query().
+		Where(user.IDEQ(id), user.DeletedAtIsNil()).
+		WithStat(). // 预加载边
+		Only(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return &u, nil
+
+	// 拿到关联的 stat
+	stat := node.Edges.Stat
+
+	return &aggregate.UserAggregate{
+		User: toEntityUser(node),
+		Stat: toEntityUserStat(stat),
+	}, err
 }
 
-func (r *UserRepo) Create(ctx context.Context, user *entity.User) error {
-	const query = `
-INSERT INTO user (name, password, email, role, status, signature)
-VALUES (?, ?, ?, ?, ?, ?)`
-	result, err := r.db(ctx).ExecContext(ctx, query, user.Name, user.Password, user.Email, user.Role.String(), user.Status.String(), user.Signature)
+func (r *UserRepo) GetUserStat(ctx context.Context, userID uint64) (*entity.UserStat, error) {
+	stat, err := r.db.UserStat.Query().
+		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil()).
+		Only(ctx)
 	if err != nil {
-		return err
+		if ent.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
 	}
-	id, err := result.LastInsertId()
+	return toEntityUserStat(stat), nil
+}
+
+func (r *UserRepo) Search(ctx context.Context, keyword string, limit, offset int32) ([]*entity.User, uint64, error) {
+	query := r.db.User.Query().Where(
+		user.DeletedAtIsNil(),
+		user.Or(user.NameContains(keyword), user.EmailContains(keyword)),
+	)
+
+	total, err := query.Clone().Count(ctx)
 	if err != nil {
-		return err
+		return nil, 0, err
 	}
-	user.ID = uint64(id)
-	return nil
+	nodes, err := query.Order(ent.Desc(user.FieldID)).Limit(int(limit)).Offset(int(offset)).All(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	return toEntityUsers(nodes), uint64(total), nil
+}
+
+func (r *UserRepo) List(ctx context.Context, limit, offset int32) ([]*entity.User, uint64, error) {
+	query := r.db.User.Query().Where(user.DeletedAtIsNil())
+	total, err := query.Clone().Count(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	nodes, err := query.Order(ent.Desc(user.FieldID)).Limit(int(limit)).Offset(int(offset)).All(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	return toEntityUsers(nodes), uint64(total), nil
 }
 
 func (r *UserRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User, error) {
@@ -87,177 +159,94 @@ func (r *UserRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User,
 		return nil, nil
 	}
 
-	const baseQuery = `
-SELECT id, created_at, updated_at, deleted_at, name, phone, avatar, email, role, sex, birthday, signature, like_count, receive_like_count, status
-FROM user
-WHERE id IN (?) AND deleted_at IS NULL`
-
-	query, args, err := sqlx.In(baseQuery, ids)
+	entIDs := ids
+	nodes, err := r.db.User.Query().
+		Where(user.IDIn(entIDs...), user.DeletedAtIsNil()).
+		All(ctx)
 	if err != nil {
 		return nil, err
 	}
-	query = r.DB.Rebind(query)
-
-	var users []*entity.User
-	if err := r.db(ctx).SelectContext(ctx, &users, query, args...); err != nil {
-		return nil, err
-	}
-	return users, nil
+	return toEntityUsers(nodes), nil
 }
 
-func (r *UserRepo) List(ctx context.Context, limit, offset uint32) ([]*entity.User, uint64, error) {
-	var total uint64
-	if err := r.db(ctx).GetContext(ctx, &total, "SELECT COUNT(*) FROM user WHERE deleted_at IS NULL"); err != nil {
-		return nil, 0, err
-	}
-
-	query := "SELECT " + userListColumns + " FROM user WHERE deleted_at IS NULL ORDER BY id DESC LIMIT ? OFFSET ?"
-	var users []*entity.User
-	if err := r.db(ctx).SelectContext(ctx, &users, query, limit, offset); err != nil {
-		return nil, 0, err
-	}
-	return users, total, nil
-}
-
-func (r *UserRepo) Search(ctx context.Context, keyword string, limit, offset uint32) ([]*entity.User, uint64, error) {
-	const where = "WHERE deleted_at IS NULL AND (name LIKE ? OR email LIKE ?)"
-	like := "%" + keyword + "%"
-
-	var total uint64
-	if err := r.db(ctx).GetContext(ctx, &total, "SELECT COUNT(*) FROM user "+where, like, like); err != nil {
-		return nil, 0, err
-	}
-
-	query := "SELECT " + userListColumns + " FROM user " + where + " ORDER BY id DESC LIMIT ? OFFSET ?"
-	var users []*entity.User
-	if err := r.db(ctx).SelectContext(ctx, &users, query, like, like, limit, offset); err != nil {
-		return nil, 0, err
-	}
-	return users, total, nil
-}
-
-func (r *UserRepo) GetLikeCount(ctx context.Context, userID uint64) (int64, error) {
-	var count int64
-	const query = `SELECT like_count FROM user WHERE id = ? AND deleted_at IS NULL`
-	if err := r.db(ctx).GetContext(ctx, &count, query, userID); err != nil {
-		return 0, err
-	}
-	return count, nil
-}
-
-func (r *UserRepo) GetReceiveLikeCount(ctx context.Context, userID uint64) (int64, error) {
-	var count int64
-	const query = `SELECT receive_like_count FROM user WHERE id = ? AND deleted_at IS NULL`
-	if err := r.db(ctx).GetContext(ctx, &count, query, userID); err != nil {
-		return 0, err
-	}
-	return count, nil
-}
+// =====================================================================================================================
 
 func (r *UserRepo) IncrementLikeCount(ctx context.Context, userID uint64) error {
-	const query = `
-UPDATE user
-SET like_count = like_count + 1, updated_at = NOW(3)
-WHERE id = ? AND deleted_at IS NULL`
-	_, err := r.db(ctx).ExecContext(ctx, query, userID)
-	return err
+	return r.db.UserStat.Update().
+		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil()).
+		AddLikeCount(1).
+		Exec(ctx)
 }
 
 func (r *UserRepo) DecrementLikeCount(ctx context.Context, userID uint64) error {
-	const query = `
-UPDATE user
-SET like_count = CASE WHEN like_count > 0 THEN like_count - 1 ELSE 0 END,
-    updated_at = NOW(3)
-WHERE id = ? AND deleted_at IS NULL`
-	_, err := r.db(ctx).ExecContext(ctx, query, userID)
-	return err
+	return r.db.UserStat.Update().
+		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil(), userstat.LikeCountGT(0)).
+		AddLikeCount(-1).
+		Exec(ctx)
+}
+
+func (r *UserRepo) IncrementReceiveLikeCount(ctx context.Context, userID uint64) error {
+	return r.DB(ctx).UserStat.Update().
+		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil()).
+		AddReceiveLikeCount(1).
+		Exec(ctx)
+}
+
+func (r *UserRepo) DecrementReceiveLikeCount(ctx context.Context, userID uint64) error {
+	return r.DB(ctx).UserStat.Update().
+		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil(), userstat.ReceiveLikeCountGT(0)).
+		AddReceiveLikeCount(-1).
+		Exec(ctx)
 }
 
 func (r *UserRepo) IncrementArticleCount(ctx context.Context, userID uint64) error {
-	const query = `
-UPDATE user_stat
-SET article_count = article_count + 1, updated_at = NOW(3)
-WHERE user_id = ? AND deleted_at IS NULL`
-	_, err := r.db(ctx).ExecContext(ctx, query, userID)
-	return err
+	return r.DB(ctx).UserStat.Update().
+		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil()).
+		AddArticleCount(1).
+		Exec(ctx)
 }
 
 func (r *UserRepo) DecrementArticleCount(ctx context.Context, userID uint64) error {
-	const query = `
-UPDATE user_stat
-SET article_count = CASE WHEN article_count > 0 THEN article_count - 1 ELSE 0 END,
-    updated_at = NOW(3)
-WHERE user_id = ? AND deleted_at IS NULL`
-	_, err := r.db(ctx).ExecContext(ctx, query, userID)
-	return err
+	return r.DB(ctx).UserStat.Update().
+		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil(), userstat.ArticleCountGT(0)).
+		AddArticleCount(-1).
+		Exec(ctx)
 }
 
-func (r *UserRepo) SetReceiveLikeCount(ctx context.Context, userID uint64, count int64) error {
-	const query = `
-UPDATE user
-SET receive_like_count = ?, updated_at = NOW(3)
-WHERE id = ? AND deleted_at IS NULL`
-	_, err := r.db(ctx).ExecContext(ctx, query, count, userID)
-	return err
-}
+// =====================================================================================================================
 
-func (r *UserRepo) UpdateProfile(ctx context.Context, user *entity.User) error {
-	const query = `
-UPDATE user
-SET name = ?, phone = ?, sex = ?, birthday = ?, signature = ?, updated_at = NOW(3)
-WHERE id = ? AND deleted_at IS NULL`
-
-	_, err := r.db(ctx).ExecContext(ctx, query, user.Name, user.Phone, user.Sex.String(), user.Birthday, user.Signature, user.ID)
+func (r *UserRepo) UpdateProfile(ctx context.Context, value *entity.User) error {
+	_, err := r.db.User.Update().
+		Where(user.IDEQ(value.ID), user.DeletedAtIsNil()).
+		SetName(value.Name).
+		SetPhone(value.Phone).
+		SetSex(user.Sex(value.Sex)).
+		SetBirthday(value.Birthday).
+		SetSignature(value.Signature).
+		Save(ctx)
 	return err
 }
 
 func (r *UserRepo) UpdateAvatar(ctx context.Context, userID uint64, avatar string) error {
-	const query = `
-UPDATE user
-SET avatar = ?, updated_at = NOW(3)
-WHERE id = ? AND deleted_at IS NULL`
-
-	_, err := r.db(ctx).ExecContext(ctx, query, avatar, userID)
+	_, err := r.db.User.Update().
+		Where(user.IDEQ(userID), user.DeletedAtIsNil()).
+		SetAvatar(avatar).
+		Save(ctx)
 	return err
 }
 
-func (r *UserRepo) UpdatePassword(ctx context.Context, userID uint64, hashedPassword string) error {
-	const query = `
-UPDATE user 
-SET password = ?, updated_at = NOW() 
-WHERE id = ?`
-
-	result, err := r.db(ctx).ExecContext(ctx, query, hashedPassword, userID)
-	if err != nil {
-		return err
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if rowsAffected == 0 {
+func (r *UserRepo) UpdatePassword(ctx context.Context, userID uint64, password string) error {
+	err := r.db.User.UpdateOneID(userID).SetPassword(password).Exec(ctx)
+	if ent.IsNotFound(err) {
 		return errors.New("user not found")
 	}
-
-	return nil
+	return err
 }
 
 func (r *UserRepo) UpdateStatus(ctx context.Context, userID uint64, status enum.UserStatus) error {
-	result, err := r.db(ctx).ExecContext(ctx, `
-UPDATE user
-SET status = ?, updated_at = NOW(3)
-	WHERE id = ? AND deleted_at IS NULL`, status.String(), userID)
-	if err != nil {
-		return err
-	}
-	changed, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if changed == 0 {
-		return sql.ErrNoRows
-	}
-	return nil
+	err := r.db.User.UpdateOneID(userID).
+		Where(user.DeletedAtIsNil()).
+		SetStatus(user.Status(status.String())).
+		Exec(ctx)
+	return err
 }

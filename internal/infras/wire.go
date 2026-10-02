@@ -5,28 +5,27 @@ import (
 	"core-server/internal/infras/cache"
 	"core-server/internal/infras/clog"
 	"core-server/internal/infras/mq/kafka"
-	"core-server/internal/infras/repov2"
 
 	"github.com/google/wire"
 )
 
 var RepoProviderSet = wire.NewSet(
 	// v2 ent 版本
-	repov2.NewEntClient,
-	repov2.NewLikeRepo,
-	repov2.NewCountRepo,
-	repov2.NewUserRepo,
-	repov2.NewCategoryRepo,
-	repov2.NewArticleRepo,
-	repov2.NewCommentRepo,
+	repo.NewEntClient,
+	repo.NewLikeRepo,
+	repo.NewCountRepo,
+	repo.NewUserRepo,
+	repo.NewCategoryRepo,
+	repo.NewArticleRepo,
+	repo.NewCommentRepo,
 	// todo 新操作
 
-	wire.Bind(new(domain.LikeRepoDomain), new(*repov2.LikeRepo)),
-	wire.Bind(new(domain.CountRepoDomain), new(*repov2.CountRepo)),
-	wire.Bind(new(domain.UserRepoDomain), new(*repov2.UserRepo)),
-	wire.Bind(new(domain.CategoryRepoDomain), new(*repov2.CategoryRepo)),
-	wire.Bind(new(domain.ArticleRepoDomain), new(*repov2.ArticleRepo)),
-	wire.Bind(new(domain.CommentRepoDomain), new(*repov2.CommentRepo)),
+	wire.Bind(new(domain.LikeRepoDomain), new(*repo.LikeRepo)),
+	wire.Bind(new(domain.CountRepoDomain), new(*repo.CountRepo)),
+	wire.Bind(new(domain.UserRepoDomain), new(*repo.UserRepo)),
+	wire.Bind(new(domain.CategoryRepoDomain), new(*repo.CategoryRepo)),
+	wire.Bind(new(domain.ArticleRepoDomain), new(*repo.ArticleRepo)),
+	wire.Bind(new(domain.CommentRepoDomain), new(*repo.CommentRepo)),
 )
 
 var CacheProviderSet = wire.NewSet(

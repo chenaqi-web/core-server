@@ -2,244 +2,307 @@ package repo
 
 import (
 	"context"
+	"core-server/internal/infras/repo/ent/user"
 	"core-server/internal/model/aggregate"
+	"core-server/internal/model/enum"
+	"errors"
 	"time"
 
+	"core-server/internal/infras/repo/ent"
+	"core-server/internal/infras/repo/ent/article"
+	"core-server/internal/infras/repo/ent/predicate"
 	"core-server/internal/model/entity"
-	"core-server/internal/model/enum"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type ArticleRepo struct {
-	*DBClient
+	*EntClient
 }
 
+func NewArticleRepo(client *EntClient) *ArticleRepo {
+	return &ArticleRepo{
+		EntClient: client,
+	}
+}
+
+// Create 创建一篇文章
+func (r *ArticleRepo) Create(ctx context.Context, value *entity.Article) error {
+	// 判断作者是否存在用户表里面
+	exists, _ := r.db.User.Query().
+		Where(user.IDEQ(value.AuthorID)).
+		Exist(ctx)
+	if !exists {
+		return errors.New("user not found")
+	}
+
+	create := r.DB(ctx).Article.Create().
+		SetTitle(value.Title).
+		SetSummary(value.Summary).
+		SetContent(value.Content).
+		SetCoverImage(value.CoverImage).
+		SetAuthorID(value.AuthorID).
+		SetCategoryID(value.CategoryID).
+		SetIsTop(value.IsTop).
+		SetIsPublished(value.IsPublished)
+	if value.PublishedAt.Valid {
+		create.SetPublishedAt(value.PublishedAt.Time)
+	}
+
+	_, err := create.Save(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Edit 编辑文章 需要做权限校验，无法编辑他人的文章
 func (r *ArticleRepo) Edit(ctx context.Context, value *entity.Article) error {
-	//TODO implement me
-	panic("implement me")
+	update := r.DB(ctx).Article.Update().
+		SetTitle(value.Title).
+		SetSummary(value.Summary).
+		SetContent(value.Content).
+		SetCoverImage(value.CoverImage).
+		SetCategoryID(value.CategoryID).
+		SetIsPublished(value.IsPublished).
+		SetIsTop(value.IsTop).
+		Where(article.IDEQ(value.ID), article.AuthorIDEQ(value.AuthorID), article.DeletedAtIsNil())
+	if value.IsPublished {
+		update.SetPublishedAt(time.Now())
+	} else {
+		update.ClearPublishedAt()
+	}
+
+	affected, err := update.Save(ctx)
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return ErrNotFound
+	}
+	return err
 }
 
 func (r *ArticleRepo) PublishDraft(ctx context.Context, id, authorID uint64) error {
-	const query = `
-UPDATE blog_article
-SET is_published = 1, published_at = ?, updated_at = ?
-WHERE id = ? AND author_id = ? AND is_published = 0 AND deleted_at IS NULL`
-	now := time.Now()
-	result, err := r.db(ctx).ExecContext(ctx, query, now, now, id, authorID)
+	affected, err := r.DB(ctx).Article.Update().
+		Where(article.IDEQ(id), article.AuthorIDEQ(authorID), article.IsPublishedEQ(false), article.DeletedAtIsNil()).
+		SetIsPublished(true).
+		SetPublishedAt(time.Now()).
+		Save(ctx)
 	if err != nil {
 		return err
 	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if rowsAffected == 0 {
+	if affected == 0 {
 		return ErrNotFound
 	}
 	return nil
 }
 
-func NewArticleRepo(client *DBClient) *ArticleRepo {
-	return &ArticleRepo{DBClient: client}
-}
-
-func (r *ArticleRepo) Create(ctx context.Context, article *entity.Article) error {
-	now := time.Now()
-	const query = `
-INSERT INTO blog_article 
-    (title, summary, content, cover_image, author_id,
-     category_id, is_top, view_count, like_count, comment_count,
-     created_at, updated_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-
-	_, err := r.db(ctx).ExecContext(ctx, query,
-		article.Title,
-		article.Summary,
-		article.Content,
-		article.CoverImage,
-		article.AuthorID,
-		article.CategoryID,
-		article.IsTop,
-		0,   // view_count 默认 0
-		0,   // like_count 默认 0
-		0,   // comment_count 默认 0
-		now, // created_at
-		now, // updated_at
-	)
-	return err
-}
-
 func (r *ArticleRepo) DeleteByID(ctx context.Context, id, authorID uint64, role string) (*aggregate.ArticleAggregate, error) {
-	var deleted entity.Article
-	query := `
-SELECT id, created_at, updated_at, deleted_at, title, summary, content, cover_image, author_id, category_id, is_top, is_published, view_count, like_count, favor_count, comment_count, published_at
-FROM blog_article
-WHERE id = ? AND is_published = 1 AND deleted_at IS NULL`
-	args := []any{id}
-	if role != enum.UserRoleAdmin.String() {
-		query += " AND author_id = ?"
-		args = append(args, authorID)
+	now := time.Now()
+	predicates := []predicate.Article{
+		article.IDEQ(id),
+		article.IsPublishedEQ(true),
+		article.DeletedAtIsNil(),
 	}
-	if err := r.db(ctx).GetContext(ctx, &deleted, query, args...); err != nil {
+	if role != enum.UserRoleAdmin.String() {
+		predicates = append(predicates, article.AuthorIDEQ(authorID))
+	}
+
+	node, err := r.DB(ctx).Article.Query().
+		Where(predicates...).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 
-	now := time.Now()
-	update := `
-UPDATE blog_article 
-SET deleted_at = ?, updated_at = ? 
-WHERE id = ? AND is_published = 1 AND deleted_at IS NULL`
-	updateArgs := []any{now, now, id}
-	if role != enum.UserRoleAdmin.String() {
-		update += " AND author_id = ?"
-		updateArgs = append(updateArgs, authorID)
-	}
-	result, err := r.db(ctx).ExecContext(ctx, update, updateArgs...)
+	affected, err := r.DB(ctx).Article.Update().
+		Where(predicates...).
+		SetDeletedAt(now).
+		Save(ctx)
 	if err != nil {
 		return nil, err
 	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return nil, err
-	}
-	if rowsAffected == 0 {
+	if affected == 0 {
 		return nil, ErrNotFound
 	}
-	return &aggregate.ArticleAggregate{Article: &deleted}, nil
+	return toEntityArticleAggregate(node), nil
 }
 
 func (r *ArticleRepo) DeleteDraftByID(ctx context.Context, id, authorID uint64) error {
 	now := time.Now()
-	const query = `
-UPDATE blog_article
-SET deleted_at = ?, updated_at = ?
-WHERE id = ? AND author_id = ? AND is_published = 0 AND deleted_at IS NULL`
-	result, err := r.db(ctx).ExecContext(ctx, query, now, now, id, authorID)
+	affected, err := r.DB(ctx).Article.Update().
+		Where(article.IDEQ(id), article.AuthorIDEQ(authorID), article.IsPublishedEQ(false), article.DeletedAtIsNil()).
+		SetDeletedAt(now).
+		Save(ctx)
 	if err != nil {
 		return err
 	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if rowsAffected == 0 {
+	if affected == 0 {
 		return ErrNotFound
 	}
 	return nil
 }
 
-func (r *ArticleRepo) GetByID(ctx context.Context, id uint64) (*entity.Article, error) {
-	var a entity.Article
-	const query = `
-SELECT id, created_at, updated_at, deleted_at, title, summary, content, cover_image, author_id, category_id, is_top, view_count, like_count, comment_count
-FROM blog_article
-WHERE id = ? AND deleted_at IS NULL
-LIMIT 1`
-
-	err := r.db(ctx).GetContext(ctx, &a, query, id)
+// GetByID 根据 ID 查询单篇未删除且已发布的文章（前台详情页，过滤草稿）
+func (r *ArticleRepo) GetByID(ctx context.Context, id uint64) (*aggregate.ArticleAggregate, error) {
+	node, err := r.DB(ctx).Article.Query().
+		Where(article.IDEQ(id), article.DeletedAtIsNil(), article.IsPublishedEQ(true)).
+		WithCategory().
+		WithUser().
+		Only(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
-	return &a, nil
+	return toEntityArticleAggregate(node), nil
 }
 
-func (r *ArticleRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*entity.Article, error) {
+func (r *ArticleRepo) GetByIDForManage(ctx context.Context, id uint64) (*aggregate.ArticleAggregate, error) {
+	node, err := r.DB(ctx).Article.Query().
+		Where(article.IDEQ(id), article.DeletedAtIsNil()).
+		WithCategory().
+		WithUser().
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return toEntityArticleAggregate(node), nil
+}
+
+// ListByIDs 根据 ID 批量查询未删除的文章
+func (r *ArticleRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*aggregate.ArticleAggregate, error) {
 	if len(ids) == 0 {
 		return nil, nil
 	}
 
-	const baseQuery = `
-SELECT id, created_at, updated_at, deleted_at, title, summary, content, cover_image, author_id, category_id, is_top, view_count, like_count, comment_count
-FROM blog_article
-WHERE id IN (?) AND deleted_at IS NULL`
-
-	query, args, err := sqlx.In(baseQuery, ids)
+	nodes, err := r.DB(ctx).Article.Query().
+		Where(article.IDIn(ids...), article.DeletedAtIsNil(), article.IsPublishedEQ(true)).
+		WithCategory().
+		WithUser().
+		All(ctx)
 	if err != nil {
 		return nil, err
 	}
-	query = r.DB.Rebind(query)
-
-	var articles []*entity.Article
-	if err := r.db(ctx).SelectContext(ctx, &articles, query, args...); err != nil {
-		return nil, err
-	}
-	return articles, nil
+	return toEntityArticleAggregates(nodes), nil
 }
 
-func (r *ArticleRepo) List(ctx context.Context, offset, limit int) ([]*entity.Article, error) {
-	var items []*entity.Article
-	const query = `
-SELECT id, created_at, updated_at, deleted_at, title, summary, content, cover_image, author_id, category_id, is_top, view_count, like_count, comment_count
-FROM blog_article
-WHERE deleted_at IS NULL
-ORDER BY id DESC
-LIMIT ?, ?`
-
-	if err := r.db(ctx).SelectContext(ctx, &items, query, offset, limit); err != nil {
+// List 分页查询全部已发布文章，按 ID 倒序
+func (r *ArticleRepo) List(ctx context.Context, page, pageSize int) ([]*aggregate.ArticleAggregate, error) {
+	nodes, err := r.DB(ctx).Article.Query().
+		Where(article.DeletedAtIsNil(), article.IsPublishedEQ(true)).
+		WithCategory().
+		WithUser().
+		Order(ent.Desc(article.FieldID)).
+		Offset(page).
+		Limit(pageSize).
+		All(ctx)
+	if err != nil {
 		return nil, err
 	}
-	return items, nil
+	return toEntityArticleAggregates(nodes), nil
 }
 
-func (r *ArticleRepo) ListByAuthor(ctx context.Context, authorID uint64, offset, limit int) ([]*entity.Article, error) {
-	var items []*entity.Article
-	const query = `
-SELECT id, created_at, updated_at, deleted_at, title, summary, content, cover_image, author_id, category_id, is_top, view_count, like_count, comment_count
-FROM blog_article
-WHERE author_id = ? AND deleted_at IS NULL
-ORDER BY id DESC
-LIMIT ?, ?`
+// ListByAuthor 分页查询某个作者的文章，可按发布状态筛选，按 ID 倒序
+func (r *ArticleRepo) ListByAuthor(ctx context.Context, authorID uint64, offset, limit int, isPublished *bool) ([]*aggregate.ArticleAggregate, error) {
+	predicates := []predicate.Article{
+		article.AuthorIDEQ(authorID),
+		article.DeletedAtIsNil(),
+	}
+	if isPublished != nil {
+		predicates = append(predicates, article.IsPublishedEQ(*isPublished))
+	}
 
-	if err := r.db(ctx).SelectContext(ctx, &items, query, authorID, offset, limit); err != nil {
+	nodes, err := r.DB(ctx).Article.Query().
+		Where(predicates...).
+		WithCategory().
+		WithUser().
+		Order(ent.Desc(article.FieldID)).
+		Offset(offset).
+		Limit(limit).
+		All(ctx)
+	if err != nil {
 		return nil, err
 	}
-	return items, nil
+	return toEntityArticleAggregates(nodes), nil
 }
 
 func (r *ArticleRepo) CountByAuthor(ctx context.Context, authorID uint64, isPublished *bool) (uint64, error) {
-	var total uint64
-	query := `SELECT COUNT(*) FROM blog_article WHERE author_id = ? AND deleted_at IS NULL`
-	args := []any{authorID}
-	if isPublished != nil {
-		query += " AND is_published = ?"
-		args = append(args, *isPublished)
+	predicates := []predicate.Article{
+		article.AuthorIDEQ(authorID),
+		article.DeletedAtIsNil(),
 	}
-	if err := r.db(ctx).GetContext(ctx, &total, query, args...); err != nil {
+	if isPublished != nil {
+		predicates = append(predicates, article.IsPublishedEQ(*isPublished))
+	}
+
+	total, err := r.DB(ctx).Article.Query().
+		Where(predicates...).
+		Count(ctx)
+	if err != nil {
 		return 0, err
 	}
-	return total, nil
+	return uint64(total), nil
 }
 
-func (r *ArticleRepo) ListByCategory(ctx context.Context, categoryID uint64, offset, limit int) ([]*entity.Article, error) {
-	var items []*entity.Article
-	const query = `
-SELECT id, created_at, updated_at, deleted_at, title, summary, content, cover_image, author_id, category_id, is_top, view_count, like_count, comment_count
-FROM blog_article
-WHERE category_id = ? AND deleted_at IS NULL
-ORDER BY id DESC
-LIMIT ?, ?`
-
-	if err := r.db(ctx).SelectContext(ctx, &items, query, categoryID, offset, limit); err != nil {
+// ListMe 查看自己的全部文章 (含草稿和私密文章)
+func (r *ArticleRepo) ListMe(ctx context.Context, userID uint64, offset, limit int) ([]*entity.Article, error) {
+	nodes, err := r.DB(ctx).Article.Query().
+		Where(article.AuthorIDEQ(userID), article.DeletedAtIsNil()).
+		Order(ent.Desc(article.FieldID)).
+		Offset(offset).
+		Limit(limit).
+		All(ctx)
+	if err != nil {
 		return nil, err
 	}
-	return items, nil
+	return toEntityArticles(nodes), nil
 }
 
-func (r *ArticleRepo) Search(ctx context.Context, name string, offset, limit int) ([]*entity.Article, error) {
-	var items []*entity.Article
-	const query = `
-SELECT id, created_at, updated_at, deleted_at, title, summary, content, cover_image, author_id, category_id, is_top, view_count, like_count, comment_count
-FROM blog_article
-WHERE (title LIKE ? OR summary LIKE ? OR content LIKE ?) AND deleted_at IS NULL
-ORDER BY id DESC
-LIMIT ?, ?`
-
-	like := "%" + name + "%"
-	if err := r.db(ctx).SelectContext(ctx, &items, query, like, like, like, offset, limit); err != nil {
+// ListByCategory 分页查询某个分类下的已发布文章，按 ID 倒序
+func (r *ArticleRepo) ListByCategory(ctx context.Context, categoryID uint64, offset, limit int) ([]*aggregate.ArticleAggregate, error) {
+	nodes, err := r.DB(ctx).Article.Query().
+		Where(article.CategoryIDEQ(categoryID), article.DeletedAtIsNil(), article.IsPublishedEQ(true)).
+		WithCategory().
+		WithUser().
+		Order(ent.Desc(article.FieldID)).
+		Offset(offset).
+		Limit(limit).
+		All(ctx)
+	if err != nil {
 		return nil, err
 	}
-	return items, nil
+	return toEntityArticleAggregates(nodes), nil
 }
 
-// todo 记得写管理员文章删除
+// Search 按标题、摘要、正文模糊搜索已发布文章，按 ID 倒序
+func (r *ArticleRepo) Search(ctx context.Context, name string, offset, limit int) ([]*aggregate.ArticleAggregate, error) {
+	nodes, err := r.DB(ctx).Article.Query().
+		Where(
+			article.DeletedAtIsNil(),
+			article.IsPublishedEQ(true),
+			article.Or(
+				article.TitleContains(name),
+				article.SummaryContains(name),
+				article.ContentContains(name),
+			),
+		).
+		WithCategory().
+		WithUser().
+		Order(ent.Desc(article.FieldID)).
+		Offset(offset).
+		Limit(limit).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return toEntityArticleAggregates(nodes), nil
+}

@@ -2,175 +2,132 @@ package repo
 
 import (
 	"context"
-	"database/sql"
-	"errors"
-	"fmt"
 	"time"
 
+	"core-server/internal/infras/repo/ent"
+	"core-server/internal/infras/repo/ent/comment"
+	"core-server/internal/model/aggregate"
 	"core-server/internal/model/entity"
-	"github.com/jmoiron/sqlx"
 )
 
-type CommentRepo struct {
-	*DBClient
+type CommentRepo struct{ *EntClient }
+
+func NewCommentRepo(client *EntClient) *CommentRepo {
+	return &CommentRepo{EntClient: client}
 }
 
-func NewCommentRepo(client *DBClient) *CommentRepo {
-	return &CommentRepo{DBClient: client}
-}
-
-const commentSelectColumns = `
-id, article_id, user_id, root_id, reply_to_id,
-content, like_count, child_count, created_at, deleted_at`
-
-func (r *CommentRepo) CreateComment(ctx context.Context, comment *entity.Comment) (uint64, error) {
-	now := time.Now()
-	const query = `
-INSERT INTO comment
-    (article_id, user_id, root_id, reply_to_id,
-     content, like_count, child_count, created_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-
-	result, err := r.db(ctx).ExecContext(ctx, query,
-		comment.ArticleID, comment.UserID, comment.RootID,
-		comment.ReplyToID, comment.Content, comment.LikeCount, comment.ChildCount, now,
-	)
+func (r *CommentRepo) CreateComment(ctx context.Context, value *entity.Comment) (uint64, error) {
+	node, err := r.DB(ctx).Comment.Create().
+		SetArticleID(value.ArticleID).
+		SetUserID(value.UserID).
+		SetRootID(value.RootID).
+		SetReplyToID(value.ReplyToID).
+		SetContent(value.Content).
+		SetLikeCount(value.LikeCount).
+		SetChildCount(value.ChildCount).
+		Save(ctx)
 	if err != nil {
 		return 0, err
 	}
-	id, err := result.LastInsertId()
-	if err != nil {
-		return 0, err
-	}
-	return uint64(id), nil
+	return node.ID, nil
 }
 
-func (r *CommentRepo) CreateReply(ctx context.Context, comment *entity.Comment) (uint64, error) {
-	now := time.Now()
-	const query = `
-INSERT INTO comment
-    (article_id, user_id, root_id, reply_to_id,
-     content, like_count, child_count, created_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-
-	result, err := r.db(ctx).ExecContext(ctx, query,
-		comment.ArticleID, comment.UserID, comment.RootID,
-		comment.ReplyToID, comment.Content, comment.LikeCount, comment.ChildCount, now,
-	)
-	if err != nil {
-		return 0, err
-	}
-	id, err := result.LastInsertId()
-	if err != nil {
-		return 0, err
-	}
-	return uint64(id), nil
+func (r *CommentRepo) CreateReply(ctx context.Context, value *entity.Comment) (uint64, error) {
+	return r.CreateComment(ctx, value)
 }
 
-func (r *CommentRepo) GetByID(ctx context.Context, id uint64) (*entity.Comment, error) {
-	var c entity.Comment
-	query := fmt.Sprintf(`SELECT %s FROM comment WHERE id = ? AND deleted_at IS NULL LIMIT 1`, commentSelectColumns)
-	err := r.db(ctx).GetContext(ctx, &c, query, id)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil
-	}
+func (r *CommentRepo) GetByID(ctx context.Context, id uint64) (*aggregate.CommentAggregate, error) {
+	node, err := r.DB(ctx).Comment.Query().
+		Where(comment.IDEQ(id), comment.DeletedAtIsNil()).
+		WithUser().
+		WithArticle().
+		Only(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
-	return &c, nil
+	return aggregate.NewCommentAggregate(toEntityComment(node), toEntityUser(node.Edges.User)), nil
 }
 
-func (r *CommentRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*entity.Comment, error) {
+func (r *CommentRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*aggregate.CommentAggregate, error) {
 	if len(ids) == 0 {
 		return nil, nil
 	}
-	var items []*entity.Comment
-	baseQuery := fmt.Sprintf(`SELECT %s FROM comment WHERE id IN (?) AND deleted_at IS NULL`, commentSelectColumns)
-	query, args, err := sqlx.In(baseQuery, ids)
+	nodes, err := r.DB(ctx).Comment.Query().
+		Where(comment.IDIn(ids...), comment.DeletedAtIsNil()).
+		WithUser().
+		WithArticle().
+		All(ctx)
 	if err != nil {
 		return nil, err
 	}
-	if err := r.db(ctx).SelectContext(ctx, &items, query, args...); err != nil {
-		return nil, err
-	}
-	return items, nil
+	return toEntityCommentAggregates(nodes), nil
 }
 
 func (r *CommentRepo) SoftDelete(ctx context.Context, id, userID uint64) error {
-	now := time.Now()
-	const query = `
-UPDATE comment
-SET deleted_at = ?
-WHERE id = ? AND user_id = ? AND deleted_at IS NULL`
-	result, err := r.db(ctx).ExecContext(ctx, query, now, id, userID)
+	affected, err := r.DB(ctx).Comment.Update().
+		Where(comment.IDEQ(id), comment.UserIDEQ(userID), comment.DeletedAtIsNil()).
+		SetDeletedAt(time.Now()).
+		Save(ctx)
 	if err != nil {
 		return err
 	}
-	rows, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if rows == 0 {
+	if affected == 0 {
 		return ErrNotFound
 	}
 	return nil
 }
 
 func (r *CommentRepo) SoftDeleteRepliesByRoot(ctx context.Context, rootID uint64) (int64, error) {
-	now := time.Now()
-	const query = `
-UPDATE comment
-SET deleted_at = ?
-WHERE root_id = ? AND deleted_at IS NULL`
-	result, err := r.db(ctx).ExecContext(ctx, query, now, rootID)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected()
+	affected, err := r.DB(ctx).Comment.Update().
+		Where(comment.RootIDEQ(rootID), comment.DeletedAtIsNil()).
+		SetDeletedAt(time.Now()).
+		Save(ctx)
+	return int64(affected), err
 }
 
 func (r *CommentRepo) IncrementChildCount(ctx context.Context, rootID uint64) error {
-	const query = `
-UPDATE comment
-SET child_count = child_count + 1
-WHERE id = ? AND deleted_at IS NULL`
-	_, err := r.db(ctx).ExecContext(ctx, query, rootID)
-	return err
+	return r.DB(ctx).Comment.Update().
+		Where(comment.IDEQ(rootID), comment.DeletedAtIsNil()).
+		AddChildCount(1).
+		Exec(ctx)
 }
 
 func (r *CommentRepo) DecrementChildCount(ctx context.Context, rootID uint64) error {
-	const query = `
-UPDATE comment
-SET child_count = CASE WHEN child_count > 0 THEN child_count - 1 ELSE 0 END
-WHERE id = ? AND deleted_at IS NULL`
-	_, err := r.db(ctx).ExecContext(ctx, query, rootID)
-	return err
+	return r.DB(ctx).Comment.Update().
+		Where(comment.IDEQ(rootID), comment.DeletedAtIsNil(), comment.ChildCountGT(0)).
+		AddChildCount(-1).
+		Exec(ctx)
 }
 
-func (r *CommentRepo) ListTopByArticle(ctx context.Context, articleID uint64, offset, limit int) ([]*entity.Comment, error) {
-	var items []*entity.Comment
-	query := fmt.Sprintf(`
-SELECT %s FROM comment
-WHERE article_id = ? AND root_id = 0 AND deleted_at IS NULL
-ORDER BY created_at DESC
-LIMIT ?, ?`, commentSelectColumns)
-
-	if err := r.db(ctx).SelectContext(ctx, &items, query, articleID, offset, limit); err != nil {
+func (r *CommentRepo) ListTopByArticle(ctx context.Context, articleID uint64, offset, limit int) ([]*aggregate.CommentAggregate, error) {
+	nodes, err := r.DB(ctx).Comment.Query().
+		Where(comment.ArticleIDEQ(articleID), comment.RootIDEQ(0), comment.DeletedAtIsNil()).
+		WithUser().
+		WithArticle().
+		Order(ent.Desc(comment.FieldCreatedAt)).
+		Offset(offset).
+		Limit(limit).
+		All(ctx)
+	if err != nil {
 		return nil, err
 	}
-	return items, nil
+	return toEntityCommentAggregates(nodes), nil
 }
 
-func (r *CommentRepo) ListRepliesByRoot(ctx context.Context, rootID uint64, offset, limit int) ([]*entity.Comment, error) {
-	var items []*entity.Comment
-	query := fmt.Sprintf(`
-SELECT %s FROM comment
-WHERE root_id = ? AND deleted_at IS NULL
-ORDER BY created_at ASC
-LIMIT ?, ?`, commentSelectColumns)
-
-	if err := r.db(ctx).SelectContext(ctx, &items, query, rootID, offset, limit); err != nil {
+func (r *CommentRepo) ListRepliesByRoot(ctx context.Context, rootID uint64, offset, limit int) ([]*aggregate.CommentAggregate, error) {
+	nodes, err := r.DB(ctx).Comment.Query().
+		Where(comment.RootIDEQ(rootID), comment.DeletedAtIsNil()).
+		WithUser().
+		WithArticle().
+		Order(ent.Asc(comment.FieldCreatedAt)).
+		Offset(offset).
+		Limit(limit).
+		All(ctx)
+	if err != nil {
 		return nil, err
 	}
-	return items, nil
+	return toEntityCommentAggregates(nodes), nil
 }
