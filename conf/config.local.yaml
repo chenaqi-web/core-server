@@ -7,7 +7,7 @@ Log:
   Filename: "logs/core-server.log"
 
 Mysql:
-  Host: "mysql8.4.7"
+  Host: "mysql"
   Port: "3306"
   username: "root"
   password: "123456"
@@ -17,7 +17,7 @@ Mysql:
   Max_Open_Conn: 100
 
 Redis:
-  Host: "redis-filterbloom"
+  Host: "redis"
   Port: "6379"
   username: ""
   password: ""

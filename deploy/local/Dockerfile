@@ -12,7 +12,7 @@ ENV GOPROXY=https://goproxy.cn,direct
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY .. .
+COPY . .
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/core-server ./cmd/server
 
 FROM ${ALPINE_IMAGE}
