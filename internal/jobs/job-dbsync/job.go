@@ -33,9 +33,10 @@ type MessageQueueConsumer struct {
 	redisClient *cache.CacheClient
 
 	// database
-	likeRepo  domain.LikeRepoDomain
-	countRepo domain.CountRepoDomain
-	userRepo  domain.UserRepoDomain
+	likeRepo    domain.LikeRepoDomain
+	countRepo   domain.CountRepoDomain
+	userRepo    domain.UserRepoDomain
+	articleRepo domain.ArticleRepoDomain
 
 	// cache
 	likeCache domain.LikeCacheDomain
@@ -59,6 +60,7 @@ func NewMessageQueueConsumer(
 	likeRepo domain.LikeRepoDomain,
 	countRepo domain.CountRepoDomain,
 	userRepo domain.UserRepoDomain,
+	articleRepo domain.ArticleRepoDomain,
 	likeCache domain.LikeCacheDomain,
 ) *MessageQueueConsumer {
 
@@ -70,6 +72,7 @@ func NewMessageQueueConsumer(
 		countRepo:    countRepo,
 		likeCache:    likeCache,
 		userRepo:     userRepo,
+		articleRepo:  articleRepo,
 		producer:     producer,
 		dlqTopic:     cfg.Kafka.DlqTopicName(),
 	}

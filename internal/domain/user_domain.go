@@ -31,11 +31,10 @@ type UserRepo interface {
 
 	// 个人主页方面的接口
 
-	GetLikeCount(ctx context.Context, userID uint64) (int64, error)
-	GetReceiveLikeCount(ctx context.Context, userID uint64) (int64, error)
-	SetReceiveLikeCount(ctx context.Context, userID uint64, count int64) error
 	IncrementLikeCount(ctx context.Context, userID uint64) error
 	DecrementLikeCount(ctx context.Context, userID uint64) error
+	IncrementReceiveLikeCount(ctx context.Context, userID uint64) error
+	DecrementReceiveLikeCount(ctx context.Context, userID uint64) error
 	IncrementArticleCount(ctx context.Context, userID uint64) error
 	DecrementArticleCount(ctx context.Context, userID uint64) error
 }

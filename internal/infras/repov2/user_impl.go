@@ -171,22 +171,6 @@ func (r *UserRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User,
 
 // =====================================================================================================================
 
-func (r *UserRepo) GetLikeCount(ctx context.Context, userID uint64) (int64, error) {
-	stat, err := r.GetUserStat(ctx, userID)
-	if err != nil || stat == nil {
-		return 0, err
-	}
-	return int64(stat.LikeCount), nil
-}
-
-func (r *UserRepo) GetReceiveLikeCount(ctx context.Context, userID uint64) (int64, error) {
-	stat, err := r.GetUserStat(ctx, userID)
-	if err != nil || stat == nil {
-		return 0, err
-	}
-	return int64(stat.ReceiveLikeCount), nil
-}
-
 func (r *UserRepo) IncrementLikeCount(ctx context.Context, userID uint64) error {
 	return r.db.UserStat.Update().
 		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil()).
@@ -201,6 +185,20 @@ func (r *UserRepo) DecrementLikeCount(ctx context.Context, userID uint64) error 
 		Exec(ctx)
 }
 
+func (r *UserRepo) IncrementReceiveLikeCount(ctx context.Context, userID uint64) error {
+	return r.DB(ctx).UserStat.Update().
+		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil()).
+		AddReceiveLikeCount(1).
+		Exec(ctx)
+}
+
+func (r *UserRepo) DecrementReceiveLikeCount(ctx context.Context, userID uint64) error {
+	return r.DB(ctx).UserStat.Update().
+		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil(), userstat.ReceiveLikeCountGT(0)).
+		AddReceiveLikeCount(-1).
+		Exec(ctx)
+}
+
 func (r *UserRepo) IncrementArticleCount(ctx context.Context, userID uint64) error {
 	return r.DB(ctx).UserStat.Update().
 		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil()).
@@ -212,16 +210,6 @@ func (r *UserRepo) DecrementArticleCount(ctx context.Context, userID uint64) err
 	return r.DB(ctx).UserStat.Update().
 		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil(), userstat.ArticleCountGT(0)).
 		AddArticleCount(-1).
-		Exec(ctx)
-}
-
-func (r *UserRepo) SetReceiveLikeCount(ctx context.Context, userID uint64, count int64) error {
-	if count < 0 {
-		count = 0
-	}
-	return r.db.UserStat.Update().
-		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil()).
-		SetReceiveLikeCount(uint64(count)).
 		Exec(ctx)
 }
 
