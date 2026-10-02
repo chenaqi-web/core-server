@@ -17,7 +17,7 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/core-server ./cmd/
 
 FROM ${ALPINE_IMAGE}
 
-ARG CONFIG_FILE=conf/config.prod.yaml
+ARG CONFIG_FILE=conf/config.local.yaml
 
 WORKDIR /app
 

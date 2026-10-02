@@ -13,7 +13,7 @@ services:
     ports:
       - "3306:3306"
     networks:
-      - chenaqi-net-local
+      - local
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
@@ -27,7 +27,7 @@ services:
     ports:
       - "6379:6379"
     networks:
-      - chenaqi-net-local
+      - local
     restart: unless-stopped
 
   chroma:
@@ -42,10 +42,10 @@ services:
     ports:
       - "8000:8000"
     networks:
-      - chenaqi-net-local
+      - local
     restart: unless-stopped
 
 networks:
-  chenaqi-net-local:
-    name: chenaqi-net-local
+  local:
+    name: local
     driver: bridge
