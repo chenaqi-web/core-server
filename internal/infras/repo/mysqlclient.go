@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type EntClient struct {
