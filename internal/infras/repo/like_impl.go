@@ -16,12 +16,13 @@ func NewLikeRepo(client *EntClient) *LikeRepo { return &LikeRepo{EntClient: clie
 
 func (r *LikeRepo) Upsert(ctx context.Context, like *entity.InteractionLike) (int, error) {
 	const query = `
-INSERT INTO interaction_like (user_id, object_type, object_id, status, version, created_at, updated_at)
-VALUES (?, ?, ?, ?, ?, NOW(3), NOW(3))
-ON DUPLICATE KEY UPDATE
-  status = IF(@skip := (status = ? AND version >= VALUES(version)), status, VALUES(status)),
-  version = IF(@skip, version, VALUES(version)),
-  updated_at = IF(@skip, updated_at, NOW(3))`
+		INSERT INTO interaction_like (...)
+		VALUES (...)
+		ON DUPLICATE KEY UPDATE
+		  status = IF(status = 'ThumbUp' AND version >= VALUES(version), status, VALUES(status)),
+		  version = IF(status = 'ThumbUp' AND version >= VALUES(version), version, VALUES(version)),
+		  updated_at = IF(status = 'ThumbUp' AND version >= VALUES(version), updated_at, NOW(3))
+  `
 	driver, ok := r.driver.(interface {
 		ExecContext(context.Context, string, ...any) (stdsql.Result, error)
 	})

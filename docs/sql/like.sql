@@ -2,7 +2,7 @@
 -- 点赞交互表
 -- =====================================================
 CREATE TABLE IF NOT EXISTS `interaction_like` (
-                                                  `id` VARCHAR(64) NOT NULL COMMENT '主键ID',
+    `id` VARCHAR(64) auto_increment NOT NULL COMMENT '主键ID',
     `user_id` VARCHAR(64) NOT NULL COMMENT '用户ID',
     `object_type` VARCHAR(32) NOT NULL COMMENT '对象类型（如：post, comment, video等）',
     `object_id` VARCHAR(64) NOT NULL COMMENT '对象ID',

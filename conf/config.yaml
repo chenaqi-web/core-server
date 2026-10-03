@@ -26,7 +26,7 @@ Redis:
 
 
 Kafka:
-  Enabled: true
+  Enabled: false
   Version: "4.2.0"
   Host: "127.0.0.1:9092"
   MaxRetry: 3

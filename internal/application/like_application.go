@@ -10,6 +10,8 @@ import (
 	"core-server/internal/model/aggregate"
 	"core-server/internal/model/entity"
 	"core-server/internal/model/enum"
+
+	"github.com/avast/retry-go"
 )
 
 type LikeService struct {
@@ -60,6 +62,7 @@ func (s *LikeService) HasThumbUp(ctx context.Context, userID uint64, objectType 
 // 点赞操作
 
 func (s *LikeService) ThumbUp(ctx context.Context, userID uint64, objectType string, objectID uint64) error {
+	// 首先判断点赞是否已经存在
 	exists, err := s.HasThumbUp(ctx, userID, objectType, objectID)
 	if err != nil {
 		return err
@@ -76,14 +79,22 @@ func (s *LikeService) ThumbUp(ctx context.Context, userID uint64, objectType str
 		Version:    time.Now().UnixMicro(),
 	}
 
+	mark := true
+
+	// 开始操作点赞
 	err = s.repo.WithTransaction(ctx, func(ctx context.Context) error {
 		affected, err := s.repo.Upsert(ctx, like)
 		if err != nil {
 			return err
 		}
+		// upsert 0表示无变化或未生效，1表示成功，2表示更新了原有的点赞状态（这里1，2都是1）
 		if affected == 0 {
+			// 无影响，则计数不需要+1
+			mark = false
 			return nil
 		}
+
+		// 更新计数表
 		if err := s.countService.repo.Upsert(ctx, &entity.InteractionCount{
 			ObjectType:      enum.ParseObjectType(objectType),
 			ObjectID:        objectID,
@@ -91,6 +102,8 @@ func (s *LikeService) ThumbUp(ctx context.Context, userID uint64, objectType str
 		}, 1); err != nil {
 			return err
 		}
+
+		// 更新用户点赞数
 		if err := s.userRepo.IncrementLikeCount(ctx, userID); err != nil {
 			return err
 		}
@@ -99,6 +112,11 @@ func (s *LikeService) ThumbUp(ctx context.Context, userID uint64, objectType str
 	if err != nil {
 		s.log.Error("Error in ThumbUp transaction")
 		return err
+	}
+
+	// 没问题异步增加作者的获赞数
+	if mark {
+		s.asyncUpdateObjectAuthorReceiveLikeCount(objectType, objectID, 1)
 	}
 
 	return nil
@@ -121,12 +139,16 @@ func (s *LikeService) CancelThumbUp(ctx context.Context, userID uint64, objectTy
 		Version:    time.Now().UnixMicro(),
 	}
 
-	return s.repo.WithTransaction(ctx, func(ctx context.Context) error {
+	mark := true
+
+	err = s.repo.WithTransaction(ctx, func(ctx context.Context) error {
 		affected, err := s.repo.UpdateWithCondition(ctx, entity.LikeStatusTypeThumbUp.String(), like)
 		if err != nil {
 			return err
 		}
 		if affected == 0 {
+			// 无影响，则计数不需要-1
+			mark = false
 			return nil
 		}
 		if err := s.countService.repo.Upsert(ctx, &entity.InteractionCount{
@@ -141,6 +163,71 @@ func (s *LikeService) CancelThumbUp(ctx context.Context, userID uint64, objectTy
 		}
 		return nil
 	})
+	if err != nil {
+		s.log.Error("Error in CancelThumbUp transaction")
+		return err
+	}
+
+	// 没问题异步减少作者的获赞数
+	if mark {
+		s.asyncUpdateObjectAuthorReceiveLikeCount(objectType, objectID, -1)
+	}
+
+	return nil
+}
+
+func (s *LikeService) asyncUpdateObjectAuthorReceiveLikeCount(objectType string, objectID uint64, delta int) {
+	go func() {
+		syncCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		err := retry.Do(func() error {
+			authorID, err := s.getObjectAuthorID(syncCtx, objectType, objectID)
+			if err != nil {
+				return err
+			}
+			if authorID == 0 {
+				return nil
+			}
+			return s.updateReceiveLikeCount(syncCtx, authorID, delta)
+		},
+			retry.Attempts(3),
+			retry.MaxDelay(10*time.Second),
+			retry.DelayType(retry.BackOffDelay),
+		)
+		if err != nil {
+			s.log.Error("Error in asyncUpdateObjectAuthorReceiveLikeCount")
+			return
+		}
+	}()
+}
+
+func (s *LikeService) getObjectAuthorID(ctx context.Context, objectType string, objectID uint64) (uint64, error) {
+	switch enum.ParseObjectType(objectType) {
+	case enum.ObjectTypeArticle:
+		article, err := s.articleRepo.GetByID(ctx, objectID)
+		if err != nil {
+			return 0, err
+		}
+		if article == nil || article.Article == nil {
+			return 0, ErrArticleNotFound
+		}
+		return article.Article.AuthorID, nil
+	default:
+		// 后续新增 objectType 时，在这里补充对应对象的作者查询。
+		return 0, nil
+	}
+}
+
+func (s *LikeService) updateReceiveLikeCount(ctx context.Context, userID uint64, delta int) error {
+	if userID == 0 || delta == 0 {
+		return nil
+	}
+
+	if delta > 0 {
+		return s.userRepo.IncrementReceiveLikeCount(ctx, userID)
+	}
+	return s.userRepo.DecrementReceiveLikeCount(ctx, userID)
 }
 
 // =====================================================================================================================
