@@ -26,7 +26,7 @@ var (
 		{Name: "like_count", Type: field.TypeInt, Default: 0},
 		{Name: "favor_count", Type: field.TypeInt, Default: 0},
 		{Name: "comment_count", Type: field.TypeInt, Default: 0},
-		{Name: "category_id", Type: field.TypeUint64, Unique: true},
+		{Name: "category_id", Type: field.TypeUint64, Unique: true, Nullable: true, Default: 0},
 		{Name: "author_id", Type: field.TypeUint64, Unique: true},
 	}
 	// ArticleTable holds the schema information for the "article" table.
@@ -39,7 +39,7 @@ var (
 				Symbol:     "article_category_articles",
 				Columns:    []*schema.Column{ArticleColumns[15]},
 				RefColumns: []*schema.Column{CategoryColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "article_user_articles",

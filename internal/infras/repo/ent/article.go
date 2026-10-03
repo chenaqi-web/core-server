@@ -37,7 +37,7 @@ type Article struct {
 	CoverImage string `json:"cover_image,omitempty"`
 	// 作者ID
 	AuthorID uint64 `json:"author_id,omitempty"`
-	// 分类ID
+	// 分类ID，0 表示其它
 	CategoryID uint64 `json:"category_id,omitempty"`
 	// 是否置顶 默认为不置顶
 	IsTop bool `json:"is_top,omitempty"`

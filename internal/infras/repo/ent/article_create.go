@@ -131,6 +131,14 @@ func (_c *ArticleCreate) SetCategoryID(v uint64) *ArticleCreate {
 	return _c
 }
 
+// SetNillableCategoryID sets the "category_id" field if the given value is not nil.
+func (_c *ArticleCreate) SetNillableCategoryID(v *uint64) *ArticleCreate {
+	if v != nil {
+		_c.SetCategoryID(*v)
+	}
+	return _c
+}
+
 // SetIsTop sets the "is_top" field.
 func (_c *ArticleCreate) SetIsTop(v bool) *ArticleCreate {
 	_c.mutation.SetIsTop(v)
@@ -303,6 +311,10 @@ func (_c *ArticleCreate) defaults() {
 		v := article.DefaultCoverImage
 		_c.mutation.SetCoverImage(v)
 	}
+	if _, ok := _c.mutation.CategoryID(); !ok {
+		v := article.DefaultCategoryID
+		_c.mutation.SetCategoryID(v)
+	}
 	if _, ok := _c.mutation.IsTop(); !ok {
 		v := article.DefaultIsTop
 		_c.mutation.SetIsTop(v)
@@ -352,9 +364,6 @@ func (_c *ArticleCreate) check() error {
 	if _, ok := _c.mutation.AuthorID(); !ok {
 		return &ValidationError{Name: "author_id", err: errors.New(`ent: missing required field "Article.author_id"`)}
 	}
-	if _, ok := _c.mutation.CategoryID(); !ok {
-		return &ValidationError{Name: "category_id", err: errors.New(`ent: missing required field "Article.category_id"`)}
-	}
 	if _, ok := _c.mutation.IsTop(); !ok {
 		return &ValidationError{Name: "is_top", err: errors.New(`ent: missing required field "Article.is_top"`)}
 	}
@@ -375,9 +384,6 @@ func (_c *ArticleCreate) check() error {
 	}
 	if len(_c.mutation.UserIDs()) == 0 {
 		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "Article.user"`)}
-	}
-	if len(_c.mutation.CategoryIDs()) == 0 {
-		return &ValidationError{Name: "category", err: errors.New(`ent: missing required edge "Article.category"`)}
 	}
 	return nil
 }

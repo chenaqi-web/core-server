@@ -561,9 +561,22 @@ func (m *ArticleMutation) OldCategoryID(ctx context.Context) (v uint64, err erro
 	return oldValue.CategoryID, nil
 }
 
+// ClearCategoryID clears the value of the "category_id" field.
+func (m *ArticleMutation) ClearCategoryID() {
+	m.category = nil
+	m.clearedFields[article.FieldCategoryID] = struct{}{}
+}
+
+// CategoryIDCleared returns if the "category_id" field was cleared in this mutation.
+func (m *ArticleMutation) CategoryIDCleared() bool {
+	_, ok := m.clearedFields[article.FieldCategoryID]
+	return ok
+}
+
 // ResetCategoryID resets all changes to the "category_id" field.
 func (m *ArticleMutation) ResetCategoryID() {
 	m.category = nil
+	delete(m.clearedFields, article.FieldCategoryID)
 }
 
 // SetIsTop sets the "is_top" field.
@@ -964,7 +977,7 @@ func (m *ArticleMutation) ClearCategory() {
 
 // CategoryCleared reports if the "category" edge to the Category entity was cleared.
 func (m *ArticleMutation) CategoryCleared() bool {
-	return m.clearedcategory
+	return m.CategoryIDCleared() || m.clearedcategory
 }
 
 // CategoryIDs returns the "category" edge IDs in the mutation.
@@ -1355,6 +1368,9 @@ func (m *ArticleMutation) ClearedFields() []string {
 	if m.FieldCleared(article.FieldPublishedAt) {
 		fields = append(fields, article.FieldPublishedAt)
 	}
+	if m.FieldCleared(article.FieldCategoryID) {
+		fields = append(fields, article.FieldCategoryID)
+	}
 	return fields
 }
 
@@ -1374,6 +1390,9 @@ func (m *ArticleMutation) ClearField(name string) error {
 		return nil
 	case article.FieldPublishedAt:
 		m.ClearPublishedAt()
+		return nil
+	case article.FieldCategoryID:
+		m.ClearCategoryID()
 		return nil
 	}
 	return fmt.Errorf("unknown Article nullable field %s", name)

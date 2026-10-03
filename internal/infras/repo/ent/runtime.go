@@ -38,6 +38,10 @@ func init() {
 	articleDescCoverImage := articleFields[8].Descriptor()
 	// article.DefaultCoverImage holds the default value on creation for the cover_image field.
 	article.DefaultCoverImage = articleDescCoverImage.Default.(string)
+	// articleDescCategoryID is the schema descriptor for category_id field.
+	articleDescCategoryID := articleFields[10].Descriptor()
+	// article.DefaultCategoryID holds the default value on creation for the category_id field.
+	article.DefaultCategoryID = articleDescCategoryID.Default.(uint64)
 	// articleDescIsTop is the schema descriptor for is_top field.
 	articleDescIsTop := articleFields[11].Descriptor()
 	// article.DefaultIsTop holds the default value on creation for the is_top field.

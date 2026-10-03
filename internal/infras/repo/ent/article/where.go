@@ -615,6 +615,16 @@ func CategoryIDNotIn(vs ...uint64) predicate.Article {
 	return predicate.Article(sql.FieldNotIn(FieldCategoryID, vs...))
 }
 
+// CategoryIDIsNil applies the IsNil predicate on the "category_id" field.
+func CategoryIDIsNil() predicate.Article {
+	return predicate.Article(sql.FieldIsNull(FieldCategoryID))
+}
+
+// CategoryIDNotNil applies the NotNil predicate on the "category_id" field.
+func CategoryIDNotNil() predicate.Article {
+	return predicate.Article(sql.FieldNotNull(FieldCategoryID))
+}
+
 // IsTopEQ applies the EQ predicate on the "is_top" field.
 func IsTopEQ(v bool) predicate.Article {
 	return predicate.Article(sql.FieldEQ(FieldIsTop, v))

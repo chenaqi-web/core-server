@@ -175,6 +175,12 @@ func (_u *ArticleUpdate) SetNillableCategoryID(v *uint64) *ArticleUpdate {
 	return _u
 }
 
+// ClearCategoryID clears the value of the "category_id" field.
+func (_u *ArticleUpdate) ClearCategoryID() *ArticleUpdate {
+	_u.mutation.ClearCategoryID()
+	return _u
+}
+
 // SetIsTop sets the "is_top" field.
 func (_u *ArticleUpdate) SetIsTop(v bool) *ArticleUpdate {
 	_u.mutation.SetIsTop(v)
@@ -396,9 +402,6 @@ func (_u *ArticleUpdate) defaults() {
 func (_u *ArticleUpdate) check() error {
 	if _u.mutation.UserCleared() && len(_u.mutation.UserIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Article.user"`)
-	}
-	if _u.mutation.CategoryCleared() && len(_u.mutation.CategoryIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "Article.category"`)
 	}
 	return nil
 }
@@ -742,6 +745,12 @@ func (_u *ArticleUpdateOne) SetNillableCategoryID(v *uint64) *ArticleUpdateOne {
 	return _u
 }
 
+// ClearCategoryID clears the value of the "category_id" field.
+func (_u *ArticleUpdateOne) ClearCategoryID() *ArticleUpdateOne {
+	_u.mutation.ClearCategoryID()
+	return _u
+}
+
 // SetIsTop sets the "is_top" field.
 func (_u *ArticleUpdateOne) SetIsTop(v bool) *ArticleUpdateOne {
 	_u.mutation.SetIsTop(v)
@@ -976,9 +985,6 @@ func (_u *ArticleUpdateOne) defaults() {
 func (_u *ArticleUpdateOne) check() error {
 	if _u.mutation.UserCleared() && len(_u.mutation.UserIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Article.user"`)
-	}
-	if _u.mutation.CategoryCleared() && len(_u.mutation.CategoryIDs()) > 0 {
-		return errors.New(`ent: clearing a required unique edge "Article.category"`)
 	}
 	return nil
 }

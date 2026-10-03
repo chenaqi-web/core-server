@@ -35,7 +35,7 @@ func (Article) Fields() []ent.Field {
 		field.String("content").Comment("文章正文"),
 		field.String("cover_image").Default("").Comment("封面图片"),
 		field.Uint64("author_id").Comment("作者ID"),
-		field.Uint64("category_id").Comment("分类ID"),
+		field.Uint64("category_id").Optional().Default(0).Comment("分类ID，0 表示其它"),
 		field.Bool("is_top").Default(false).Comment("是否置顶 默认为不置顶"),
 		field.Bool("is_published").Default(true).Comment("是否发布 默认发布"),
 		field.Int("view_count").Default(0).Comment("浏览量"),
@@ -60,8 +60,7 @@ func (Article) Edges() []ent.Edge {
 		edge.From("category", Category.Type).
 			Ref("articles").      // Category 里的边叫 "articles",
 			Field("category_id"). // 外键字段
-			Unique().             // 唯一
-			Required(),           // 必须设置
+			Unique(),             // 唯一
 
 	}
 }

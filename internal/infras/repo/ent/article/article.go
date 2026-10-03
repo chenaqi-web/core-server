@@ -119,6 +119,8 @@ var (
 	DefaultSummary string
 	// DefaultCoverImage holds the default value on creation for the "cover_image" field.
 	DefaultCoverImage string
+	// DefaultCategoryID holds the default value on creation for the "category_id" field.
+	DefaultCategoryID uint64
 	// DefaultIsTop holds the default value on creation for the "is_top" field.
 	DefaultIsTop bool
 	// DefaultIsPublished holds the default value on creation for the "is_published" field.
