@@ -11,4 +11,7 @@ var ProviderSet = wire.NewSet(
 	NewArticleService,
 	NewCommentService,
 	NewCountService,
+
+	// 测试异步点赞
+	//NewSyncLikeService,
 )

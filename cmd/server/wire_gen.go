@@ -38,7 +38,7 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 		return nil, err
 	}
 	kafkaManager := kafka.NewKafkaManager(cfg, topicManager)
-	likeRepo := repo.NewLikeRepo(entClient)
+	likeRepo := repo.NewSyncLikeRepo(entClient)
 	countRepo := repo.NewCountRepo(entClient)
 	userRepo := repo.NewUserRepo(entClient)
 	iLikeCache := cache.NewILikeCache(cacheClient)
@@ -47,7 +47,7 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 	userService := application.NewUserService(userRepo, log)
 	authRPC := rpc.NewAuthRPC(userService)
 	countService := application.NewCountService(log, countRepo)
-	likeService, err := application.NewLikeService(log, likeRepo, iLikeCache, syncProducer, articleRepo, userRepo, countService, cfg)
+	likeService, err := application.NewLikeService(log, likeRepo, articleRepo, userRepo, countService, cfg)
 	if err != nil {
 		return nil, err
 	}

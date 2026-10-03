@@ -76,7 +76,11 @@ func (r *LikeRepo) CountUserLiked(ctx context.Context, userID uint64, objectType
 
 func (r *LikeRepo) PageQueryLikeObjects(ctx context.Context, userID uint64, objectType string, offset, limit int) ([]*entity.InteractionLike, error) {
 	nodes, err := r.DB(ctx).InteractionLike.Query().
-		Where(interactionlike.UserIDEQ(userID), interactionlike.ObjectTypeEQ(interactionlike.ObjectType(objectType)), interactionlike.StatusEQ(interactionlike.StatusThumbUp)).
+		Where(
+			interactionlike.UserIDEQ(userID),
+			interactionlike.ObjectTypeEQ(interactionlike.ObjectType(objectType)),
+			interactionlike.StatusEQ(interactionlike.StatusThumbUp),
+		).
 		Order(ent.Desc(interactionlike.FieldVersion), ent.Desc(interactionlike.FieldUpdatedAt)).
 		Offset(offset).
 		Limit(limit).

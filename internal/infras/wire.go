@@ -5,6 +5,7 @@ import (
 	"core-server/internal/infras/cache"
 	"core-server/internal/infras/clog"
 	"core-server/internal/infras/mq/kafka"
+	"core-server/internal/infras/repo"
 
 	"github.com/google/wire"
 )
