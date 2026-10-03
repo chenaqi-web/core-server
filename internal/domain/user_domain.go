@@ -31,12 +31,9 @@ type UserRepo interface {
 
 	// 个人主页方面的接口
 
-	IncrementLikeCount(ctx context.Context, userID uint64) error
-	DecrementLikeCount(ctx context.Context, userID uint64) error
-	IncrementReceiveLikeCount(ctx context.Context, userID uint64) error
-	DecrementReceiveLikeCount(ctx context.Context, userID uint64) error
-	IncrementArticleCount(ctx context.Context, userID uint64) error
-	DecrementArticleCount(ctx context.Context, userID uint64) error
+	UpdateLikeCount(ctx context.Context, userID uint64, delta int64) error
+	UpdateReceiveLikeCount(ctx context.Context, userID uint64, delta int64) error
+	UpdateArticleCount(ctx context.Context, userID uint64, delta int64) error
 }
 
 type UserRepoDomain interface {

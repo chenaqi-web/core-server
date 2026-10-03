@@ -42,7 +42,7 @@ func (c *MessageQueueConsumer) handleUserLike(ctx context.Context, msg *event.Ev
 		return err
 	}
 	// 当点赞成功之后，给用户的点赞数量+1 (这个地方可以先不聚合)
-	err = c.userRepo.IncrementLikeCount(ctx, msg.UserID)
+	err = c.userRepo.UpdateLikeCount(ctx, msg.UserID, 1)
 	if err != nil {
 		return err
 	}
@@ -87,7 +87,7 @@ func (c *MessageQueueConsumer) handleUserCancelThumbUp(ctx context.Context, msg 
 	}
 
 	// 去掉点赞之后，要对用户的点赞数-1
-	err = c.userRepo.DecrementLikeCount(ctx, msg.UserID)
+	err = c.userRepo.UpdateLikeCount(ctx, msg.UserID, -1)
 	if err != nil {
 		return err
 	}

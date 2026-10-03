@@ -171,46 +171,43 @@ func (r *UserRepo) ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User,
 
 // =====================================================================================================================
 
-func (r *UserRepo) IncrementLikeCount(ctx context.Context, userID uint64) error {
-	return r.db.UserStat.Update().
-		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil()).
-		AddLikeCount(1).
-		Exec(ctx)
+func (r *UserRepo) UpdateLikeCount(ctx context.Context, userID uint64, delta int64) error {
+	if delta == 0 {
+		return nil
+	}
+
+	update := r.DB(ctx).UserStat.Update().
+		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil())
+	if delta < 0 {
+		update.Where(userstat.LikeCountGT(0))
+	}
+	return update.AddLikeCount(delta).Exec(ctx)
 }
 
-func (r *UserRepo) DecrementLikeCount(ctx context.Context, userID uint64) error {
-	return r.db.UserStat.Update().
-		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil(), userstat.LikeCountGT(0)).
-		AddLikeCount(-1).
-		Exec(ctx)
+func (r *UserRepo) UpdateReceiveLikeCount(ctx context.Context, userID uint64, delta int64) error {
+	if delta == 0 {
+		return nil
+	}
+
+	update := r.DB(ctx).UserStat.Update().
+		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil())
+	if delta < 0 {
+		update.Where(userstat.ReceiveLikeCountGT(0))
+	}
+	return update.AddReceiveLikeCount(delta).Exec(ctx)
 }
 
-func (r *UserRepo) IncrementReceiveLikeCount(ctx context.Context, userID uint64) error {
-	return r.DB(ctx).UserStat.Update().
-		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil()).
-		AddReceiveLikeCount(1).
-		Exec(ctx)
-}
+func (r *UserRepo) UpdateArticleCount(ctx context.Context, userID uint64, delta int64) error {
+	if delta == 0 {
+		return nil
+	}
 
-func (r *UserRepo) DecrementReceiveLikeCount(ctx context.Context, userID uint64) error {
-	return r.DB(ctx).UserStat.Update().
-		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil(), userstat.ReceiveLikeCountGT(0)).
-		AddReceiveLikeCount(-1).
-		Exec(ctx)
-}
-
-func (r *UserRepo) IncrementArticleCount(ctx context.Context, userID uint64) error {
-	return r.DB(ctx).UserStat.Update().
-		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil()).
-		AddArticleCount(1).
-		Exec(ctx)
-}
-
-func (r *UserRepo) DecrementArticleCount(ctx context.Context, userID uint64) error {
-	return r.DB(ctx).UserStat.Update().
-		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil(), userstat.ArticleCountGT(0)).
-		AddArticleCount(-1).
-		Exec(ctx)
+	update := r.DB(ctx).UserStat.Update().
+		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil())
+	if delta < 0 {
+		update.Where(userstat.ArticleCountGT(0))
+	}
+	return update.AddArticleCount(delta).Exec(ctx)
 }
 
 // =====================================================================================================================

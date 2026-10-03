@@ -62,7 +62,7 @@ func (s *ArticleService) CreateArticle(ctx context.Context, req *dto.CreateArtic
 			return err
 		}
 		if a.IsPublished {
-			return s.userRepo.IncrementArticleCount(ctx, a.AuthorID)
+			return s.userRepo.UpdateArticleCount(ctx, a.AuthorID, 1)
 		}
 		return nil
 	}); err != nil {
@@ -98,7 +98,7 @@ func (s *ArticleService) DeleteArticle(ctx context.Context, req *dto.DelArticleR
 		if err != nil {
 			return err
 		}
-		return s.userRepo.DecrementArticleCount(ctx, res.Article.AuthorID)
+		return s.userRepo.UpdateArticleCount(ctx, res.Article.AuthorID, -1)
 	}); err != nil {
 		s.log.Error("DeleteArticle error", zap.Error(err))
 		return err
@@ -114,7 +114,7 @@ func (s *ArticleService) PublishDraft(ctx context.Context, req *dto.PublishDraft
 		if err := s.ArtRepo.PublishDraft(ctx, req.ID, req.AuthorID); err != nil {
 			return err
 		}
-		return s.userRepo.IncrementArticleCount(ctx, req.AuthorID)
+		return s.userRepo.UpdateArticleCount(ctx, req.AuthorID, 1)
 	}); err != nil {
 		s.log.Error("PublishDraft error", zap.Error(err))
 		return err

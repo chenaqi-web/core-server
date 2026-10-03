@@ -104,7 +104,7 @@ func (s *LikeService) ThumbUp(ctx context.Context, userID uint64, objectType str
 		}
 
 		// 更新用户点赞数
-		if err := s.userRepo.IncrementLikeCount(ctx, userID); err != nil {
+		if err := s.userRepo.UpdateLikeCount(ctx, userID, 1); err != nil {
 			return err
 		}
 		return nil
@@ -158,7 +158,7 @@ func (s *LikeService) CancelThumbUp(ctx context.Context, userID uint64, objectTy
 		}, -1); err != nil {
 			return err
 		}
-		if err := s.userRepo.DecrementLikeCount(ctx, userID); err != nil {
+		if err := s.userRepo.UpdateLikeCount(ctx, userID, -1); err != nil {
 			return err
 		}
 		return nil
@@ -224,10 +224,7 @@ func (s *LikeService) updateReceiveLikeCount(ctx context.Context, userID uint64,
 		return nil
 	}
 
-	if delta > 0 {
-		return s.userRepo.IncrementReceiveLikeCount(ctx, userID)
-	}
-	return s.userRepo.DecrementReceiveLikeCount(ctx, userID)
+	return s.userRepo.UpdateReceiveLikeCount(ctx, userID, int64(delta))
 }
 
 // =====================================================================================================================
