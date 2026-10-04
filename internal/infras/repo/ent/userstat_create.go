@@ -83,6 +83,20 @@ func (_c *UserStatCreate) SetNillableArticleCount(v *uint64) *UserStatCreate {
 	return _c
 }
 
+// SetViewCount sets the "view_count" field.
+func (_c *UserStatCreate) SetViewCount(v uint64) *UserStatCreate {
+	_c.mutation.SetViewCount(v)
+	return _c
+}
+
+// SetNillableViewCount sets the "view_count" field if the given value is not nil.
+func (_c *UserStatCreate) SetNillableViewCount(v *uint64) *UserStatCreate {
+	if v != nil {
+		_c.SetViewCount(*v)
+	}
+	return _c
+}
+
 // SetFollowersCount sets the "followers_count" field.
 func (_c *UserStatCreate) SetFollowersCount(v uint64) *UserStatCreate {
 	_c.mutation.SetFollowersCount(v)
@@ -229,6 +243,10 @@ func (_c *UserStatCreate) defaults() {
 		v := userstat.DefaultUpdatedAt()
 		_c.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := _c.mutation.ViewCount(); !ok {
+		v := userstat.DefaultViewCount
+		_c.mutation.SetViewCount(v)
+	}
 	if _, ok := _c.mutation.FollowersCount(); !ok {
 		v := userstat.DefaultFollowersCount
 		_c.mutation.SetFollowersCount(v)
@@ -269,6 +287,9 @@ func (_c *UserStatCreate) check() error {
 	}
 	if _, ok := _c.mutation.UserID(); !ok {
 		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "UserStat.user_id"`)}
+	}
+	if _, ok := _c.mutation.ViewCount(); !ok {
+		return &ValidationError{Name: "view_count", err: errors.New(`ent: missing required field "UserStat.view_count"`)}
 	}
 	if _, ok := _c.mutation.FollowersCount(); !ok {
 		return &ValidationError{Name: "followers_count", err: errors.New(`ent: missing required field "UserStat.followers_count"`)}
@@ -335,6 +356,10 @@ func (_c *UserStatCreate) createSpec() (*UserStat, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.ArticleCount(); ok {
 		_spec.SetField(userstat.FieldArticleCount, field.TypeUint64, value)
 		_node.ArticleCount = value
+	}
+	if value, ok := _c.mutation.ViewCount(); ok {
+		_spec.SetField(userstat.FieldViewCount, field.TypeUint64, value)
+		_node.ViewCount = value
 	}
 	if value, ok := _c.mutation.FollowersCount(); ok {
 		_spec.SetField(userstat.FieldFollowersCount, field.TypeUint64, value)

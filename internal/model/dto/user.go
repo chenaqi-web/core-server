@@ -49,12 +49,14 @@ type GetProfileResponse struct {
 	Status    enum.UserStatus
 
 	ArticleCount      uint64
+	ViewCount         uint64
 	FollowersCount    uint64
 	FollowingCount    uint64
 	LikeCount         uint64
 	ReceiveLikeCount  uint64
 	FavorCount        uint64
 	ReceiveFavorCount uint64
+	CommentCount      uint64
 }
 
 type UpdateProfileRequest struct {
@@ -133,12 +135,14 @@ func ToGetProfileResponse(user *entity.User, stat *entity.UserStat) *GetProfileR
 		Role:              user.Role,
 		Status:            user.Status,
 		ArticleCount:      stat.ArticleCount,
+		ViewCount:         stat.ViewCount,
 		FollowersCount:    stat.FollowersCount,
 		FollowingCount:    stat.FollowingCount,
 		LikeCount:         stat.LikeCount,
 		ReceiveLikeCount:  stat.ReceiveLikeCount,
 		FavorCount:        stat.FavorCount,
 		ReceiveFavorCount: stat.ReceiveFavorCount,
+		CommentCount:      stat.CommentCount,
 	}
 }
 

@@ -11,6 +11,8 @@ import (
 	"go.uber.org/zap"
 )
 
+// 这里作为一个计数中心，是可以单独拆分出去的
+
 type CountService struct {
 	log       *clog.Log
 	repo      domain.CountRepoDomain
@@ -27,17 +29,7 @@ func NewCountService(
 	}
 }
 
-func (s *CountService) IncrementArticleView(ctx context.Context, articleID uint64) error {
-	if err := s.repo.Upsert(ctx, &entity.InteractionCount{
-		ObjectType:      enum.ObjectTypeArticle,
-		ObjectID:        articleID,
-		InteractionType: enum.InteractionTypeView,
-	}, 1); err != nil {
-		s.log.Error("IncrementArticleView error:", zap.Error(err))
-		return err
-	}
-	return nil
-}
+// 获取计数
 
 func (s *CountService) GetArticleInteractionCount(ctx context.Context, articleID uint64) (*entity.InteractionStats, error) {
 	storedCounts, err := s.repo.GetByObject(ctx, enum.ObjectTypeArticle, articleID)
@@ -90,4 +82,19 @@ func (s *CountService) BatchGetArticleInteractionCounts(ctx context.Context, art
 		}
 	}
 	return statsByArticleID, nil
+}
+
+// =====================================================================================================================
+// 计数修改
+
+func (s *CountService) UpdateObjectTypeWithInteractionType(ctx context.Context, object, interaction string, objectID uint64, delta int64) error {
+	if err := s.repo.Upsert(ctx, &entity.InteractionCount{
+		ObjectType:      enum.ParseObjectType(object),
+		ObjectID:        objectID,
+		InteractionType: enum.ParseInteractionType(interaction),
+	}, delta); err != nil {
+		s.log.Error("UpdateObjectTypeWithInteractionType error:", zap.Error(err))
+		return err
+	}
+	return nil
 }

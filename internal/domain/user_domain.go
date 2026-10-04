@@ -34,6 +34,8 @@ type UserRepo interface {
 	UpdateLikeCount(ctx context.Context, userID uint64, delta int64) error
 	UpdateReceiveLikeCount(ctx context.Context, userID uint64, delta int64) error
 	UpdateArticleCount(ctx context.Context, userID uint64, delta int64) error
+	UpdateViewCount(ctx context.Context, userID uint64, delta int64) error
+	UpdateCommentCount(ctx context.Context, userID uint64, delta int64) error
 }
 
 type UserRepoDomain interface {

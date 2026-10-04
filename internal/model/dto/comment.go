@@ -52,8 +52,9 @@ func CreateReplyRequestFromPB(req *commentpb.CreateReplyReq) *CreateReplyRequest
 // 删除评论
 
 type DeleteCommentRequest struct {
-	ID     uint64
-	UserID uint64
+	ID        uint64
+	ArticleID uint64
+	UserID    uint64
 }
 
 type GetArticleCommentsRequest struct {
@@ -100,8 +101,9 @@ func DeleteCommentRequestFromPB(req *commentpb.DeleteCommentReq) *DeleteCommentR
 		return nil
 	}
 	return &DeleteCommentRequest{
-		ID:     req.GetId(),
-		UserID: req.GetUserId(),
+		ID:        req.GetId(),
+		ArticleID: req.GetArticleId(),
+		UserID:    req.GetUserId(),
 	}
 }
 

@@ -4,6 +4,7 @@ type UserStat struct {
 	UserID uint64 `db:"user_id"`
 
 	ArticleCount uint64 `db:"article_count"`
+	ViewCount    uint64 `db:"view_count"`
 
 	FollowersCount uint64 `db:"followers_count"`
 	FollowingCount uint64 `db:"following_count"`

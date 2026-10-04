@@ -41,6 +41,8 @@ func (u *UserRPC) GetProfile(ctx context.Context, request *userpb.GetProfileRequ
 		FavorCount:        res.FavorCount,
 		ReceiveFavorCount: res.ReceiveFavorCount,
 		ArticleCount:      res.ArticleCount,
+		ViewCount:         res.ViewCount,
+		CommentCount:      res.CommentCount,
 	}, nil
 }
 

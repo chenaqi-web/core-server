@@ -50,6 +50,7 @@ func toEntityUserStat(stat *ent.UserStat) *entity.UserStat {
 	return &entity.UserStat{
 		UserID:            stat.UserID,
 		ArticleCount:      stat.ArticleCount,
+		ViewCount:         stat.ViewCount,
 		FollowersCount:    stat.FollowersCount,
 		FollowingCount:    stat.FollowingCount,
 		LikeCount:         stat.LikeCount,

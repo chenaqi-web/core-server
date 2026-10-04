@@ -28,6 +28,8 @@ type UserStat struct {
 	UserID uint64 `json:"user_id,omitempty"`
 	// 发帖/文章数量
 	ArticleCount uint64 `json:"article_count,omitempty"`
+	// 浏览量总数
+	ViewCount uint64 `json:"view_count,omitempty"`
 	// 粉丝数
 	FollowersCount uint64 `json:"followers_count,omitempty"`
 	// 关注数
@@ -73,7 +75,7 @@ func (*UserStat) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case userstat.FieldID, userstat.FieldUserID, userstat.FieldArticleCount, userstat.FieldFollowersCount, userstat.FieldFollowingCount, userstat.FieldLikeCount, userstat.FieldReceiveLikeCount, userstat.FieldFavorCount, userstat.FieldReceiveFavorCount, userstat.FieldCommentCount:
+		case userstat.FieldID, userstat.FieldUserID, userstat.FieldArticleCount, userstat.FieldViewCount, userstat.FieldFollowersCount, userstat.FieldFollowingCount, userstat.FieldLikeCount, userstat.FieldReceiveLikeCount, userstat.FieldFavorCount, userstat.FieldReceiveFavorCount, userstat.FieldCommentCount:
 			values[i] = new(sql.NullInt64)
 		case userstat.FieldCreatedAt, userstat.FieldUpdatedAt, userstat.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
@@ -128,6 +130,12 @@ func (_m *UserStat) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field article_count", values[i])
 			} else if value.Valid {
 				_m.ArticleCount = uint64(value.Int64)
+			}
+		case userstat.FieldViewCount:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field view_count", values[i])
+			} else if value.Valid {
+				_m.ViewCount = uint64(value.Int64)
 			}
 		case userstat.FieldFollowersCount:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -228,6 +236,9 @@ func (_m *UserStat) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("article_count=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ArticleCount))
+	builder.WriteString(", ")
+	builder.WriteString("view_count=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ViewCount))
 	builder.WriteString(", ")
 	builder.WriteString("followers_count=")
 	builder.WriteString(fmt.Sprintf("%v", _m.FollowersCount))

@@ -24,6 +24,8 @@ const (
 	FieldUserID = "user_id"
 	// FieldArticleCount holds the string denoting the article_count field in the database.
 	FieldArticleCount = "article_count"
+	// FieldViewCount holds the string denoting the view_count field in the database.
+	FieldViewCount = "view_count"
 	// FieldFollowersCount holds the string denoting the followers_count field in the database.
 	FieldFollowersCount = "followers_count"
 	// FieldFollowingCount holds the string denoting the following_count field in the database.
@@ -59,6 +61,7 @@ var Columns = []string{
 	FieldDeletedAt,
 	FieldUserID,
 	FieldArticleCount,
+	FieldViewCount,
 	FieldFollowersCount,
 	FieldFollowingCount,
 	FieldLikeCount,
@@ -85,6 +88,8 @@ var (
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
+	// DefaultViewCount holds the default value on creation for the "view_count" field.
+	DefaultViewCount uint64
 	// DefaultFollowersCount holds the default value on creation for the "followers_count" field.
 	DefaultFollowersCount uint64
 	// DefaultFollowingCount holds the default value on creation for the "following_count" field.
@@ -132,6 +137,11 @@ func ByUserID(opts ...sql.OrderTermOption) OrderOption {
 // ByArticleCount orders the results by the article_count field.
 func ByArticleCount(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldArticleCount, opts...).ToFunc()
+}
+
+// ByViewCount orders the results by the view_count field.
+func ByViewCount(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldViewCount, opts...).ToFunc()
 }
 
 // ByFollowersCount orders the results by the followers_count field.

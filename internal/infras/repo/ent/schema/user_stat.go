@@ -27,6 +27,7 @@ func (UserStat) Fields() []ent.Field {
 
 		field.Uint64("user_id").Unique(),
 		field.Uint64("article_count").Optional().Comment("发帖/文章数量"),
+		field.Uint64("view_count").Default(0).Comment("浏览量总数"),
 		field.Uint64("followers_count").Default(0).Comment("粉丝数"),
 		field.Uint64("following_count").Default(0).Comment("关注数"),
 		field.Uint64("like_count").Default(0).Comment("点赞总数"),

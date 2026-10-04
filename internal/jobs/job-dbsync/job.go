@@ -69,7 +69,6 @@ func NewMessageQueueConsumer(
 		kafkaManager: kafkaManager,
 		redisClient:  redisClient,
 		likeRepo:     likeRepo,
-		countRepo:    countRepo,
 		likeCache:    likeCache,
 		userRepo:     userRepo,
 		articleRepo:  articleRepo,

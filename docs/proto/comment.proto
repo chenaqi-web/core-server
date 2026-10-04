@@ -42,6 +42,7 @@ message CreateReplyResp {
 message DeleteCommentReq {
   uint64 id = 1;
   uint64 userId = 2;
+  uint64 articleId = 3;
 }
 message DeleteCommentResp {
   bool success =1;

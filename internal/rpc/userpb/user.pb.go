@@ -200,6 +200,8 @@ type GetProfileResponse struct {
 	ReceiveFavorCount uint64                 `protobuf:"varint,15,opt,name=receive_favor_count,json=receiveFavorCount,proto3" json:"receive_favor_count,omitempty"`
 	ArticleCount      uint64                 `protobuf:"varint,16,opt,name=article_count,json=articleCount,proto3" json:"article_count,omitempty"`
 	Signature         string                 `protobuf:"bytes,17,opt,name=signature,proto3" json:"signature,omitempty"`
+	ViewCount         uint64                 `protobuf:"varint,18,opt,name=view_count,json=viewCount,proto3" json:"view_count,omitempty"`
+	CommentCount      uint64                 `protobuf:"varint,19,opt,name=comment_count,json=commentCount,proto3" json:"comment_count,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -351,6 +353,20 @@ func (x *GetProfileResponse) GetSignature() string {
 		return x.Signature
 	}
 	return ""
+}
+
+func (x *GetProfileResponse) GetViewCount() uint64 {
+	if x != nil {
+		return x.ViewCount
+	}
+	return 0
+}
+
+func (x *GetProfileResponse) GetCommentCount() uint64 {
+	if x != nil {
+		return x.CommentCount
+	}
+	return 0
 }
 
 type UpdateProfileRequest struct {
@@ -908,7 +924,7 @@ const file_user_proto_rawDesc = "" +
 	"\x06status\x18\n" +
 	" \x01(\tR\x06status\",\n" +
 	"\x11GetProfileRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x04R\x06userId\"\x91\x04\n" +
+	"\auser_id\x18\x01 \x01(\x04R\x06userId\"\xd5\x04\n" +
 	"\x12GetProfileResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x14\n" +
@@ -929,7 +945,10 @@ const file_user_proto_rawDesc = "" +
 	"favorCount\x12.\n" +
 	"\x13receive_favor_count\x18\x0f \x01(\x04R\x11receiveFavorCount\x12#\n" +
 	"\rarticle_count\x18\x10 \x01(\x04R\farticleCount\x12\x1c\n" +
-	"\tsignature\x18\x11 \x01(\tR\tsignature\"\xad\x01\n" +
+	"\tsignature\x18\x11 \x01(\tR\tsignature\x12\x1d\n" +
+	"\n" +
+	"view_count\x18\x12 \x01(\x04R\tviewCount\x12#\n" +
+	"\rcomment_count\x18\x13 \x01(\x04R\fcommentCount\"\xad\x01\n" +
 	"\x14UpdateProfileRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x04R\x06userId\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x14\n" +

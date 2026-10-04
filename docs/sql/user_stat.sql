@@ -2,6 +2,7 @@ CREATE TABLE `user_stat` (
      `id` INT NOT NULL AUTO_INCREMENT COMMENT '统计记录ID',
      `user_id` BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
      `article_count` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '文章数',
+     `view_count` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '浏览量总数',
      `followers_count` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '粉丝数',
      `following_count` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '关注数',
      `like_count` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '点赞数',

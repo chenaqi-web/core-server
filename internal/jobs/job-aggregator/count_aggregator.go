@@ -2,13 +2,12 @@ package jobaggregator
 
 import (
 	"context"
-	"core-server/internal/infras/clog"
-	"sync"
-	"time"
-
 	"core-server/internal/domain"
+	"core-server/internal/infras/clog"
 	"core-server/internal/model/entity"
 	"core-server/internal/model/enum"
+	"sync"
+	"time"
 
 	"github.com/hashicorp/go-multierror"
 )

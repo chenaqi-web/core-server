@@ -41,6 +41,8 @@ message GetProfileResponse {
   uint64 receive_favor_count = 15;
   uint64 article_count = 16;
   string signature = 17;
+  uint64 view_count = 18;
+  uint64 comment_count = 19;
 }
 
 message UpdateProfileRequest {

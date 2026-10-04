@@ -94,12 +94,7 @@ func (s *LikeService) ThumbUp(ctx context.Context, userID uint64, objectType str
 			return nil
 		}
 
-		// 更新计数表
-		if err := s.countService.repo.Upsert(ctx, &entity.InteractionCount{
-			ObjectType:      enum.ParseObjectType(objectType),
-			ObjectID:        objectID,
-			InteractionType: enum.InteractionTypeLike,
-		}, 1); err != nil {
+		if err := s.countService.UpdateObjectTypeWithInteractionType(ctx, objectType, enum.InteractionTypeLike.String(), objectID, 1); err != nil {
 			return err
 		}
 
@@ -151,11 +146,7 @@ func (s *LikeService) CancelThumbUp(ctx context.Context, userID uint64, objectTy
 			mark = false
 			return nil
 		}
-		if err := s.countService.repo.Upsert(ctx, &entity.InteractionCount{
-			ObjectType:      enum.ParseObjectType(objectType),
-			ObjectID:        objectID,
-			InteractionType: enum.InteractionTypeLike,
-		}, -1); err != nil {
+		if err := s.countService.UpdateObjectTypeWithInteractionType(ctx, objectType, enum.InteractionTypeLike.String(), objectID, -1); err != nil {
 			return err
 		}
 		if err := s.userRepo.UpdateLikeCount(ctx, userID, -1); err != nil {
@@ -189,7 +180,7 @@ func (s *LikeService) asyncUpdateObjectAuthorReceiveLikeCount(objectType string,
 			if authorID == 0 {
 				return nil
 			}
-			return s.updateReceiveLikeCount(syncCtx, authorID, delta)
+			return s.userRepo.UpdateReceiveLikeCount(syncCtx, authorID, int64(delta))
 		},
 			retry.Attempts(3),
 			retry.MaxDelay(10*time.Second),
@@ -217,14 +208,6 @@ func (s *LikeService) getObjectAuthorID(ctx context.Context, objectType string, 
 		// 后续新增 objectType 时，在这里补充对应对象的作者查询。
 		return 0, nil
 	}
-}
-
-func (s *LikeService) updateReceiveLikeCount(ctx context.Context, userID uint64, delta int) error {
-	if userID == 0 || delta == 0 {
-		return nil
-	}
-
-	return s.userRepo.UpdateReceiveLikeCount(ctx, userID, int64(delta))
 }
 
 // =====================================================================================================================

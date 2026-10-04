@@ -7,6 +7,7 @@ import (
 	"core-server/internal/infras/clog"
 	"core-server/internal/model/dto"
 	"core-server/internal/model/entity"
+	"core-server/internal/model/enum"
 	"database/sql"
 	"time"
 
@@ -149,6 +150,22 @@ func (s *ArticleService) GetArticle(ctx context.Context, id uint64) (*dto.GetArt
 	res.Article.LikeCount = counts.LikeCount
 	res.Article.ViewCount = counts.ViewCount
 	res.Article.CommentCount = counts.CommentCount
+
+	// 同时浏览量+1 允许丢失
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		// 博客浏览量+1
+		_ = s.countService.UpdateObjectTypeWithInteractionType(ctx,
+			enum.ObjectTypeArticle.String(),
+			enum.InteractionTypeView.String(),
+			id,
+			1,
+		)
+
+		// 用户浏览总数+1
+		_ = s.userRepo.UpdateViewCount(ctx, res.Article.AuthorID, 1)
+	}()
 
 	return dto.ToGetArticleResponse(res), nil
 }

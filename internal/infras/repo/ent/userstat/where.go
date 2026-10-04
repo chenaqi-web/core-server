@@ -80,6 +80,11 @@ func ArticleCount(v uint64) predicate.UserStat {
 	return predicate.UserStat(sql.FieldEQ(FieldArticleCount, v))
 }
 
+// ViewCount applies equality check predicate on the "view_count" field. It's identical to ViewCountEQ.
+func ViewCount(v uint64) predicate.UserStat {
+	return predicate.UserStat(sql.FieldEQ(FieldViewCount, v))
+}
+
 // FollowersCount applies equality check predicate on the "followers_count" field. It's identical to FollowersCountEQ.
 func FollowersCount(v uint64) predicate.UserStat {
 	return predicate.UserStat(sql.FieldEQ(FieldFollowersCount, v))
@@ -313,6 +318,46 @@ func ArticleCountIsNil() predicate.UserStat {
 // ArticleCountNotNil applies the NotNil predicate on the "article_count" field.
 func ArticleCountNotNil() predicate.UserStat {
 	return predicate.UserStat(sql.FieldNotNull(FieldArticleCount))
+}
+
+// ViewCountEQ applies the EQ predicate on the "view_count" field.
+func ViewCountEQ(v uint64) predicate.UserStat {
+	return predicate.UserStat(sql.FieldEQ(FieldViewCount, v))
+}
+
+// ViewCountNEQ applies the NEQ predicate on the "view_count" field.
+func ViewCountNEQ(v uint64) predicate.UserStat {
+	return predicate.UserStat(sql.FieldNEQ(FieldViewCount, v))
+}
+
+// ViewCountIn applies the In predicate on the "view_count" field.
+func ViewCountIn(vs ...uint64) predicate.UserStat {
+	return predicate.UserStat(sql.FieldIn(FieldViewCount, vs...))
+}
+
+// ViewCountNotIn applies the NotIn predicate on the "view_count" field.
+func ViewCountNotIn(vs ...uint64) predicate.UserStat {
+	return predicate.UserStat(sql.FieldNotIn(FieldViewCount, vs...))
+}
+
+// ViewCountGT applies the GT predicate on the "view_count" field.
+func ViewCountGT(v uint64) predicate.UserStat {
+	return predicate.UserStat(sql.FieldGT(FieldViewCount, v))
+}
+
+// ViewCountGTE applies the GTE predicate on the "view_count" field.
+func ViewCountGTE(v uint64) predicate.UserStat {
+	return predicate.UserStat(sql.FieldGTE(FieldViewCount, v))
+}
+
+// ViewCountLT applies the LT predicate on the "view_count" field.
+func ViewCountLT(v uint64) predicate.UserStat {
+	return predicate.UserStat(sql.FieldLT(FieldViewCount, v))
+}
+
+// ViewCountLTE applies the LTE predicate on the "view_count" field.
+func ViewCountLTE(v uint64) predicate.UserStat {
+	return predicate.UserStat(sql.FieldLTE(FieldViewCount, v))
 }
 
 // FollowersCountEQ applies the EQ predicate on the "followers_count" field.

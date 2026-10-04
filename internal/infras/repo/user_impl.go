@@ -74,6 +74,7 @@ func (r *UserRepo) CreateUser(ctx context.Context, value *entity.User) error {
 		_, err = r.db.UserStat.Create().
 			SetUserID(node.ID).
 			SetArticleCount(0).
+			SetViewCount(0).
 			SetFollowersCount(0).
 			SetFollowingCount(0).
 			SetLikeCount(0).
@@ -208,6 +209,32 @@ func (r *UserRepo) UpdateArticleCount(ctx context.Context, userID uint64, delta 
 		update.Where(userstat.ArticleCountGT(0))
 	}
 	return update.AddArticleCount(delta).Exec(ctx)
+}
+
+func (r *UserRepo) UpdateViewCount(ctx context.Context, userID uint64, delta int64) error {
+	if delta == 0 {
+		return nil
+	}
+
+	update := r.DB(ctx).UserStat.Update().
+		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil())
+	if delta < 0 {
+		update.Where(userstat.ViewCountGT(0))
+	}
+	return update.AddViewCount(delta).Exec(ctx)
+}
+
+func (r *UserRepo) UpdateCommentCount(ctx context.Context, userID uint64, delta int64) error {
+	if delta == 0 {
+		return nil
+	}
+
+	update := r.DB(ctx).UserStat.Update().
+		Where(userstat.UserIDEQ(userID), userstat.DeletedAtIsNil())
+	if delta < 0 {
+		update.Where(userstat.CommentCountGT(0))
+	}
+	return update.AddCommentCount(delta).Exec(ctx)
 }
 
 // =====================================================================================================================
