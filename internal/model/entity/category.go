@@ -13,11 +13,3 @@ type Category struct {
 	ParentID  uint64    `db:"parent_id" json:"parent_id"`
 	Name      string    `db:"name" json:"name"`
 }
-
-func (Category) TableName() string {
-	return "category"
-}
-
-func (c *Category) IsRoot() bool {
-	return c.ParentID == RootCategoryParentID
-}

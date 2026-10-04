@@ -33,6 +33,9 @@ func (r *CategoryRepo) CreateCate(ctx context.Context, value *entity.Category) e
 	if _, err := r.DB(ctx).Category.Query().
 		Where(category.IDEQ(value.ParentID), category.ParentIDEQ(entity.RootCategoryParentID)).
 		Only(ctx); err != nil {
+		if ent.IsNotFound(err) {
+			return ErrCategoryNotFound
+		}
 		return err
 	}
 
@@ -46,24 +49,33 @@ func (r *CategoryRepo) CreateCate(ctx context.Context, value *entity.Category) e
 func (r *CategoryRepo) DeleteCate(ctx context.Context, id uint64) error {
 	err := r.DB(ctx).Category.DeleteOneID(id).Exec(ctx)
 	if ent.IsNotFound(err) {
-		return ErrNotFound
+		return ErrCategoryNotFound
 	}
 	return err
 }
 
 func (r *CategoryRepo) DeleteType(ctx context.Context, id uint64) error {
 	err := r.WithTransaction(ctx, func(ctx context.Context) error {
-		deleteBuilder := r.DB(ctx).Category.Delete().Where(category.IDEQ(id))
-		deleted, err := deleteBuilder.Exec(ctx)
+		if _, err := r.DB(ctx).Category.Query().
+			Where(category.IDEQ(id), category.ParentIDEQ(entity.RootCategoryParentID)).
+			Only(ctx); err != nil {
+			if ent.IsNotFound(err) {
+				return ErrCategoryNotFound
+			}
+			return err
+		}
+
+		// 删除二级分类
+		_, err := r.DB(ctx).Category.Delete().
+			Where(category.ParentIDEQ(id)).
+			Exec(ctx)
 		if err != nil {
 			return err
 		}
-		if deleted == 0 {
-			return ErrNotFound
-		}
 
+		// 删除该父类评论
 		_, err = r.DB(ctx).Category.Delete().
-			Where(category.ParentIDEQ(id)).
+			Where(category.IDEQ(id), category.ParentIDEQ(entity.RootCategoryParentID)).
 			Exec(ctx)
 		if err != nil {
 			return err
@@ -74,12 +86,12 @@ func (r *CategoryRepo) DeleteType(ctx context.Context, id uint64) error {
 		return err
 	}
 
-	return err
+	return nil
 }
 
 func (r *CategoryRepo) ListType(ctx context.Context) ([]*entity.Category, error) {
 	nodes, err := r.DB(ctx).Category.Query().
-		Where(category.ParentIDEQ(0)).
+		Where(category.ParentIDEQ(entity.RootCategoryParentID)).
 		Order(ent.Asc(category.FieldID)).
 		All(ctx)
 	if err != nil {

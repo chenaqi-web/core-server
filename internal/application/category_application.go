@@ -2,12 +2,9 @@ package application
 
 import (
 	"context"
-	"errors"
-
 	"core-server/internal/config"
 	"core-server/internal/domain"
 	"core-server/internal/infras/clog"
-	"core-server/internal/infras/repo"
 	"core-server/internal/model/dto"
 	"core-server/internal/model/entity"
 
@@ -36,6 +33,7 @@ func NewCategoryService(
 // 一级类型（parent_id = 0）
 
 func (s *CategoryService) CreateType(ctx context.Context, req *dto.CreateTypeRequest) error {
+	// 有唯一索引
 	if err := s.repo.CreateType(ctx, &entity.Category{
 		ParentID: entity.RootCategoryParentID,
 		Name:     req.Name,
@@ -47,9 +45,6 @@ func (s *CategoryService) CreateType(ctx context.Context, req *dto.CreateTypeReq
 }
 
 func (s *CategoryService) DeleteType(ctx context.Context, req *dto.DeleteTypeRequest) error {
-	if req == nil {
-		return errors.New("delete type request is nil")
-	}
 	if err := s.repo.DeleteType(ctx, req.ID); err != nil {
 		s.log.Error("DeleteType Error", zap.Error(err))
 		return err
@@ -81,13 +76,7 @@ func (s *CategoryService) CreateCategory(ctx context.Context, req *dto.CreateCat
 }
 
 func (s *CategoryService) DeleteCategory(ctx context.Context, req *dto.DeleteCategoryRequest) error {
-	if req == nil {
-		return errors.New("delete category request is nil")
-	}
 	if err := s.repo.DeleteCate(ctx, req.ID); err != nil {
-		if errors.Is(err, repo.ErrNotFound) {
-			return ErrCategoryNotFound
-		}
 		s.log.Error("DeleteCategory Error", zap.Error(err))
 		return err
 	}

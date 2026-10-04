@@ -8,4 +8,6 @@ type UserAggregate struct {
 
 	// 用户总计数表
 	Stat *entity.UserStat
+
+	// 用户设置等
 }
