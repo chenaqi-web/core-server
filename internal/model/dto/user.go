@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"core-server/internal/model/aggregate"
 	"core-server/internal/model/entity"
 	"core-server/internal/model/enum"
 	"time"
@@ -116,33 +117,31 @@ type SearchUsersResponse struct {
 
 // =====================================================================================================================
 
-func ToGetProfileResponse(user *entity.User, stat *entity.UserStat) *GetProfileResponse {
-	if user == nil {
+func ToGetProfileResponse(msg *aggregate.UserAggregate) *GetProfileResponse {
+	if msg == nil {
 		return nil
 	}
-	if stat == nil {
-		stat = &entity.UserStat{UserID: user.ID}
-	}
+
 	return &GetProfileResponse{
-		ID:                user.ID,
-		Username:          user.Name,
-		Email:             user.Email,
-		Phone:             user.Phone,
-		Avatar:            user.Avatar,
-		Sex:               user.Sex,
-		Signature:         user.Signature,
-		Birthday:          user.Birthday,
-		Role:              user.Role,
-		Status:            user.Status,
-		ArticleCount:      stat.ArticleCount,
-		ViewCount:         stat.ViewCount,
-		FollowersCount:    stat.FollowersCount,
-		FollowingCount:    stat.FollowingCount,
-		LikeCount:         stat.LikeCount,
-		ReceiveLikeCount:  stat.ReceiveLikeCount,
-		FavorCount:        stat.FavorCount,
-		ReceiveFavorCount: stat.ReceiveFavorCount,
-		CommentCount:      stat.CommentCount,
+		ID:                msg.User.ID,
+		Username:          msg.User.Name,
+		Email:             msg.User.Email,
+		Phone:             msg.User.Phone,
+		Avatar:            msg.User.Avatar,
+		Sex:               msg.User.Sex,
+		Signature:         msg.User.Signature,
+		Birthday:          msg.User.Birthday,
+		Role:              msg.User.Role,
+		Status:            msg.User.Status,
+		ArticleCount:      msg.Stat.ArticleCount,
+		ViewCount:         msg.Stat.ViewCount,
+		FollowersCount:    msg.Stat.FollowersCount,
+		FollowingCount:    msg.Stat.FollowingCount,
+		LikeCount:         msg.Stat.LikeCount,
+		ReceiveLikeCount:  msg.Stat.ReceiveLikeCount,
+		FavorCount:        msg.Stat.FavorCount,
+		ReceiveFavorCount: msg.Stat.ReceiveFavorCount,
+		CommentCount:      msg.Stat.CommentCount,
 	}
 }
 

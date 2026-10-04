@@ -8,13 +8,12 @@ import (
 )
 
 type UserRepo interface {
-	// 有关用户增删查的操作
+	// 有关用户查询的操作
 
 	GetByID(ctx context.Context, id uint64) (*entity.User, error)
 	GetByName(ctx context.Context, name string) (*entity.User, error)
 	GetByEmail(ctx context.Context, email string) (*entity.User, error)
 
-	CreateUser(ctx context.Context, user *entity.User) error
 	GetUserMsgByID(ctx context.Context, id uint64) (*aggregate.UserAggregate, error)
 	GetUserStat(ctx context.Context, userID uint64) (*entity.UserStat, error)
 
@@ -22,7 +21,8 @@ type UserRepo interface {
 	List(ctx context.Context, limit, offset int32) ([]*entity.User, uint64, error)
 	ListByIDs(ctx context.Context, ids []uint64) ([]*entity.User, error)
 
-	// 有关用户更新方面的操作
+	// 有关用户写操作
+	CreateUser(ctx context.Context, user *entity.User) error
 
 	UpdateProfile(ctx context.Context, user *entity.User) error
 	UpdateAvatar(ctx context.Context, userID uint64, avatar string) error

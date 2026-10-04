@@ -4,6 +4,7 @@ import (
 	"context"
 	"core-server/internal/domain"
 	"core-server/internal/infras/clog"
+	"core-server/internal/infras/repo"
 	"core-server/internal/model/dto"
 	"core-server/internal/model/entity"
 	"core-server/internal/model/enum"
@@ -17,7 +18,7 @@ var (
 	ErrInvalidCredentials = errors.New("invalid username or password")
 	ErrUserBlocked        = errors.New("USER_BLOCKED")
 	ErrEmailAlreadyInUse  = errors.New("email is already registered")
-	ErrUserNotFound       = errors.New("user not found")
+	ErrPasswordMismatch   = errors.New("passwords do not match")
 )
 
 type UserService struct {
@@ -38,26 +39,24 @@ func NewUserService(
 // 用户登入方面
 
 func (s *UserService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.LoginResponse, error) {
-	// 1.判断用户是否存在
+	// 1.Does the user exist?
 	user, err := s.repo.GetByName(ctx, req.Username)
 	if err != nil {
-		// 数据库错误
+		// DB error or Not found
 		s.log.Error("UserService/Login error:", zap.Error(err))
 		return nil, err
 	}
-	if user == nil {
-		return nil, ErrUserNotFound
+
+	// 2. Determine whether the user has been blocked.
+	if user.Status != enum.StatusApproved {
+		return nil, ErrUserBlocked
 	}
 
-	// 2.判断密码是否正确
+	// 3. Check whether the password is correct
 	if user.Password != utils.Bcrypt(req.Password) {
 		return nil, ErrInvalidCredentials
 	}
 
-	// 3.判断用户是否被拉黑
-	if user.Status != enum.StatusApproved {
-		return nil, ErrUserBlocked
-	}
 	return dto.ToLoginResponse(user), nil
 }
 
@@ -66,9 +65,6 @@ func (s *UserService) EmailLogin(ctx context.Context, req *dto.EmailLoginRequest
 	if err != nil {
 		s.log.Error("UserService/EmailLogin error:", zap.Error(err))
 		return nil, err
-	}
-	if user == nil {
-		return nil, ErrUserNotFound
 	}
 
 	if user.Status != enum.StatusApproved {
@@ -79,7 +75,7 @@ func (s *UserService) EmailLogin(ctx context.Context, req *dto.EmailLoginRequest
 
 func (s *UserService) Register(ctx context.Context, req *dto.RegisterRequest) error {
 	existing, err := s.repo.GetByEmail(ctx, req.Email)
-	if err != nil {
+	if err != nil && !errors.Is(err, repo.ErrUserNotFound) {
 		s.log.Error("UserService/Register error:", zap.Error(err))
 		return err
 	}
@@ -107,7 +103,7 @@ func (s *UserService) Register(ctx context.Context, req *dto.RegisterRequest) er
 func (s *UserService) ForgotPassword(ctx context.Context, req *dto.ForgotPasswordRequest) error {
 	// 1.校验两次密码是否相同
 	if req.Password != req.Confirm {
-		return errors.New("passwords do not match")
+		return ErrPasswordMismatch
 	}
 
 	// 2.判断该邮箱是否存在
@@ -115,9 +111,6 @@ func (s *UserService) ForgotPassword(ctx context.Context, req *dto.ForgotPasswor
 	if err != nil {
 		s.log.Error("UserService/ForgotPassword error:", zap.Error(err))
 		return err
-	}
-	if user == nil {
-		return ErrUserNotFound
 	}
 
 	// 3.更新密码
@@ -140,11 +133,7 @@ func (s *UserService) GetProfile(ctx context.Context, req *dto.GetProfileRequest
 		s.log.Error("GetProfile error", zap.Error(err))
 		return nil, err
 	}
-	if userMsg == nil {
-		return nil, ErrUserNotFound
-	}
-
-	return dto.ToGetProfileResponse(userMsg.User, userMsg.Stat), nil
+	return dto.ToGetProfileResponse(userMsg), nil
 }
 
 func (s *UserService) UpdateProfile(ctx context.Context, req *dto.UpdateProfileRequest) error {
@@ -152,9 +141,6 @@ func (s *UserService) UpdateProfile(ctx context.Context, req *dto.UpdateProfileR
 	if err != nil {
 		s.log.Error("UpdateProfile error", zap.Error(err))
 		return err
-	}
-	if user == nil {
-		return ErrUserNotFound
 	}
 
 	user.Name = req.Username
@@ -175,9 +161,6 @@ func (s *UserService) UpdateAvatar(ctx context.Context, req *dto.UpdateAvatarReq
 		s.log.Error("UpdateAvatar error", zap.Error(err))
 		return nil, err
 	}
-	if user == nil {
-		return nil, ErrUserNotFound
-	}
 
 	if err := s.repo.UpdateAvatar(ctx, req.UserID, req.Avatar); err != nil {
 		s.log.Error("UpdateAvatar error", zap.Error(err))
@@ -189,16 +172,13 @@ func (s *UserService) UpdateAvatar(ctx context.Context, req *dto.UpdateAvatarReq
 
 // =====================================================================================================================
 
-// 个人主页方面
+// 用户数据看板
 
 func (s *UserService) GetUserStat(ctx context.Context, userID uint64) (*entity.UserStat, error) {
 	stat, err := s.repo.GetUserStat(ctx, userID)
 	if err != nil {
 		s.log.Error("UserService/GetUserStat error", zap.Error(err), zap.Uint64("user_id", userID))
 		return nil, err
-	}
-	if stat == nil {
-		return nil, ErrUserNotFound
 	}
 	return stat, nil
 }

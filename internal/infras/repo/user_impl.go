@@ -8,7 +8,6 @@ import (
 	"core-server/internal/model/aggregate"
 	"core-server/internal/model/entity"
 	"core-server/internal/model/enum"
-	"errors"
 )
 
 type UserRepo struct {
@@ -26,6 +25,9 @@ func (r *UserRepo) GetByID(ctx context.Context, id uint64) (*entity.User, error)
 		Where(user.IDEQ(id), user.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, ErrUserNotFound
+		}
 		return nil, err
 	}
 	return toEntityUser(node), nil
@@ -37,7 +39,7 @@ func (r *UserRepo) GetByName(ctx context.Context, name string) (*entity.User, er
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, nil
+			return nil, ErrUserNotFound
 		}
 		return nil, err
 	}
@@ -50,7 +52,7 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*entity.User, 
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, nil
+			return nil, ErrUserNotFound
 		}
 		return nil, err
 	}
@@ -100,6 +102,9 @@ func (r *UserRepo) GetUserMsgByID(ctx context.Context, id uint64) (*aggregate.Us
 		WithStat(). // 预加载边
 		Only(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, ErrUserNotFound
+		}
 		return nil, err
 	}
 
@@ -118,7 +123,7 @@ func (r *UserRepo) GetUserStat(ctx context.Context, userID uint64) (*entity.User
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, nil
+			return nil, ErrUserNotFound
 		}
 		return nil, err
 	}
@@ -262,7 +267,7 @@ func (r *UserRepo) UpdateAvatar(ctx context.Context, userID uint64, avatar strin
 func (r *UserRepo) UpdatePassword(ctx context.Context, userID uint64, password string) error {
 	err := r.db.User.UpdateOneID(userID).SetPassword(password).Exec(ctx)
 	if ent.IsNotFound(err) {
-		return errors.New("user not found")
+		return ErrUserNotFound
 	}
 	return err
 }

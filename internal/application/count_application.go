@@ -14,9 +14,8 @@ import (
 // 这里作为一个计数中心，是可以单独拆分出去的
 
 type CountService struct {
-	log       *clog.Log
-	repo      domain.CountRepoDomain
-	likeCache domain.LikeCacheDomain
+	log  *clog.Log
+	repo domain.CountRepoDomain
 }
 
 func NewCountService(
