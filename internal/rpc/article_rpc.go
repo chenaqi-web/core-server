@@ -96,7 +96,10 @@ func (a *ArticleRPC) GetArticle(ctx context.Context, req *articlepb.GetArticleRe
 }
 
 func (a *ArticleRPC) ListArticles(ctx context.Context, req *articlepb.ListArticlesRequest) (*articlepb.ListArticlesResponse, error) {
-	res, err := a.ArticleService.ListArticles(ctx, &dto.ListArticlesRequest{Page: int(req.GetPage()), PageSize: int(req.GetPageSize())})
+	res, err := a.ArticleService.ListArticles(ctx, &dto.ListArticlesRequest{
+		Page:     int(req.GetPage()),
+		PageSize: int(req.GetPageSize()),
+	})
 	if err != nil {
 		return nil, err
 	}

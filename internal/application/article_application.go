@@ -84,13 +84,7 @@ func (s *ArticleService) EditorArticle(ctx context.Context, req *dto.EditorArtic
 
 func (s *ArticleService) DeleteArticle(ctx context.Context, req *dto.DelArticleRequest) error {
 	// 这个删除是包含管理员删除的
-	if err := s.ArtRepo.WithTransaction(ctx, func(ctx context.Context) error {
-		res, err := s.ArtRepo.DeleteByID(ctx, req.ID, req.UserID, req.Role)
-		if err != nil {
-			return err
-		}
-		return s.countService.UpdateArticleCount(ctx, res.Article.AuthorID, -1)
-	}); err != nil {
+	if err := s.ArtRepo.DeleteByID(ctx, req.ID, req.UserID, req.Role); err != nil {
 		s.log.Error("DeleteArticle error", zap.Error(err))
 		return err
 	}
@@ -101,12 +95,8 @@ func (s *ArticleService) DeleteArticle(ctx context.Context, req *dto.DelArticleR
 // 草稿箱
 
 func (s *ArticleService) PublishDraft(ctx context.Context, req *dto.PublishDraftRequest) error {
-	if err := s.ArtRepo.WithTransaction(ctx, func(ctx context.Context) error {
-		if err := s.ArtRepo.PublishDraft(ctx, req.ID, req.AuthorID); err != nil {
-			return err
-		}
-		return s.countService.UpdateArticleCount(ctx, req.AuthorID, 1)
-	}); err != nil {
+	// 发布草稿箱内的文章
+	if err := s.ArtRepo.PublishDraft(ctx, req.ID, req.AuthorID); err != nil {
 		s.log.Error("PublishDraft error", zap.Error(err))
 		return err
 	}
@@ -174,17 +164,13 @@ func (s *ArticleService) ListArticles(ctx context.Context, req *dto.ListArticles
 	return dto.ToListArticlesResponse(articles), nil
 }
 
+// ListMyArticles 用于查询个人的笔记，通过IsPublished来区分是查询已发布的还是草稿箱的
 func (s *ArticleService) ListMyArticles(ctx context.Context, req *dto.ListMyArticlesRequest) (*dto.ListMyArticlesResponse, error) {
 	page := Page(req.Page)
 	size := Size(req.PageSize)
 	offset := (page - 1) * size
 
-	articles, err := s.ArtRepo.ListByAuthor(ctx, req.AuthorID, offset, size, req.IsPublished)
-	if err != nil {
-		s.log.Error(err.Error())
-		return nil, err
-	}
-	total, err := s.ArtRepo.CountByAuthor(ctx, req.AuthorID, req.IsPublished)
+	articles, total, err := s.ArtRepo.ListByAuthor(ctx, req.AuthorID, offset, size, req.IsPublished)
 	if err != nil {
 		s.log.Error(err.Error())
 		return nil, err

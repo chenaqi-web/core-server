@@ -101,21 +101,29 @@ func (r *ArticleRepo) Edit(ctx context.Context, value *entity.Article) error {
 }
 
 func (r *ArticleRepo) PublishDraft(ctx context.Context, id, authorID uint64) error {
-	affected, err := r.DB(ctx).Article.Update().
-		Where(article.IDEQ(id), article.AuthorIDEQ(authorID), article.IsPublishedEQ(false), article.DeletedAtIsNil()).
-		SetIsPublished(true).
-		SetPublishedAt(time.Now()).
-		Save(ctx)
-	if err != nil {
-		return err
-	}
-	if affected == 0 {
-		return ErrNotFound
-	}
-	return nil
+	return r.WithTransaction(ctx, func(ctx context.Context) error {
+		// 更新状态
+		affected, err := r.DB(ctx).Article.Update().
+			Where(article.IDEQ(id), article.AuthorIDEQ(authorID), article.IsPublishedEQ(false), article.DeletedAtIsNil()).
+			SetIsPublished(true).
+			SetPublishedAt(time.Now()).
+			Save(ctx)
+		if err != nil {
+			return err
+		}
+		if affected == 0 {
+			return ErrArticleNotFound
+		}
+
+		// 以及计数
+		return r.DB(ctx).UserStat.Update().
+			Where(userstat.UserIDEQ(authorID), userstat.DeletedAtIsNil()).
+			AddArticleCount(1).
+			Exec(ctx)
+	})
 }
 
-func (r *ArticleRepo) DeleteByID(ctx context.Context, id, authorID uint64, role string) (*aggregate.ArticleAggregate, error) {
+func (r *ArticleRepo) DeleteByID(ctx context.Context, id, authorID uint64, role string) error {
 	now := time.Now()
 	predicates := []predicate.Article{
 		article.IDEQ(id),
@@ -126,27 +134,33 @@ func (r *ArticleRepo) DeleteByID(ctx context.Context, id, authorID uint64, role 
 		predicates = append(predicates, article.AuthorIDEQ(authorID))
 	}
 
-	node, err := r.DB(ctx).Article.Query().
-		Where(predicates...).
-		Only(ctx)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			return nil, ErrNotFound
+	return r.WithTransaction(ctx, func(ctx context.Context) error {
+		node, err := r.DB(ctx).Article.Query().
+			Where(predicates...).
+			Only(ctx)
+		if err != nil {
+			if ent.IsNotFound(err) {
+				return ErrArticleNotFound
+			}
+			return err
 		}
-		return nil, err
-	}
 
-	affected, err := r.DB(ctx).Article.Update().
-		Where(predicates...).
-		SetDeletedAt(now).
-		Save(ctx)
-	if err != nil {
-		return nil, err
-	}
-	if affected == 0 {
-		return nil, ErrNotFound
-	}
-	return toEntityArticleAggregate(node), nil
+		affected, err := r.DB(ctx).Article.Update().
+			Where(predicates...).
+			SetDeletedAt(now).
+			Save(ctx)
+		if err != nil {
+			return err
+		}
+		if affected == 0 {
+			return ErrArticleNotFound
+		}
+
+		return r.DB(ctx).UserStat.Update().
+			Where(userstat.UserIDEQ(node.AuthorID), userstat.DeletedAtIsNil(), userstat.ArticleCountGT(0)).
+			AddArticleCount(-1).
+			Exec(ctx)
+	})
 }
 
 func (r *ArticleRepo) DeleteDraftByID(ctx context.Context, id, authorID uint64) error {
@@ -227,7 +241,7 @@ func (r *ArticleRepo) List(ctx context.Context, page, pageSize int) ([]*aggregat
 	return toEntityArticleAggregates(nodes), nil
 }
 
-func (r *ArticleRepo) ListByAuthor(ctx context.Context, authorID uint64, offset, limit int, isPublished *bool) ([]*aggregate.ArticleAggregate, error) {
+func (r *ArticleRepo) ListByAuthor(ctx context.Context, authorID uint64, offset, limit int, isPublished *bool) ([]*aggregate.ArticleAggregate, uint64, error) {
 	predicates := []predicate.Article{
 		article.AuthorIDEQ(authorID),
 		article.DeletedAtIsNil(),
@@ -236,6 +250,7 @@ func (r *ArticleRepo) ListByAuthor(ctx context.Context, authorID uint64, offset,
 		predicates = append(predicates, article.IsPublishedEQ(*isPublished))
 	}
 
+	// 查询博客实体
 	nodes, err := r.DB(ctx).Article.Query().
 		Where(predicates...).
 		WithCategory().
@@ -245,27 +260,18 @@ func (r *ArticleRepo) ListByAuthor(ctx context.Context, authorID uint64, offset,
 		Limit(limit).
 		All(ctx)
 	if err != nil {
-		return nil, err
-	}
-	return toEntityArticleAggregates(nodes), nil
-}
-
-func (r *ArticleRepo) CountByAuthor(ctx context.Context, authorID uint64, isPublished *bool) (uint64, error) {
-	predicates := []predicate.Article{
-		article.AuthorIDEQ(authorID),
-		article.DeletedAtIsNil(),
-	}
-	if isPublished != nil {
-		predicates = append(predicates, article.IsPublishedEQ(*isPublished))
+		return nil, 0, err
 	}
 
+	// 查询计数
 	total, err := r.DB(ctx).Article.Query().
 		Where(predicates...).
 		Count(ctx)
 	if err != nil {
-		return 0, err
+		return nil, 0, err
 	}
-	return uint64(total), nil
+
+	return toEntityArticleAggregates(nodes), uint64(total), nil
 }
 
 func (r *ArticleRepo) ListByCategory(ctx context.Context, categoryID uint64, offset, limit int) ([]*aggregate.ArticleAggregate, error) {
