@@ -18,7 +18,6 @@ type ArticleService struct {
 	log          *clog.Log
 	cfg          *config.Config
 	ArtRepo      domain.ArticleRepoDomain
-	userRepo     domain.UserRepoDomain
 	countService *CountService
 }
 
@@ -26,14 +25,12 @@ func NewArticleService(
 	log *clog.Log,
 	cfg *config.Config,
 	ArtRepo domain.ArticleRepoDomain,
-	userRepo domain.UserRepoDomain,
 	countService *CountService,
 ) (*ArticleService, error) {
 	return &ArticleService{
 		cfg:          cfg,
 		log:          log,
 		ArtRepo:      ArtRepo,
-		userRepo:     userRepo,
 		countService: countService,
 	}, nil
 }
@@ -58,18 +55,11 @@ func (s *ArticleService) CreateArticle(ctx context.Context, req *dto.CreateArtic
 		}
 	}
 
-	if err := s.ArtRepo.WithTransaction(ctx, func(ctx context.Context) error {
-		if err := s.ArtRepo.Create(ctx, a); err != nil {
-			return err
-		}
-		if a.IsPublished {
-			return s.userRepo.UpdateArticleCount(ctx, a.AuthorID, 1)
-		}
-		return nil
-	}); err != nil {
+	if err := s.ArtRepo.Create(ctx, a); err != nil {
 		s.log.Error("CreateArticle error", zap.Error(err))
 		return err
 	}
+
 	return nil
 }
 
@@ -99,7 +89,7 @@ func (s *ArticleService) DeleteArticle(ctx context.Context, req *dto.DelArticleR
 		if err != nil {
 			return err
 		}
-		return s.userRepo.UpdateArticleCount(ctx, res.Article.AuthorID, -1)
+		return s.countService.UpdateArticleCount(ctx, res.Article.AuthorID, -1)
 	}); err != nil {
 		s.log.Error("DeleteArticle error", zap.Error(err))
 		return err
@@ -115,7 +105,7 @@ func (s *ArticleService) PublishDraft(ctx context.Context, req *dto.PublishDraft
 		if err := s.ArtRepo.PublishDraft(ctx, req.ID, req.AuthorID); err != nil {
 			return err
 		}
-		return s.userRepo.UpdateArticleCount(ctx, req.AuthorID, 1)
+		return s.countService.UpdateArticleCount(ctx, req.AuthorID, 1)
 	}); err != nil {
 		s.log.Error("PublishDraft error", zap.Error(err))
 		return err
@@ -164,7 +154,7 @@ func (s *ArticleService) GetArticle(ctx context.Context, id uint64) (*dto.GetArt
 		)
 
 		// 用户浏览总数+1
-		_ = s.userRepo.UpdateViewCount(ctx, res.Article.AuthorID, 1)
+		_ = s.countService.UpdateViewCount(ctx, res.Article.AuthorID, 1)
 	}()
 
 	return dto.ToGetArticleResponse(res), nil

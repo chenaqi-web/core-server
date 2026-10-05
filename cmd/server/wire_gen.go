@@ -40,8 +40,8 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 	kafkaManager := kafka.NewKafkaManager(cfg, topicManager)
 	likeRepo := repo.NewSyncLikeRepo(entClient)
 	countRepo := repo.NewCountRepo(entClient)
-	countService := application.NewCountService(log, countRepo)
 	userRepo := repo.NewUserRepo(entClient)
+	countService := application.NewCountService(log, countRepo, userRepo)
 	iLikeCache := cache.NewILikeCache(cacheClient)
 	articleRepo := repo.NewArticleRepo(entClient)
 	messageQueueConsumer := jobdbsync.NewMessageQueueConsumer(cfg, log, syncProducer, kafkaManager, cacheClient, likeRepo, countRepo, userRepo, articleRepo, iLikeCache)
@@ -58,7 +58,7 @@ func InitializeServer(cfg *config.Config) (*rpc.Server, error) {
 		return nil, err
 	}
 	categoryRPC := rpc.NewCategoryRPC(categoryService)
-	articleService, err := application.NewArticleService(log, cfg, articleRepo, userRepo, countService)
+	articleService, err := application.NewArticleService(log, cfg, articleRepo, countService)
 	if err != nil {
 		return nil, err
 	}

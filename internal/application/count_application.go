@@ -14,17 +14,20 @@ import (
 // 这里作为一个计数中心，是可以单独拆分出去的
 
 type CountService struct {
-	log  *clog.Log
-	repo domain.CountRepoDomain
+	log      *clog.Log
+	repo     domain.CountRepoDomain
+	userRepo domain.UserRepoDomain
 }
 
 func NewCountService(
 	log *clog.Log,
 	repo domain.CountRepoDomain,
+	userRepo domain.UserRepoDomain,
 ) *CountService {
 	return &CountService{
-		repo: repo,
-		log:  log,
+		repo:     repo,
+		userRepo: userRepo,
+		log:      log,
 	}
 }
 
@@ -93,6 +96,46 @@ func (s *CountService) UpdateObjectTypeWithInteractionType(ctx context.Context, 
 		InteractionType: enum.ParseInteractionType(interaction),
 	}, delta); err != nil {
 		s.log.Error("UpdateObjectTypeWithInteractionType error:", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+func (s *CountService) UpdateLikeCount(ctx context.Context, userID uint64, delta int64) error {
+	if err := s.userRepo.UpdateLikeCount(ctx, userID, delta); err != nil {
+		s.log.Error("UpdateLikeCount error:", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+func (s *CountService) UpdateReceiveLikeCount(ctx context.Context, userID uint64, delta int64) error {
+	if err := s.userRepo.UpdateReceiveLikeCount(ctx, userID, delta); err != nil {
+		s.log.Error("UpdateReceiveLikeCount error:", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+func (s *CountService) UpdateArticleCount(ctx context.Context, userID uint64, delta int64) error {
+	if err := s.userRepo.UpdateArticleCount(ctx, userID, delta); err != nil {
+		s.log.Error("UpdateArticleCount error:", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+func (s *CountService) UpdateViewCount(ctx context.Context, userID uint64, delta int64) error {
+	if err := s.userRepo.UpdateViewCount(ctx, userID, delta); err != nil {
+		s.log.Error("UpdateViewCount error:", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+func (s *CountService) UpdateCommentCount(ctx context.Context, userID uint64, delta int64) error {
+	if err := s.userRepo.UpdateCommentCount(ctx, userID, delta); err != nil {
+		s.log.Error("UpdateCommentCount error:", zap.Error(err))
 		return err
 	}
 	return nil
